@@ -16,9 +16,12 @@
     "zip": "wxt zip",
     "zip:edge": "wxt zip -b edge",
     "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "format": "biome check --write .",
     "postinstall": "wxt prepare"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@wxt-dev/module-react": "^1.2.2",
