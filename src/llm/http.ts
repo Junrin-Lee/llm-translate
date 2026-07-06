@@ -2,6 +2,11 @@ import { LlmError } from './types';
 
 export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
 
+/** Common options both protocol adapters accept (fetch injection for tests). */
+export interface AdapterDeps {
+  fetchImpl?: FetchLike;
+}
+
 export const DEFAULT_TIMEOUT_MS = 60_000;
 
 function truncate(s: string, max: number): string {

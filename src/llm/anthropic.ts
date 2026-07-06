@@ -10,44 +10,52 @@ import {
   type TranslationClient,
 } from './types';
 
-interface OpenAiBody {
+const ANTHROPIC_VERSION = '2023-06-01';
+const DEFAULT_MAX_TOKENS = 4096;
+
+interface AnthropicBody {
   model: string;
-  messages: Array<{ role: 'system' | 'user'; content: string }>;
+  messages: Array<{ role: 'user'; content: string }>;
+  max_tokens: number;
   stream: boolean;
+  system?: string;
   temperature?: number;
-  max_tokens?: number;
 }
 
-/** A TranslationClient speaking the OpenAI Chat Completions protocol. */
-export function createOpenAiClient(
+/** A TranslationClient speaking the Anthropic Messages protocol. */
+export function createAnthropicClient(
   profile: ProviderProfile,
   deps: AdapterDeps = {},
 ): TranslationClient {
   const fetchImpl = deps.fetchImpl ?? fetch;
-  const base = normalizeBaseUrl(profile.baseUrl, 'openai');
+  const base = normalizeBaseUrl(profile.baseUrl, 'anthropic');
   const timeoutMs = profile.params?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const headers: Record<string, string> = {
     'content-type': 'application/json',
-    authorization: `Bearer ${profile.apiKey}`,
+    'x-api-key': profile.apiKey,
+    'anthropic-version': ANTHROPIC_VERSION,
+    // Required to call the official API from an extension (browser) context;
+    // harmless for compatible gateways. See ADR-0003 / docs/plan.md.
+    'anthropic-dangerous-direct-browser-access': 'true',
   };
 
-  function buildBody(req: ChatRequest, stream: boolean): OpenAiBody {
-    const messages: OpenAiBody['messages'] = [];
-    if (req.system) messages.push({ role: 'system', content: req.system });
-    messages.push({ role: 'user', content: req.user });
-
-    const body: OpenAiBody = { model: req.model, messages, stream };
+  function buildBody(req: ChatRequest, stream: boolean): AnthropicBody {
+    const body: AnthropicBody = {
+      model: req.model,
+      messages: [{ role: 'user', content: req.user }],
+      max_tokens: req.maxTokens ?? profile.params?.maxTokens ?? DEFAULT_MAX_TOKENS,
+      stream,
+    };
+    if (req.system) body.system = req.system;
     const temperature = req.temperature ?? profile.params?.temperature;
     if (temperature !== undefined) body.temperature = temperature;
-    const maxTokens = req.maxTokens ?? profile.params?.maxTokens;
-    if (maxTokens !== undefined) body.max_tokens = maxTokens;
     return body;
   }
 
-  function postChat(body: OpenAiBody, signal?: AbortSignal): Promise<Response> {
+  function postMessages(body: AnthropicBody, signal?: AbortSignal): Promise<Response> {
     return fetchWithTimeout(
       fetchImpl,
-      endpointFor(base, 'openai', 'chat'),
+      endpointFor(base, 'anthropic', 'chat'),
       { method: 'POST', headers, body: JSON.stringify(body) },
       timeoutMs,
       signal,
@@ -59,54 +67,58 @@ export function createOpenAiClient(
     onDelta: (text: string) => void,
     signal?: AbortSignal,
   ): Promise<ChatResult> {
-    const res = await postChat(buildBody(req, true), signal);
+    const res = await postMessages(buildBody(req, true), signal);
     if (!res.ok) throw await errorFromResponse(res);
     if (!res.body) throw new LlmError('bad_response', 'Streaming response had no body');
 
     let text = '';
     for await (const ev of parseSse(res.body)) {
-      if (ev.data === '[DONE]') break;
-      let json: unknown;
+      let json: { type?: string; delta?: { type?: string; text?: unknown } };
       try {
         json = JSON.parse(ev.data);
       } catch {
-        continue; // ignore keep-alive / non-JSON frames
+        continue;
       }
-      const delta = (json as { choices?: Array<{ delta?: { content?: unknown } }> })?.choices?.[0]
-        ?.delta?.content;
-      if (typeof delta === 'string' && delta.length > 0) {
-        text += delta;
-        onDelta(delta);
+      if (json.type === 'message_stop') break;
+      if (json.type === 'content_block_delta' && json.delta?.type === 'text_delta') {
+        const chunk = json.delta.text;
+        if (typeof chunk === 'string' && chunk.length > 0) {
+          text += chunk;
+          onDelta(chunk);
+        }
       }
     }
     return { text };
   }
 
   async function complete(req: ChatRequest, signal?: AbortSignal): Promise<ChatResult> {
-    const res = await postChat(buildBody(req, false), signal);
+    const res = await postMessages(buildBody(req, false), signal);
     if (!res.ok) throw await errorFromResponse(res);
 
     const json = (await res.json()) as {
-      choices?: Array<{ message?: { content?: unknown } }>;
-      usage?: { prompt_tokens?: number; completion_tokens?: number };
+      content?: Array<{ type?: string; text?: unknown }>;
+      usage?: { input_tokens?: number; output_tokens?: number };
     };
-    const content = json?.choices?.[0]?.message?.content;
-    if (typeof content !== 'string') {
-      throw new LlmError('bad_response', 'Response contained no message content');
+    if (!Array.isArray(json?.content)) {
+      throw new LlmError('bad_response', 'Response contained no content');
     }
+    const text = json.content
+      .filter((block) => block?.type === 'text' && typeof block.text === 'string')
+      .map((block) => block.text as string)
+      .join('');
     const usage = json.usage
       ? {
-          inputTokens: json.usage.prompt_tokens ?? 0,
-          outputTokens: json.usage.completion_tokens ?? 0,
+          inputTokens: json.usage.input_tokens ?? 0,
+          outputTokens: json.usage.output_tokens ?? 0,
         }
       : undefined;
-    return { text: content, usage };
+    return { text, usage };
   }
 
   async function listModels(): Promise<string[]> {
     const res = await fetchWithTimeout(
       fetchImpl,
-      endpointFor(base, 'openai', 'models'),
+      endpointFor(base, 'anthropic', 'models'),
       { method: 'GET', headers },
       timeoutMs,
     );
