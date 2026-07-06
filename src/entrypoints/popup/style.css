@@ -1,0 +1,24 @@
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.popup {
+  min-width: 320px;
+  padding: 16px;
+}
+
+.popup h1 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.popup__hint {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.7;
+}

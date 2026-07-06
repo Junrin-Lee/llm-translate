@@ -1,0 +1,12 @@
+node_modules
+.output
+.wxt
+dist
+coverage
+stats.html
+*.zip
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
