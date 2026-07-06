@@ -18,6 +18,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
     "format": "biome check --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "postinstall": "wxt prepare"
   },
   "devDependencies": {
@@ -26,6 +28,7 @@
     "@types/react-dom": "^19.2.3",
     "@wxt-dev/module-react": "^1.2.2",
     "typescript": "^6.0.3",
+    "vitest": "^4.1.10",
     "wxt": "^0.20.27"
   },
   "dependencies": {
