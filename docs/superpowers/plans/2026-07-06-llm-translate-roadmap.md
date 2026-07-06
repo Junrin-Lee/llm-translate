@@ -114,6 +114,8 @@ export function renderPrompt(kind: PromptKind, vars: PromptVars, overrides?: Pro
   { system: string; user: string; version: string };   // version 参与缓存 key
 
 // src/messaging/protocol.ts —— Port 名称常量 + 消息类型
+// 实现进度:M1 落地 translate-stream / list-models / test-connection(BgEvent 增加 models / test-result 事件);
+// translate-batch 与 batch-result 事件随 M3 的编排器(T3.3)一并加入。路由逻辑抽到 src/messaging/handler.ts 便于单测。
 export type BgRequest =
   | { kind: 'translate-stream'; feature: 'selection'; promptKind: 'selectionDict' | 'selectionText'; vars: PromptVars }
   | { kind: 'translate-batch'; feature: 'page'; items: { id: number; text: string }[]; vars: Omit<PromptVars, 'text'> }
