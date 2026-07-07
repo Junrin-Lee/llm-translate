@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { LANGUAGES } from '@/languages';
 import { openTranslateStream } from '@/messaging/port-client';
 import { parseDictResult } from '@/selection/dict-result';
@@ -32,6 +32,7 @@ export function TranslatePanel({
   const [output, setOutput] = useState('');
   const [status, setStatus] = useState<Status>('streaming');
   const [error, setError] = useState('');
+  const panelRef = useRef<HTMLDivElement>(null);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: `attempt` is a manual retry trigger.
   useEffect(() => {
@@ -61,8 +62,18 @@ export function TranslatePanel({
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
+    // Close on a click anywhere outside the panel. composedPath sees through the
+    // Shadow DOM; capture phase runs regardless of stopPropagation on the page.
+    const onPointerDown = (e: Event) => {
+      const panel = panelRef.current;
+      if (panel && !e.composedPath().includes(panel)) onClose();
+    };
     document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
+    document.addEventListener('mousedown', onPointerDown, true);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('mousedown', onPointerDown, true);
+    };
   }, [onClose]);
 
   const dict = useMemo(
@@ -80,6 +91,7 @@ export function TranslatePanel({
 
   return (
     <div
+      ref={panelRef}
       className="llmt-panel"
       style={{ left: `${left}px`, ...position }}
       role="dialog"
