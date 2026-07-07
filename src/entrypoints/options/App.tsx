@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
 import { BRAND } from '@/brand';
 import type { ProviderProfile } from '@/llm/types';
-import type { GeneralSettings, ProfileDefaults } from '@/storage/schema';
+import type { GeneralSettings, ProfileDefaults, PromptOverrides } from '@/storage/schema';
 import { DefaultsPanel } from './DefaultsPanel';
 import { GeneralPanel } from './GeneralPanel';
+import { PromptsPanel } from './PromptsPanel';
 import { ProviderCard } from './ProviderCard';
 import { useSettings } from './useSettings';
 
@@ -66,6 +67,8 @@ export function App() {
 
   const setDisabledSites = (sites: string[]) =>
     mutate((s) => ({ ...s, siteRules: { ...s.siteRules, disableSelection: sites } }));
+
+  const setPrompts = (prompts: PromptOverrides) => mutate((s) => ({ ...s, prompts }));
 
   const { providers, defaults } = settings;
 
@@ -137,6 +140,15 @@ export function App() {
           onGeneral={setGeneral}
           onDisabledSites={setDisabledSites}
         />
+      </section>
+
+      <section className="section">
+        <div className="section__head">
+          <h2 className="section__title">
+            <span className="eyebrow">Prompts</span>
+          </h2>
+        </div>
+        <PromptsPanel prompts={settings.prompts} onChange={setPrompts} />
       </section>
     </main>
   );
