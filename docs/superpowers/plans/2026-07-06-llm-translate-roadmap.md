@@ -8,11 +8,13 @@
 
 **Architecture:** WXT + React + TS;content script 常驻 `<all_urls>` 负责 UI 与 DOM;所有 LLM 请求仅由 background service worker 发出;content ↔ background 用 Port 通道传流式结果;纯逻辑模块(协议、分块、判定、prompt)与入口解耦,重点单测。
 
-**Tech Stack:** WXT、React 18、TypeScript(strict)、pnpm、Biome、vitest(+ WxtVitest/fake-browser)、Playwright、GitHub Actions。
+**Tech Stack:** WXT、React 19、TypeScript(strict)、pnpm、Biome、vitest(+ WxtVitest/fake-browser)、Playwright、GitHub Actions。
+
+> **进度(截至 2026-07-07):** M0–M4 已完成并通过单测(164 例);M5(上架收尾)尚未开始。下方各里程碑标题的 ✅ / ⬜ 表示当前状态。
 
 ## 全局约束(每个任务隐含遵守)
 
-- TypeScript `strict: true`;包管理 pnpm;Node 使用当前 LTS。
+- TypeScript `strict: true`;包管理 pnpm(经 `packageManager` 固定 9.15.9);Node 20(pnpm 10/11 需 Node 22+,故留在 pnpm 9)。
 - 所有对 LLM API 的网络请求只允许出现在 background;content script 禁止 fetch 外部服务。
 - 译文写入 DOM 一律 `textContent`,禁止 `innerHTML`(LLM 输出按不可信输入处理)。
 - API Key 不得出现在日志、错误信息、异常堆栈;导出默认不含 Key。
@@ -31,15 +33,16 @@
 │   ├── popup/ (index.html, App.tsx)
 │   └── options/ (index.html, App.tsx, components/)
 ├── src/
-│   ├── brand.ts
-│   ├── llm/        types.ts, sse.ts, base-url.ts, openai.ts, anthropic.ts, client.ts
-│   ├── messaging/  protocol.ts
+│   ├── brand.ts / languages.ts
+│   ├── i18n/       messages.ts, index.ts, useI18n.ts(应用内 en/zh 文案)
+│   ├── llm/        types.ts, sse.ts, base-url.ts, openai.ts, anthropic.ts, http.ts, client.ts
+│   ├── messaging/  protocol.ts, handler.ts, port-client.ts
 │   ├── storage/    schema.ts, index.ts, import-export.ts
 │   ├── prompts/    templates.ts, index.ts
 │   ├── selection/  classify.ts, dict-result.ts
 │   ├── segmenter/  index.ts
-│   ├── translator/ batch.ts, orchestrator.ts, cache.ts
-│   └── ui/         (浮层/工具条/共享组件)
+│   ├── translator/ batch.ts, orchestrator.ts, cache.ts, inject.ts
+│   └── ui/         selection/(图标·浮层), page/(工具条·store)
 ├── tests/          # 与 src/ 镜像的 *.test.ts;fixtures/
 ├── e2e/            # Playwright + mock-llm server
 └── .github/workflows/ ci.yml, release.yml
@@ -88,6 +91,7 @@ export interface GeneralSettings {
   targetLang: string; secondaryTargetLang?: string;
   selectionTrigger: 'icon' | 'instant' | 'shortcut-only';
   pageMode: 'bilingual' | 'replace';
+  uiLang: 'auto' | 'en' | 'zh';   // 界面语言(T4.3 i18n)
 }
 export interface SiteRules { autoTranslate: string[]; disableSelection: string[] }
 export interface PromptOverrides { selectionDict?: string; selectionText?: string; pageBatch?: string }
@@ -113,19 +117,22 @@ export interface PromptVars { text: string; targetLang: string; sourceLang?: str
 export function renderPrompt(kind: PromptKind, vars: PromptVars, overrides?: PromptOverrides):
   { system: string; user: string; version: string };   // version 参与缓存 key
 
-// src/messaging/protocol.ts —— Port 名称常量 + 消息类型
-// 实现进度:M1 落地 translate-stream / list-models / test-connection(BgEvent 增加 models / test-result 事件);
-// translate-batch 与 batch-result 事件随 M3 的编排器(T3.3)一并加入。路由逻辑抽到 src/messaging/handler.ts 便于单测。
+// src/messaging/protocol.ts —— Port 名称常量 + 消息类型(以代码为准;路由逻辑在 src/messaging/handler.ts 便于单测)
 export type BgRequest =
-  | { kind: 'translate-stream'; feature: 'selection'; promptKind: 'selectionDict' | 'selectionText'; vars: PromptVars }
-  | { kind: 'translate-batch'; feature: 'page'; items: { id: number; text: string }[]; vars: Omit<PromptVars, 'text'> }
+  | { kind: 'translate-stream'; feature: 'selection'; promptKind: 'selectionDict' | 'selectionText'; vars: PromptVars; bypassCache?: boolean }
+  | { kind: 'translate-batch'; feature: 'page'; payload: string; vars: Omit<PromptVars, 'text'> }  // payload = 已编码批次,编解码归 orchestrator
   | { kind: 'list-models'; profileId: string }
   | { kind: 'test-connection'; profileId: string };
 export type BgEvent =
   | { type: 'delta'; text: string }
-  | { type: 'batch-result'; items: { id: number; text: string }[] }
+  | { type: 'batch-result'; text: string }
   | { type: 'done'; usage?: ChatResult['usage'] }
+  | { type: 'models'; models: string[] }
+  | { type: 'test-result'; ok: boolean; latencyMs?: number; errorCode?: LlmErrorCode; message?: string }
   | { type: 'error'; code: LlmErrorCode; message: string };
+// 另有 background/popup → content 的一次性消息:
+//   ContentMessage = { type: 'open-selection-panel' | 'translate-page' | 'get-page-status' }
+//   PageStatusReply = 'idle' | 'translating' | 'done';  TabMessage = { type: 'page-status-changed'; status: PageStatusReply }
 
 // src/selection/classify.ts
 export function classifySelection(text: string): 'dict' | 'text';
@@ -152,12 +159,12 @@ export function translateSegments(
 // src/translator/cache.ts
 export function cacheGet(key: string): Promise<string | null>;
 export function cacheSet(key: string, value: string): Promise<void>;
-export function cacheKey(p: { protocol: string; model: string; promptVersion: string; targetLang: string; text: string }): string;
+export function cacheKey(p: { protocol: string; model: string; promptVersion: string; targetLang: string; kind: string; text: string }): string;
 ```
 
 ---
 
-## M0 脚手架(可加载、CI 绿)
+## M0 脚手架(可加载、CI 绿) ✅
 
 | 任务 | 内容 | Files | 验收 | 依赖 | 估 |
 |---|---|---|---|---|---|
@@ -167,7 +174,7 @@ export function cacheKey(p: { protocol: string; model: string; promptVersion: st
 | **T0.4** manifest 与权限 | permissions: `storage`,`contextMenus`;host_permissions `<all_urls>`;content script matches `<all_urls>`;commands 骨架(`translate-selection`/`translate-page`);name 引 BRAND | wxt.config.ts, entrypoints/content.tsx | chrome://extensions 显示权限正确;快捷键出现在 chrome://extensions/shortcuts | T0.1 | S |
 | **T0.5** CI | ci.yml:PR/push → pnpm install + typecheck + lint + test + `wxt build`;release.yml 骨架(tag 触发,先只 build) | .github/workflows/ci.yml, release.yml | PR 上 CI 全绿 | T0.2-3 | S |
 
-## M1 协议层与 Provider 管理(options 真实连通两协议)
+## M1 协议层与 Provider 管理(options 真实连通两协议) ✅
 
 | 任务 | 内容 | Files | 验收 | 依赖 | 估 |
 |---|---|---|---|---|---|
@@ -183,7 +190,7 @@ export function cacheKey(p: { protocol: string; model: string; promptVersion: st
 | **T1.10** Provider CRUD UI | options 页:Provider 列表/新增/编辑(协议、baseUrl、key 掩码、模型输入)/删除(默认项保护)/设全局默认/划词与全文覆盖下拉 | entrypoints/options/*, src/ui/* | 手动清单:CRUD 全通;刷新持久 | T1.7 | L |
 | **T1.11** 连通验证 | 「测试连接」「拉取模型」按钮走 background;错误按 LlmErrorCode 显示可读文案 | entrypoints/options/*, entrypoints/background.ts | 真实 OpenAI 兼容 + Anthropic 兼容端点各连通一次(冒烟记录) | T1.9-10 | S |
 
-## M2 划词翻译(任意站点可用)
+## M2 划词翻译(任意站点可用) ✅
 
 | 任务 | 内容 | Files | 验收 | 依赖 | 估 |
 |---|---|---|---|---|---|
@@ -195,7 +202,7 @@ export function cacheKey(p: { protocol: string; model: string; promptVersion: st
 | **T2.6** 快捷键 | `translate-selection` command → background 转发当前 tab;`shortcut-only`/`instant` 模式接线 | entrypoints/background.ts, entrypoints/content.tsx | 手动:三种触发模式行为符合设置 | T2.4 | S |
 | **T2.7** 划词设置 | options:触发方式单选、目标语言选择、禁用站点清单编辑(增删域名) | entrypoints/options/* | 手动:改设置即时生效(watchSettings) | T2.2 | S |
 
-## M3 全文翻译(新闻/文档/SPA 三类站点可用)
+## M3 全文翻译(新闻/文档/SPA 三类站点可用) ✅
 
 | 任务 | 内容 | Files | 验收 | 依赖 | 估 |
 |---|---|---|---|---|---|
@@ -210,7 +217,7 @@ export function cacheKey(p: { protocol: string; model: string; promptVersion: st
 | **T3.9** popup | 翻译此页(触发/还原态切换)、模式选择、本站自动翻译开关、当前生效 Provider 展示、跳设置 | entrypoints/popup/* | 手动清单逐项过 | T3.5 | M |
 | **T3.10** 触发收口 | 右键菜单(翻译此页/翻译所选)、`translate-page` 快捷键、autoTranslate 站点加载即翻 | entrypoints/background.ts, entrypoints/content.tsx | 手动:四种触发路径全通 | T3.8-9 | S |
 
-## M4 设置完善
+## M4 设置完善 ✅
 
 | 任务 | 内容 | Files | 验收 | 依赖 | 估 |
 |---|---|---|---|---|---|
@@ -219,7 +226,7 @@ export function cacheKey(p: { protocol: string; model: string; promptVersion: st
 | **T4.3** i18n | WXT i18n 模块;zh_CN + en 两套 messages;UI 文案全部走 i18n key | public/_locales/*, 全 UI 文件 | 切换浏览器语言 UI 跟随;无硬编码文案(grep 检查) | M2-3 | M |
 | **T4.4** 杂项收尾 | 缓存用量显示/一键清空;快捷键说明+跳转 `chrome://extensions/shortcuts`(MV3 不可编程修改);「选中即翻」防抖参数与费用提示文案 | entrypoints/options/* | 手动清单逐项过 | T3.4 | S |
 
-## M5 质量与上架
+## M5 质量与上架 ⬜
 
 | 任务 | 内容 | Files | 验收 | 依赖 | 估 |
 |---|---|---|---|---|---|

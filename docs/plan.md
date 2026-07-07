@@ -111,7 +111,7 @@ interface TranslationClient {
 - **注入**:双语对照 = 在原文块后插入带扩展标记 class 的译文节点;仅译文 = 隐藏原文节点(不销毁)。**译文一律以 `textContent` 写入,绝不 `innerHTML`**(LLM 输出视为不可信输入,防 XSS)。一键还原 = 移除所有扩展节点 + 恢复隐藏节点。
 - **动态内容**:MutationObserver 监听新增块,页面处于已翻译状态时增量翻译(SPA 路由切换按 URL 变化重置状态)。
 - **进度与控制**:页面内浮动工具条(进度、暂停/取消、模式切换、还原)。
-- **缓存**:内存 + `storage.local` LRU(上限约 5MB),key = hash(协议+模型+prompt 版本+目标语言+原文);刷新页面重译秒回。
+- **缓存**:内存 + `storage.session`(划词)/ `storage.local`(全文)LRU,key = hash(协议+模型+prompt 版本+目标语言+类型+原文);刷新页面重译秒回。
 - **自动翻译站点**:域名清单命中时页面加载完成即自动触发。
 
 ## 7. 存储 Schema(storage.local,含 version 字段供迁移)
@@ -121,12 +121,13 @@ interface TranslationClient {
   version: 1,
   providers: ProviderProfile[],            // {id, name, protocol, baseUrl, apiKey, model, params?}
   defaults: { global: id, selection?: id, page?: id },   // 功能级覆盖
-  general: { targetLang, secondaryTargetLang?, selectionTrigger, pageMode, shortcuts },
+  general: { targetLang, secondaryTargetLang?, selectionTrigger, pageMode, uiLang },  // uiLang: 界面语言 auto/en/zh
   siteRules: { autoTranslate: string[], disableSelection: string[] },
   prompts: { selectionDict?, selectionText?, pageBatch? },  // 未设置 = 用内置默认
-  cache: {...}                              // LRU,独立 key 前缀,可一键清空
 }
 ```
+
+> 翻译缓存**不在** `AppSettings` 内,而是独立的存储键(划词用 `storage.session`、全文用 `storage.local`),按内容 key、LRU 淘汰、可一键清空;详见 roadmap「缓存设计」。
 
 导入/导出:JSON 文件;导出默认**不含** API Key,勾选「包含 Key」才导出并给敏感提示。
 
