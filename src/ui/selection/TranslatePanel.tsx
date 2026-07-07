@@ -45,6 +45,8 @@ export function TranslatePanel({
         feature: 'selection',
         promptKind: mode === 'dict' ? 'selectionDict' : 'selectionText',
         vars: { text, targetLang: lang },
+        // A manual retry refetches instead of serving the cached result.
+        bypassCache: attempt > 0,
       },
       {
         onDelta: (chunk) => setOutput((prev) => prev + chunk),

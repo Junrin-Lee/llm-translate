@@ -3,6 +3,7 @@ import { LlmError, type ProviderProfile, type TranslationClient } from '@/llm/ty
 import { handleRequest } from '@/messaging/handler';
 import type { BgEvent, BgRequest } from '@/messaging/protocol';
 import { type AppSettings, DEFAULT_SETTINGS } from '@/storage/schema';
+import type { TranslationCache } from '@/translator/cache';
 
 const profile: ProviderProfile = {
   id: 'p1',
@@ -196,5 +197,66 @@ describe('handleRequest translate-batch', () => {
       expect.objectContaining({ user: '@@0@@\nHello', model: 'gpt-4o-mini' }),
       undefined,
     );
+  });
+});
+
+function fakeCache(): TranslationCache & { store: Map<string, string> } {
+  const store = new Map<string, string>();
+  return {
+    store,
+    get: async (k) => store.get(k),
+    set: async (k, v) => {
+      store.set(k, v);
+    },
+  };
+}
+
+describe('handleRequest caching', () => {
+  const streamReq: BgRequest = {
+    kind: 'translate-stream',
+    feature: 'selection',
+    promptKind: 'selectionText',
+    vars: { text: 'hi', targetLang: 'zh-CN' },
+  };
+
+  it('caches a selection result and serves it without calling the model again', async () => {
+    const streamSpy = vi.fn(async (_r: unknown, onDelta: (t: string) => void) => {
+      onDelta('你好');
+      return { text: '你好' };
+    });
+    const client = fakeClient({ stream: streamSpy as unknown as TranslationClient['stream'] });
+    const deps = {
+      getSettings: async () => settingsWith([profile]),
+      resolveProfile: async () => profile,
+      createClient: () => client,
+      selectionCache: fakeCache(),
+    };
+
+    const first = collector();
+    await handleRequest(streamReq, first.emit, deps);
+    const second = collector();
+    await handleRequest(streamReq, second.emit, deps);
+
+    expect(streamSpy).toHaveBeenCalledTimes(1);
+    expect(second.events).toEqual([{ type: 'delta', text: '你好' }, { type: 'done' }]);
+  });
+
+  it('bypasses the cache when bypassCache is set', async () => {
+    const streamSpy = vi.fn(async (_r: unknown, onDelta: (t: string) => void) => {
+      onDelta('你好');
+      return { text: '你好' };
+    });
+    const client = fakeClient({ stream: streamSpy as unknown as TranslationClient['stream'] });
+    const deps = {
+      getSettings: async () => settingsWith([profile]),
+      resolveProfile: async () => profile,
+      createClient: () => client,
+      selectionCache: fakeCache(),
+    };
+
+    await handleRequest(streamReq, collector().emit, deps);
+    await handleRequest({ ...streamReq, bypassCache: true }, collector().emit, deps);
+
+    expect(streamSpy).toHaveBeenCalledTimes(2);
   });
 });

@@ -1,12 +1,16 @@
 import { LlmError, type ProviderProfile, type TranslationClient } from '@/llm/types';
 import { renderPrompt } from '@/prompts';
 import type { AppSettings } from '@/storage/schema';
+import { cacheKey, type TranslationCache } from '@/translator/cache';
 import type { BgEvent, BgRequest } from './protocol';
 
 export interface HandlerDeps {
   getSettings: () => Promise<AppSettings>;
   resolveProfile: (feature: 'selection' | 'page') => Promise<ProviderProfile | null>;
   createClient: (profile: ProviderProfile) => TranslationClient;
+  /** Optional caches; omitted in tests to exercise the live path. */
+  selectionCache?: TranslationCache;
+  pageCache?: TranslationCache;
 }
 
 function errorEvent(error: unknown): BgEvent {
@@ -39,12 +43,31 @@ export async function handleRequest(
           return;
         }
         const rendered = renderPrompt(req.promptKind, req.vars, settings.prompts);
+        const key = cacheKey({
+          protocol: profile.protocol,
+          model: profile.model,
+          promptVersion: rendered.version,
+          targetLang: req.vars.targetLang,
+          kind: req.promptKind,
+          text: req.vars.text,
+        });
+
+        if (!req.bypassCache) {
+          const hit = await deps.selectionCache?.get(key);
+          if (hit != null) {
+            emit({ type: 'delta', text: hit });
+            emit({ type: 'done' });
+            return;
+          }
+        }
+
         const client = deps.createClient(profile);
         const result = await client.stream(
           { system: rendered.system, user: rendered.user, model: profile.model },
           (text) => emit({ type: 'delta', text }),
           signal,
         );
+        await deps.selectionCache?.set(key, result.text);
         emit({ type: 'done', usage: result.usage });
         return;
       }
@@ -60,11 +83,27 @@ export async function handleRequest(
           { ...req.vars, text: req.payload },
           settings.prompts,
         );
+        const key = cacheKey({
+          protocol: profile.protocol,
+          model: profile.model,
+          promptVersion: rendered.version,
+          targetLang: req.vars.targetLang,
+          kind: 'pageBatch',
+          text: req.payload,
+        });
+
+        const hit = await deps.pageCache?.get(key);
+        if (hit != null) {
+          emit({ type: 'batch-result', text: hit });
+          return;
+        }
+
         const client = deps.createClient(profile);
         const result = await client.complete(
           { system: rendered.system, user: rendered.user, model: profile.model },
           signal,
         );
+        await deps.pageCache?.set(key, result.text);
         emit({ type: 'batch-result', text: result.text });
         return;
       }

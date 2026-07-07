@@ -14,6 +14,8 @@ export type BgRequest =
       feature: 'selection';
       promptKind: 'selectionDict' | 'selectionText';
       vars: PromptVars;
+      /** Retry sets this to skip a cached result and refetch. */
+      bypassCache?: boolean;
     }
   | {
       // payload is an already-encoded batch (orchestrator owns encode/decode).

@@ -7,6 +7,18 @@ import {
   TRANSLATE_PORT,
 } from '@/messaging/protocol';
 import { getSettings, resolveProfile } from '@/storage';
+import { createCache, type StorageAreaLike } from '@/translator/cache';
+
+// Selection cache is in-memory (cleared on browser close, never hits disk);
+// page cache persists across sessions. Both keyed by content, LRU-evicted.
+const selectionCache = createCache(browser.storage.session as unknown as StorageAreaLike, {
+  storageKey: 'cache:selection',
+  maxEntries: 500,
+});
+const pageCache = createCache(browser.storage.local as unknown as StorageAreaLike, {
+  storageKey: 'cache:page',
+  maxEntries: 1000,
+});
 
 async function sendToActiveTab(message: ContentMessage): Promise<void> {
   const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
@@ -46,7 +58,7 @@ export default defineBackground(() => {
       void handleRequest(
         message as BgRequest,
         emit,
-        { getSettings, resolveProfile, createClient },
+        { getSettings, resolveProfile, createClient, selectionCache, pageCache },
         controller.signal,
       );
     });
