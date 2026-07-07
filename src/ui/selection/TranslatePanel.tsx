@@ -34,7 +34,6 @@ export function TranslatePanel({
   const [error, setError] = useState('');
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: `attempt` is a manual retry trigger.
   useEffect(() => {
     setOutput('');
     setStatus('streaming');

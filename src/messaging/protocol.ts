@@ -27,8 +27,14 @@ export type BgRequest =
   | { kind: 'list-models'; profileId: string }
   | { kind: 'test-connection'; profileId: string };
 
-/** One-off messages the background sends to a tab's content script. */
-export type ContentMessage = { type: 'open-selection-panel' } | { type: 'translate-page' };
+/** One-off messages the background / popup send to a tab's content script. */
+export type ContentMessage =
+  | { type: 'open-selection-panel' }
+  | { type: 'translate-page' }
+  | { type: 'get-page-status' };
+
+/** Reply to a get-page-status query. */
+export type PageStatusReply = 'idle' | 'translating' | 'done';
 
 /** Events the background emits back over the port. */
 export type BgEvent =

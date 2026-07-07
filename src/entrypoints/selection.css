@@ -252,6 +252,20 @@
   font-size: 13px;
 }
 
+.llmt-toolbar__grip {
+  cursor: grab;
+  color: var(--llmt-muted);
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 2px;
+  user-select: none;
+  touch-action: none;
+}
+
+.llmt-toolbar__grip:active {
+  cursor: grabbing;
+}
+
 .llmt-toolbar__label {
   font-weight: 550;
   white-space: nowrap;
