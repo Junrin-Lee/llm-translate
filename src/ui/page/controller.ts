@@ -2,7 +2,13 @@ import { runRpc } from '@/messaging/port-client';
 import type { ContentMessage } from '@/messaging/protocol';
 import { collectSegments } from '@/segmenter';
 import { getSettings } from '@/storage';
-import { injectTranslation, isPageTranslated, restorePage } from '@/translator/inject';
+import {
+  finalizeErrors,
+  injectPlaceholder,
+  injectTranslation,
+  isPageTranslated,
+  restorePage,
+} from '@/translator/inject';
 import { type PageTranslateController, translateSegments } from '@/translator/orchestrator';
 
 let active: PageTranslateController | null = null;
@@ -20,6 +26,9 @@ async function translatePage(): Promise<void> {
   }
 
   const elementById = new Map(segments.map((s) => [s.id, s.element]));
+
+  // Show a loading placeholder under every segment right away so progress is visible.
+  for (const s of segments) injectPlaceholder(s.element);
 
   active?.cancel();
   active = translateSegments(
@@ -39,7 +48,10 @@ async function translatePage(): Promise<void> {
         const element = elementById.get(id);
         if (element) injectTranslation(element, text);
       },
-      onProgress: () => {},
+      onProgress: (done, total) => {
+        // Any placeholder still pending at the end failed or was dropped.
+        if (done >= total) finalizeErrors(document.body);
+      },
       onError: (error) => console.warn('[llm-translate] page batch failed', error),
     },
   );
