@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { BRAND } from '@/brand';
 import type { ProviderProfile } from '@/llm/types';
 import type { GeneralSettings, ProfileDefaults, PromptOverrides } from '@/storage/schema';
+import { BackupPanel } from './BackupPanel';
 import { DefaultsPanel } from './DefaultsPanel';
 import { GeneralPanel } from './GeneralPanel';
 import { PromptsPanel } from './PromptsPanel';
@@ -149,6 +150,15 @@ export function App() {
           </h2>
         </div>
         <PromptsPanel prompts={settings.prompts} onChange={setPrompts} />
+      </section>
+
+      <section className="section">
+        <div className="section__head">
+          <h2 className="section__title">
+            <span className="eyebrow">Backup</span>
+          </h2>
+        </div>
+        <BackupPanel settings={settings} />
       </section>
     </main>
   );
