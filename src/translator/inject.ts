@@ -1,5 +1,7 @@
 const MARK = 'data-llmt';
 const SRC_MARK = 'data-llmt-src';
+const ORIG_MARK = 'data-llmt-orig';
+const REPLACE_CLASS = 'llmt-mode-replace';
 const STYLE_ID = 'llmt-page-style';
 
 const PAGE_CSS = `
@@ -10,6 +12,8 @@ const PAGE_CSS = `
   background-size:400% 100%;animation:llmt-shimmer 1.4s ease infinite;
 }
 [${MARK}].llmt-error{color:#c0392b;font-size:.9em;}
+[${ORIG_MARK}]{display:contents;}
+.${REPLACE_CLASS} [${ORIG_MARK}]{display:none;}
 @keyframes llmt-shimmer{0%{background-position:100% 50%}100%{background-position:0 50%}}
 @media (prefers-reduced-motion:reduce){[${MARK}].llmt-loading{animation:none;opacity:.5}}
 `;
@@ -22,14 +26,26 @@ function ensurePageStyles(doc: Document): void {
   doc.head.appendChild(style);
 }
 
-function existingNode(element: Element): Element | undefined {
-  return Array.from(element.children).find((child) => child.hasAttribute(MARK));
+function childWith(element: Element, attr: string): Element | undefined {
+  return Array.from(element.children).find((child) => child.hasAttribute(attr));
 }
 
+/**
+ * Get (or create) the translation node under `element`. On first creation the
+ * original content is moved into a display:contents wrapper so "translation
+ * only" mode can hide it without losing it.
+ */
 function nodeFor(element: Element): Element {
-  const current = existingNode(element);
-  if (current) return current;
-  const node = element.ownerDocument.createElement('div');
+  const existing = childWith(element, MARK);
+  if (existing) return existing;
+
+  const doc = element.ownerDocument;
+  const wrapper = doc.createElement('span');
+  wrapper.setAttribute(ORIG_MARK, '1');
+  while (element.firstChild) wrapper.appendChild(element.firstChild);
+  element.appendChild(wrapper);
+
+  const node = doc.createElement('div');
   node.setAttribute(MARK, '1');
   node.setAttribute('dir', 'auto');
   element.appendChild(node);
@@ -66,14 +82,27 @@ export function finalizeErrors(root: ParentNode): void {
   }
 }
 
+/** Toggle "translation only" mode (hides the original via the wrapper). */
+export function setReplaceMode(replace: boolean): void {
+  document.documentElement.classList.toggle(REPLACE_CLASS, replace);
+}
+
 export function isPageTranslated(root: ParentNode): boolean {
   return root.querySelector(`[${MARK}]`) !== null;
 }
 
-/** Remove all injected nodes and source markers; return the count removed. */
+/** Remove injected nodes, unwrap originals, and reset mode; return elements restored. */
 export function restorePage(root: ParentNode): number {
-  const injected = root.querySelectorAll(`[${MARK}]`);
-  for (const node of injected) node.remove();
-  for (const el of root.querySelectorAll(`[${SRC_MARK}]`)) el.removeAttribute(SRC_MARK);
-  return injected.length;
+  const elements = root.querySelectorAll(`[${SRC_MARK}]`);
+  for (const element of elements) {
+    const wrapper = childWith(element, ORIG_MARK);
+    if (wrapper) {
+      while (wrapper.firstChild) element.insertBefore(wrapper.firstChild, wrapper);
+      wrapper.remove();
+    }
+    childWith(element, MARK)?.remove();
+    element.removeAttribute(SRC_MARK);
+  }
+  document.documentElement.classList.remove(REPLACE_CLASS);
+  return elements.length;
 }

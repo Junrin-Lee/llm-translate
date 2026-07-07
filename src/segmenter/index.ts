@@ -8,7 +8,7 @@ export interface Segment {
 const BLOCK_SELECTOR = 'p, li, h1, h2, h3, h4, h5, h6, td, blockquote, dd, figcaption';
 // Never translate inside these, and never re-collect our own injected nodes.
 const SKIP_SELECTOR =
-  'script, style, code, pre, textarea, [contenteditable="true"], [contenteditable=""], [data-llmt]';
+  'script, style, code, pre, textarea, [contenteditable="true"], [contenteditable=""], [data-llmt], [data-llmt-orig]';
 
 function normalizeText(raw: string): string {
   return raw.replace(/\s+/g, ' ').trim();

@@ -1,12 +1,14 @@
 import { runRpc } from '@/messaging/port-client';
 import { collectSegments, type Segment } from '@/segmenter';
-import { getSettings } from '@/storage';
+import { getSettings, updateSettings } from '@/storage';
+import type { PageMode } from '@/storage/schema';
 import {
   finalizeErrors,
   injectPlaceholder,
   injectTranslation,
   isPageTranslated,
   restorePage,
+  setReplaceMode,
 } from '@/translator/inject';
 import {
   type PageTranslateController,
@@ -20,6 +22,7 @@ export interface PageState {
   status: PageStatus;
   done: number;
   total: number;
+  mode: PageMode;
 }
 
 // Translate a bit beyond the viewport so content is ready before it scrolls in.
@@ -28,7 +31,7 @@ const FLUSH_DELAY_MS = 150;
 const RESCAN_DELAY_MS = 300;
 const LOCATION_EVENT = 'llmt:locationchange';
 
-let state: PageState = { status: 'idle', done: 0, total: 0 };
+let state: PageState = { status: 'idle', done: 0, total: 0, mode: 'bilingual' };
 const listeners = new Set<() => void>();
 
 let observer: IntersectionObserver | null = null;
@@ -225,7 +228,9 @@ async function translate(): Promise<void> {
   nextId = 0;
   globalDone = 0;
   total = 0;
-  setState({ status: 'translating', done: 0, total: 0 });
+  const mode = settings.general.pageMode;
+  setReplaceMode(mode === 'replace');
+  setState({ status: 'translating', done: 0, total: 0, mode });
 
   observer = new IntersectionObserver(onIntersect, { rootMargin: ROOT_MARGIN });
   trackNewSegments(segments);
@@ -281,6 +286,14 @@ export function restore(): void {
 export function toggle(): void {
   if (state.status === 'idle' && !isPageTranslated(document.body)) void translate();
   else restore();
+}
+
+/** Switch between bilingual and translation-only display, persisting the choice. */
+export async function setMode(mode: PageMode): Promise<void> {
+  setReplaceMode(mode === 'replace');
+  setState({ mode });
+  const settings = await getSettings();
+  await updateSettings({ general: { ...settings.general, pageMode: mode } });
 }
 
 /** On load, translate automatically if this host is on the auto-translate list. */

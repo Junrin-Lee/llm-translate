@@ -1,5 +1,5 @@
 import { useRef, useState, useSyncExternalStore } from 'react';
-import { cancel, getState, restore, subscribe } from './store';
+import { cancel, getState, restore, setMode, subscribe } from './store';
 
 export function PageToolbar() {
   const state = useSyncExternalStore(subscribe, getState);
@@ -45,6 +45,14 @@ export function PageToolbar() {
       <span className="llmt-toolbar__grip" onPointerDown={startDrag} title="Drag to move">
         ⠿
       </span>
+      <button
+        type="button"
+        className="llmt-toolbar__btn"
+        title="Switch between bilingual and translation-only"
+        onClick={() => void setMode(state.mode === 'bilingual' ? 'replace' : 'bilingual')}
+      >
+        {state.mode === 'bilingual' ? 'Bilingual' : 'Only'}
+      </button>
       {translating ? (
         <>
           <span className="llmt-toolbar__label">

@@ -6,6 +6,7 @@ import {
   injectTranslation,
   isPageTranslated,
   restorePage,
+  setReplaceMode,
 } from '@/translator/inject';
 
 describe('injectTranslation', () => {
@@ -103,5 +104,40 @@ describe('loading & error states', () => {
 
     expect(p1!.querySelector('[data-llmt]')?.classList.contains('llmt-error')).toBe(false);
     expect(p2!.querySelector('[data-llmt]')?.classList.contains('llmt-error')).toBe(true);
+  });
+});
+
+describe('translation-only mode', () => {
+  beforeEach(() => {
+    document.body.innerHTML = '';
+    document.documentElement.className = '';
+  });
+
+  it('wraps the original content so it can be hidden and restored', () => {
+    document.body.innerHTML = '<p>Hello</p>';
+    const p = document.querySelector('p')!;
+    injectTranslation(p, '你好');
+
+    const wrapper = p.querySelector('[data-llmt-orig]');
+    expect(wrapper?.textContent).toBe('Hello');
+
+    restorePage(document.body);
+    expect(p.textContent).toBe('Hello');
+    expect(p.querySelector('[data-llmt-orig]')).toBeNull();
+  });
+
+  it('toggles the replace-mode class on the document element', () => {
+    setReplaceMode(true);
+    expect(document.documentElement.classList.contains('llmt-mode-replace')).toBe(true);
+    setReplaceMode(false);
+    expect(document.documentElement.classList.contains('llmt-mode-replace')).toBe(false);
+  });
+
+  it('clears the replace-mode class on restore', () => {
+    document.body.innerHTML = '<p>x</p>';
+    injectTranslation(document.querySelector('p')!, 'y');
+    setReplaceMode(true);
+    restorePage(document.body);
+    expect(document.documentElement.classList.contains('llmt-mode-replace')).toBe(false);
   });
 });
