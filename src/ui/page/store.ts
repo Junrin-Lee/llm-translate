@@ -50,8 +50,15 @@ let lastHref = '';
 let historyPatched = false;
 
 function setState(patch: Partial<PageState>): void {
+  const previousStatus = state.status;
   state = { ...state, ...patch };
   for (const listener of listeners) listener();
+  if (state.status !== previousStatus) {
+    // Let the background update the context-menu label for this tab.
+    browser.runtime
+      .sendMessage({ type: 'page-status-changed', status: state.status })
+      .catch(() => {});
+  }
 }
 
 export function subscribe(listener: () => void): () => void {

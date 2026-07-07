@@ -36,6 +36,9 @@ export type ContentMessage =
 /** Reply to a get-page-status query. */
 export type PageStatusReply = 'idle' | 'translating' | 'done';
 
+/** Content → background notification when the page translation status changes. */
+export type TabMessage = { type: 'page-status-changed'; status: PageStatusReply };
+
 /** Events the background emits back over the port. */
 export type BgEvent =
   | { type: 'delta'; text: string }

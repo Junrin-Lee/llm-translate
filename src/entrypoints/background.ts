@@ -4,6 +4,8 @@ import {
   type BgEvent,
   type BgRequest,
   type ContentMessage,
+  type PageStatusReply,
+  type TabMessage,
   TRANSLATE_PORT,
 } from '@/messaging/protocol';
 import { getSettings, resolveProfile } from '@/storage';
@@ -33,6 +35,15 @@ async function sendToActiveTab(message: ContentMessage): Promise<void> {
 
 const MENU_PAGE = 'llmt-translate-page';
 const MENU_SELECTION = 'llmt-translate-selection';
+
+async function syncPageMenu(status: PageStatusReply): Promise<void> {
+  const title = status === 'idle' ? 'Translate this page' : 'Restore original';
+  try {
+    await browser.contextMenus.update(MENU_PAGE, { title });
+  } catch {
+    // Menu not created yet — ignore.
+  }
+}
 
 export default defineBackground(() => {
   // Keyboard commands (declared in wxt.config manifest) route to the active tab.
@@ -65,6 +76,25 @@ export default defineBackground(() => {
           ? { type: 'open-selection-panel' }
           : null;
     if (message) void browser.tabs.sendMessage(tab.id, message).catch(() => {});
+  });
+
+  // Keep the "Translate this page" / "Restore original" label in sync with the
+  // active tab's translation state.
+  browser.runtime.onMessage.addListener((message: TabMessage, sender) => {
+    if (message?.type === 'page-status-changed' && sender.tab?.active) {
+      void syncPageMenu(message.status);
+    }
+  });
+
+  browser.tabs.onActivated.addListener(async ({ tabId }) => {
+    try {
+      const status = (await browser.tabs.sendMessage(tabId, { type: 'get-page-status' })) as
+        | PageStatusReply
+        | undefined;
+      await syncPageMenu(status ?? 'idle');
+    } catch {
+      await syncPageMenu('idle');
+    }
   });
 
   // Single LLM request exit for the whole extension (ADR-0001). Content and
