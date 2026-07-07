@@ -11,6 +11,14 @@ export default defineConfig({
     'build:manifestGenerated': (_wxt, manifest) => {
       manifest.action ??= {};
       manifest.action.default_title = BRAND.name;
+      // Toolbar action icon. WXT auto-detects `public/icon/*.png` into
+      // manifest.icons; mirror them onto the action so the toolbar button
+      // renders the brand mark at small densities.
+      manifest.action.default_icon = {
+        16: 'icon/16.png',
+        32: 'icon/32.png',
+        48: 'icon/48.png',
+      };
       // Open the settings page as a full tab (WXT defaults options_ui to embedded).
       if (manifest.options_ui) manifest.options_ui.open_in_tab = true;
     },
