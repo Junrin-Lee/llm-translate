@@ -76,7 +76,7 @@ export function ProviderCard({ profile, isGlobalDefault, onPatch, onDelete }: Pr
           aria-label="Provider name"
           onChange={(e) => onPatch({ name: e.target.value })}
         />
-        {isGlobalDefault && <span className="badge">Default</span>}
+        {isGlobalDefault && <span className="badge">Using</span>}
         <div className="segmented">
           {(['openai', 'anthropic'] as const).map((p) => (
             <button
