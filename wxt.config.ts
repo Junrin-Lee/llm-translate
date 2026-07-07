@@ -31,11 +31,11 @@ export default defineConfig({
     // chrome://extensions/shortcuts.
     commands: {
       'translate-selection': {
-        suggested_key: { default: 'Alt+S' },
+        suggested_key: { default: 'Ctrl+Shift+S', mac: 'Command+Shift+S' },
         description: 'Translate the current selection',
       },
       'translate-page': {
-        suggested_key: { default: 'Alt+P' },
+        suggested_key: { default: 'Ctrl+Shift+P', mac: 'Command+Shift+P' },
         description: 'Translate the whole page',
       },
     },

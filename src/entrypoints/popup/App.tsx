@@ -29,8 +29,10 @@ export function App() {
         <button
           type="button"
           className="popup__btn"
-          onClick={() => {
-            void sendToActiveTab({ type: 'translate-page' });
+          onClick={async () => {
+            // Await the send before closing — closing the popup first tears down
+            // this context and the message never leaves.
+            await sendToActiveTab({ type: 'translate-page' });
             window.close();
           }}
         >

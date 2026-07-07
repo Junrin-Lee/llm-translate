@@ -13,7 +13,11 @@ async function translatePage(): Promise<void> {
   const { general } = await getSettings();
   const targetLang = general.targetLang;
   const segments = collectSegments(document.body);
-  if (segments.length === 0) return;
+  console.info(`[llm-translate] page translation: ${segments.length} segments → ${targetLang}`);
+  if (segments.length === 0) {
+    console.warn('[llm-translate] no translatable segments found on this page');
+    return;
+  }
 
   const elementById = new Map(segments.map((s) => [s.id, s.element]));
 
@@ -51,6 +55,7 @@ function restore(): void {
 export function setupPageTranslation(): void {
   browser.runtime.onMessage.addListener((message: ContentMessage) => {
     if (message?.type !== 'translate-page') return;
+    console.info('[llm-translate] translate-page received');
     // Toggle: translate a fresh page, restore an already-translated one.
     if (isPageTranslated(document.body)) restore();
     else void translatePage();
