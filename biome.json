@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!**/.wxt", "!**/.output", "!**/dist", "!**/coverage", "!assets/**"]
+    "includes": ["**", "!**/.wxt", "!**/.output", "!**/dist", "!**/coverage", "!assets"]
   },
   "formatter": {
     "enabled": true,

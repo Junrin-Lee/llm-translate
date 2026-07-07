@@ -5,6 +5,9 @@ dist
 coverage
 stats.html
 *.zip
+test-results
+playwright-report
+.playwright
 .DS_Store
 *.log
 .env

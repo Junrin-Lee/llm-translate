@@ -38,3 +38,28 @@ jobs:
 
       - name: Build (chrome-mv3)
         run: pnpm build
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      # `pnpm e2e` builds the extension, starts the mock LLM server (Playwright
+      # webServer), and runs the Playwright specs against a real Chromium.
+      - name: E2E (Playwright)
+        run: pnpm e2e
