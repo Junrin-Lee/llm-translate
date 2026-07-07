@@ -275,3 +275,9 @@ export function toggle(): void {
   if (state.status === 'idle' && !isPageTranslated(document.body)) void translate();
   else restore();
 }
+
+/** On load, translate automatically if this host is on the auto-translate list. */
+export async function maybeAutoTranslate(): Promise<void> {
+  const { siteRules } = await getSettings();
+  if (siteRules.autoTranslate.includes(location.hostname)) void translate();
+}

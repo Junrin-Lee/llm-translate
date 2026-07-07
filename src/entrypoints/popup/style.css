@@ -70,3 +70,23 @@ body {
 .popup__btn--secondary:hover {
   background: color-mix(in srgb, currentColor 8%, transparent);
 }
+
+.popup__check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.popup__check input {
+  accent-color: var(--accent);
+}
+
+.popup__check b {
+  font-weight: 600;
+  word-break: break-all;
+}

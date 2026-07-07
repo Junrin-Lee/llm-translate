@@ -2,6 +2,7 @@ import './selection.css';
 import ReactDOM from 'react-dom/client';
 import { setupPageTranslation } from '@/ui/page/controller';
 import { PageToolbar } from '@/ui/page/PageToolbar';
+import { maybeAutoTranslate } from '@/ui/page/store';
 import { SelectionApp } from '@/ui/selection/SelectionApp';
 
 export default defineContentScript({
@@ -12,6 +13,7 @@ export default defineContentScript({
     // Full-page translation runs against the light DOM, separate from the
     // Shadow-DOM selection UI below.
     setupPageTranslation();
+    void maybeAutoTranslate();
 
     const ui = await createShadowRootUi(ctx, {
       name: 'llm-translate-ui',

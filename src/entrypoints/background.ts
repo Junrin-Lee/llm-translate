@@ -31,11 +31,40 @@ async function sendToActiveTab(message: ContentMessage): Promise<void> {
   }
 }
 
+const MENU_PAGE = 'llmt-translate-page';
+const MENU_SELECTION = 'llmt-translate-selection';
+
 export default defineBackground(() => {
   // Keyboard commands (declared in wxt.config manifest) route to the active tab.
   browser.commands.onCommand.addListener((command) => {
     if (command === 'translate-selection') void sendToActiveTab({ type: 'open-selection-panel' });
     else if (command === 'translate-page') void sendToActiveTab({ type: 'translate-page' });
+  });
+
+  // Right-click entries: whole page, or the current selection.
+  browser.runtime.onInstalled.addListener(async () => {
+    await browser.contextMenus.removeAll();
+    browser.contextMenus.create({
+      id: MENU_PAGE,
+      title: 'Translate this page',
+      contexts: ['page'],
+    });
+    browser.contextMenus.create({
+      id: MENU_SELECTION,
+      title: 'Translate selection',
+      contexts: ['selection'],
+    });
+  });
+
+  browser.contextMenus.onClicked.addListener((info, tab) => {
+    if (tab?.id == null) return;
+    const message: ContentMessage | null =
+      info.menuItemId === MENU_PAGE
+        ? { type: 'translate-page' }
+        : info.menuItemId === MENU_SELECTION
+          ? { type: 'open-selection-panel' }
+          : null;
+    if (message) void browser.tabs.sendMessage(tab.id, message).catch(() => {});
   });
 
   // Single LLM request exit for the whole extension (ADR-0001). Content and
