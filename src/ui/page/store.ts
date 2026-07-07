@@ -25,21 +25,29 @@ export interface PageState {
 // Translate a bit beyond the viewport so content is ready before it scrolls in.
 const ROOT_MARGIN = '600px 0px';
 const FLUSH_DELAY_MS = 150;
+const RESCAN_DELAY_MS = 300;
+const LOCATION_EVENT = 'llmt:locationchange';
 
 let state: PageState = { status: 'idle', done: 0, total: 0 };
 const listeners = new Set<() => void>();
 
 let observer: IntersectionObserver | null = null;
+let mutationObserver: MutationObserver | null = null;
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
+let rescanTimer: ReturnType<typeof setTimeout> | null = null;
 let flushing = false;
 const controllers = new Set<PageTranslateController>();
 let pending: Segment[] = [];
 const queued = new Set<number>();
 const elementById = new Map<number, Element>();
 const segmentByElement = new Map<Element, Segment>();
+const trackedElements = new Set<Element>();
+let nextId = 0;
 let targetLang = 'zh-CN';
 let total = 0;
 let globalDone = 0;
+let lastHref = '';
+let historyPatched = false;
 
 function setState(patch: Partial<PageState>): void {
   state = { ...state, ...patch };
@@ -68,6 +76,26 @@ function makeTranslate(): TranslateBatchFn {
     if (event.type === 'error') throw new Error(event.message);
     throw new Error('Unexpected background response');
   };
+}
+
+/** Register untracked segments with store-owned ids and start observing them. */
+function trackNewSegments(segments: Segment[]): void {
+  let added = 0;
+  for (const segment of segments) {
+    if (trackedElements.has(segment.element)) continue;
+    trackedElements.add(segment.element);
+    const id = nextId;
+    nextId += 1;
+    const tracked: Segment = { id, element: segment.element, text: segment.text };
+    elementById.set(id, segment.element);
+    segmentByElement.set(segment.element, tracked);
+    observer?.observe(segment.element);
+    added += 1;
+  }
+  if (added > 0) {
+    total = nextId;
+    setState({ total });
+  }
 }
 
 function scheduleFlush(): void {
@@ -129,6 +157,52 @@ function onIntersect(entries: IntersectionObserverEntry[]): void {
   }
 }
 
+function scheduleRescan(): void {
+  if (rescanTimer !== null) return;
+  rescanTimer = setTimeout(() => {
+    rescanTimer = null;
+    if (state.status !== 'idle') trackNewSegments(collectSegments(document.body));
+  }, RESCAN_DELAY_MS);
+}
+
+function onMutation(mutations: MutationRecord[]): void {
+  // Rescan only when foreign content is added — ignore our own injected nodes.
+  for (const mutation of mutations) {
+    for (const node of mutation.addedNodes) {
+      if (node.nodeType === Node.ELEMENT_NODE && !(node as Element).hasAttribute('data-llmt')) {
+        scheduleRescan();
+        return;
+      }
+    }
+  }
+}
+
+function installHistoryPatch(): void {
+  if (historyPatched) return;
+  historyPatched = true;
+  const fire = () => window.dispatchEvent(new Event(LOCATION_EVENT));
+  const origPush = history.pushState.bind(history);
+  const origReplace = history.replaceState.bind(history);
+  history.pushState = (...args: Parameters<History['pushState']>) => {
+    const result = origPush(...args);
+    fire();
+    return result;
+  };
+  history.replaceState = (...args: Parameters<History['replaceState']>) => {
+    const result = origReplace(...args);
+    fire();
+    return result;
+  };
+  window.addEventListener('popstate', fire);
+}
+
+function onLocationChange(): void {
+  if (location.href !== lastHref && state.status !== 'idle') {
+    // SPA navigated to a new page — drop stale translation state.
+    restore();
+  }
+}
+
 async function translate(): Promise<void> {
   if (state.status === 'translating' || isPageTranslated(document.body)) return;
 
@@ -141,24 +215,35 @@ async function translate(): Promise<void> {
     return;
   }
 
-  total = segments.length;
+  nextId = 0;
   globalDone = 0;
-  for (const segment of segments) {
-    elementById.set(segment.id, segment.element);
-    segmentByElement.set(segment.element, segment);
-  }
-  setState({ status: 'translating', done: 0, total });
+  total = 0;
+  setState({ status: 'translating', done: 0, total: 0 });
 
   observer = new IntersectionObserver(onIntersect, { rootMargin: ROOT_MARGIN });
-  for (const segment of segments) observer.observe(segment.element);
+  trackNewSegments(segments);
+
+  // Follow content added later (infinite scroll, SPA sections) and route changes.
+  mutationObserver = new MutationObserver(onMutation);
+  mutationObserver.observe(document.body, { childList: true, subtree: true });
+  installHistoryPatch();
+  lastHref = location.href;
+  window.addEventListener(LOCATION_EVENT, onLocationChange);
 }
 
 function teardown(): void {
   observer?.disconnect();
   observer = null;
+  mutationObserver?.disconnect();
+  mutationObserver = null;
+  window.removeEventListener(LOCATION_EVENT, onLocationChange);
   if (flushTimer !== null) {
     clearTimeout(flushTimer);
     flushTimer = null;
+  }
+  if (rescanTimer !== null) {
+    clearTimeout(rescanTimer);
+    rescanTimer = null;
   }
   for (const controller of controllers) controller.cancel();
   controllers.clear();
@@ -166,7 +251,9 @@ function teardown(): void {
   queued.clear();
   elementById.clear();
   segmentByElement.clear();
+  trackedElements.clear();
   flushing = false;
+  nextId = 0;
   globalDone = 0;
   total = 0;
 }
