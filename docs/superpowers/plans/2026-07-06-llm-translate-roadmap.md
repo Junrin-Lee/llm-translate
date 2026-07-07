@@ -202,7 +202,7 @@ export function cacheKey(p: { protocol: string; model: string; promptVersion: st
 | **T3.1** 分块器 | `collectSegments`:遍历 `p/li/h1-h6/td/blockquote/dd/figcaption` 等;短块合并(<20 字符并入相邻)、超长拆分(>1000 字符按句);跳过 code/pre/script/style/textarea/contenteditable/纯链接/纯数字;可见性过滤 | src/segmenter/index.ts, tests/segmenter/*.test.ts + fixtures/*.html | 新闻页/表格/代码文档/嵌套列表 4 组 fixture 单测绿 | — | L |
 | **T3.2** 批量协议 | `encodeBatch`(`@@n@@` 行标记)+ `decodeBatch`(缺号跳过、乱序容忍、多余丢弃) | src/translator/batch.ts, tests/translator/batch.test.ts | 单测:正常/缺号/乱序/粘连 case 绿 | — | S |
 | **T3.3** 编排器 | `translateSegments`:按 token 预算组包(估算 len/2,≤1500 输出)、并发池(默认 3)、失败批次重试 1 次、`chrome.i18n.detectLanguage` 跳过同目标语言块、AbortController 全局取消 | src/translator/orchestrator.ts, tests/translator/orchestrator.test.ts | 单测(mock client):组包/并发上限/取消/跳过 | T3.1-2, T1.6 | L |
-| **T3.4** 缓存 | 内存 Map + storage.local LRU(≈5MB 上限,LRU 淘汰);`cacheKey` 含 promptVersion | src/translator/cache.ts, tests/translator/cache.test.ts | 单测:命中/淘汰/清空;手动:刷新页面重译秒回 | T1.7 | M |
+| **T3.4** 缓存 | 见下方「缓存设计」;background 集中缓存 + 浮层内记忆,按内容 key、LRU 淘汰,`cacheKey` 含 mode/promptVersion,Retry 绕过 | src/translator/cache.ts, tests/translator/cache.test.ts | 单测:命中/淘汰/清空;手动:切 dict/text 与刷新页面秒回 | T1.7 | M |
 | **T3.5** DOM 注入 | 双语对照:原块后插 `data-llmt` 标记节点(textContent);仅译文:隐藏原块;`restorePage()` 全还原;模式热切换 | entrypoints/content.tsx, src/ui/inject.ts, tests/ui/inject.test.ts(happy-dom) | 单测:注入/还原幂等;手动:两模式切换无残留 | T3.1 | M |
 | **T3.6** 懒翻译 | IntersectionObserver:视口 ±1 屏优先入队,滚动追加;与编排器队列衔接 | entrypoints/content.tsx | 手动:长页首屏先出,滚动补翻 | T3.3, T3.5 | M |
 | **T3.7** 动态内容 | MutationObserver 增量收块进队;SPA URL 变化(history hook)重置翻译态 | entrypoints/content.tsx | 手动:Twitter/官方文档 SPA 切页正常 | T3.6 | M |
@@ -239,6 +239,16 @@ M2+M3 → M4 → M5(T5.1 只依赖 M2,可提前)
 ```
 
 **估算汇总**:S=≤0.5 天,M=1 天,L=1.5-2 天;合计约 **35-40 人天**。
+
+## 缓存设计(2026-07-07 与产品负责人讨论确认)
+
+翻译结果对固定输入是稳定的,**按内容做 key、按容量淘汰(LRU),不按时间过期**;"强制刷新"由 Retry 承担(绕过缓存)。分两层:
+
+- **第一层 · 浮层内记忆**(随 M2 划词做,零存储):浮层把 dict / text 两种模式的结果留在组件 state,切换模式或来回查看**瞬时命中、零请求**;切换目标语言才失效。直接消除"切换即重发"的体验问题。
+- **第二层 · background 集中缓存**(T3.4):所有请求走单一出口,在 background 按 `hash(protocol + model + promptVersion + targetLang + mode + 原文)` 缓存。命中则把完整结果当一个 delta + done 发回(不改消息协议、不调 API);未命中则流式并在结束后写入。
+  - 存储介质:划词用 **`chrome.storage.session`**(内存、关浏览器自动清、不落盘,隐私最好);全文翻译用 **`storage.local`**(跨会话持久,体量大)。
+  - 容量:LRU 上限(≈5MB 或 N 条),配 T4.4 的用量显示 + 一键清空。
+- **明确不引入 Redis / 任何服务端缓存**:违背无后端(ADR-0001)与数据只在本机(ADR-0002)的核心定位;客户端存储已免费覆盖需求。
 
 ## 里程碑验收(来自 docs/plan.md §11)
 
