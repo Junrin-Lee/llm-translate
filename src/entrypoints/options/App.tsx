@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { BRAND } from '@/brand';
 import type { ProviderProfile } from '@/llm/types';
-import type { ProfileDefaults } from '@/storage/schema';
+import type { GeneralSettings, ProfileDefaults } from '@/storage/schema';
 import { DefaultsPanel } from './DefaultsPanel';
+import { GeneralPanel } from './GeneralPanel';
 import { ProviderCard } from './ProviderCard';
 import { useSettings } from './useSettings';
 
@@ -59,6 +60,12 @@ export function App() {
   };
 
   const setDefaults = (defaults: ProfileDefaults) => mutate((s) => ({ ...s, defaults }));
+
+  const setGeneral = (patch: Partial<GeneralSettings>) =>
+    mutate((s) => ({ ...s, general: { ...s.general, ...patch } }));
+
+  const setDisabledSites = (sites: string[]) =>
+    mutate((s) => ({ ...s, siteRules: { ...s.siteRules, disableSelection: sites } }));
 
   const { providers, defaults } = settings;
 
@@ -117,6 +124,20 @@ export function App() {
           <DefaultsPanel providers={providers} defaults={defaults} onChange={setDefaults} />
         </section>
       )}
+
+      <section className="section">
+        <div className="section__head">
+          <h2 className="section__title">
+            <span className="eyebrow">Translation</span>
+          </h2>
+        </div>
+        <GeneralPanel
+          general={settings.general}
+          disabledSites={settings.siteRules.disableSelection}
+          onGeneral={setGeneral}
+          onDisabledSites={setDisabledSites}
+        />
+      </section>
     </main>
   );
 }
