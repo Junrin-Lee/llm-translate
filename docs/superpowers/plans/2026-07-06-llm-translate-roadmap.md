@@ -10,7 +10,7 @@
 
 **Tech Stack:** WXT、React 19、TypeScript(strict)、pnpm、Biome、vitest(+ WxtVitest/fake-browser)、Playwright、GitHub Actions。
 
-> **进度(截至 2026-07-07):** M0–M4 已完成并通过单测(164 例);M5(上架收尾)尚未开始。下方各里程碑标题的 ✅ / ⬜ 表示当前状态。
+> **进度(截至 2026-07-07):** M0–M5 主体已完成(164 单测 + 2 Playwright E2E 冒烟通过);仅剩 Chrome/Edge 商店的**实际提交**(需开发者账号,由维护者手动完成)。下方各里程碑标题的 ✅ / ⬜ 表示当前状态。
 
 ## 全局约束(每个任务隐含遵守)
 
@@ -226,7 +226,12 @@ export function cacheKey(p: { protocol: string; model: string; promptVersion: st
 | **T4.3** i18n | WXT i18n 模块;zh_CN + en 两套 messages;UI 文案全部走 i18n key | public/_locales/*, 全 UI 文件 | 切换浏览器语言 UI 跟随;无硬编码文案(grep 检查) | M2-3 | M |
 | **T4.4** 杂项收尾 | 缓存用量显示/一键清空;快捷键说明+跳转 `chrome://extensions/shortcuts`(MV3 不可编程修改);「选中即翻」防抖参数与费用提示文案 | entrypoints/options/* | 手动清单逐项过 | T3.4 | S |
 
-## M5 质量与上架 ⬜
+## M5 质量与上架 ✅(除商店实际提交)
+
+> 状态:T5.1/T5.2 E2E(Playwright 加载扩展 + mock LLM + 划词/全文冒烟 + CI e2e job)✅;
+> T5.3 品牌定稿(LLM Translate)+ 图标(见 `assets/logo/`)+ 商店截图(`pnpm screenshots` → `store-assets/screenshots/`)+ 中英 listing(`store-assets/listing.*.md`)✅;
+> T5.4 隐私政策(`docs/privacy-policy.md`)+ 权限 justification(`store-assets/justifications.md`)✅;
+> T5.5 release.yml(tag→build→zip→GH Release)✅、版本 0.1.0 ✅。**唯一待办:CWS + Edge 首次人工提交(需维护者账号)。**
 
 | 任务 | 内容 | Files | 验收 | 依赖 | 估 |
 |---|---|---|---|---|---|
