@@ -169,3 +169,32 @@ describe('handleRequest list-models & test-connection', () => {
     ]);
   });
 });
+
+describe('handleRequest translate-batch', () => {
+  it('renders the page-batch prompt on the payload and returns the raw completion', async () => {
+    const completeSpy = vi.fn(async () => ({ text: '@@0@@\n译文' }));
+    const client = fakeClient({
+      complete: completeSpy as unknown as TranslationClient['complete'],
+    });
+    const { emit, events } = collector();
+    await handleRequest(
+      {
+        kind: 'translate-batch',
+        feature: 'page',
+        payload: '@@0@@\nHello',
+        vars: { targetLang: 'zh-CN' },
+      },
+      emit,
+      {
+        getSettings: async () => settingsWith([profile]),
+        resolveProfile: async () => profile,
+        createClient: () => client,
+      },
+    );
+    expect(events).toEqual([{ type: 'batch-result', text: '@@0@@\n译文' }]);
+    expect(completeSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ user: '@@0@@\nHello', model: 'gpt-4o-mini' }),
+      undefined,
+    );
+  });
+});

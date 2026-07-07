@@ -15,6 +15,13 @@ export type BgRequest =
       promptKind: 'selectionDict' | 'selectionText';
       vars: PromptVars;
     }
+  | {
+      // payload is an already-encoded batch (orchestrator owns encode/decode).
+      kind: 'translate-batch';
+      feature: 'page';
+      payload: string;
+      vars: Omit<PromptVars, 'text'>;
+    }
   | { kind: 'list-models'; profileId: string }
   | { kind: 'test-connection'; profileId: string };
 
@@ -24,6 +31,7 @@ export type ContentMessage = { type: 'open-selection-panel' } | { type: 'transla
 /** Events the background emits back over the port. */
 export type BgEvent =
   | { type: 'delta'; text: string }
+  | { type: 'batch-result'; text: string }
   | { type: 'done'; usage?: TokenUsage }
   | { type: 'models'; models: string[] }
   | {

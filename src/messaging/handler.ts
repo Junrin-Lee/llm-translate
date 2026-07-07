@@ -48,6 +48,26 @@ export async function handleRequest(
         emit({ type: 'done', usage: result.usage });
         return;
       }
+      case 'translate-batch': {
+        const settings = await deps.getSettings();
+        const profile = await deps.resolveProfile('page');
+        if (!profile) {
+          emit({ type: 'error', code: 'not_found', message: 'No provider configured' });
+          return;
+        }
+        const rendered = renderPrompt(
+          'pageBatch',
+          { ...req.vars, text: req.payload },
+          settings.prompts,
+        );
+        const client = deps.createClient(profile);
+        const result = await client.complete(
+          { system: rendered.system, user: rendered.user, model: profile.model },
+          signal,
+        );
+        emit({ type: 'batch-result', text: result.text });
+        return;
+      }
       case 'list-models': {
         const settings = await deps.getSettings();
         const profile = settings.providers.find((p) => p.id === req.profileId);

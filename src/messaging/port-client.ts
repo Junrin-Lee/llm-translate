@@ -55,10 +55,14 @@ export function openTranslateStream(
 
 /**
  * Send a one-shot request to the background and resolve with its single
- * terminal event (used by list-models / test-connection, which emit exactly
- * one event). Streaming requests use openTranslatePort instead (added in M2).
+ * terminal event (list-models / test-connection / translate-batch). An
+ * optional signal aborts the request and disconnects the port.
  */
-export function runRpc(request: BgRequest, timeoutMs = 65_000): Promise<BgEvent> {
+export function runRpc(
+  request: BgRequest,
+  timeoutMs = 65_000,
+  signal?: AbortSignal,
+): Promise<BgEvent> {
   return new Promise((resolve, reject) => {
     const port = browser.runtime.connect({ name: TRANSLATE_PORT });
     let settled = false;
@@ -67,6 +71,7 @@ export function runRpc(request: BgRequest, timeoutMs = 65_000): Promise<BgEvent>
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      signal?.removeEventListener('abort', onAbort);
       try {
         port.disconnect();
       } catch {
@@ -75,7 +80,13 @@ export function runRpc(request: BgRequest, timeoutMs = 65_000): Promise<BgEvent>
       run();
     };
 
+    const onAbort = () => settle(() => reject(new Error('Request aborted')));
     const timer = setTimeout(() => settle(() => reject(new Error('Request timed out'))), timeoutMs);
+
+    if (signal) {
+      if (signal.aborted) settle(() => reject(new Error('Request aborted')));
+      else signal.addEventListener('abort', onAbort, { once: true });
+    }
 
     port.onMessage.addListener((message) => settle(() => resolve(message as BgEvent)));
     port.onDisconnect.addListener(() =>
