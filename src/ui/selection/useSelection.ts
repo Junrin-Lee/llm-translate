@@ -17,7 +17,20 @@ function isEditable(node: Node | null): boolean {
 }
 
 /**
- * Track the current page text selection as a transl/dictionary target.
+ * Read the current page selection as a target, or null when it isn't a valid
+ * translation target (collapsed, empty, over-long, or inside an editable field).
+ */
+export function readSelectionTarget(): SelectionTarget | null {
+  const selection = window.getSelection();
+  const text = selection?.toString().trim() ?? '';
+  if (!selection || selection.isCollapsed || !text || exceedsSelectionLimit(text)) return null;
+  if (isEditable(selection.anchorNode)) return null;
+  const rect = selection.getRangeAt(0).getBoundingClientRect();
+  return { text, rect };
+}
+
+/**
+ * Track the current page text selection as a translation/dictionary target.
  * Ignores collapsed, empty, over-long, and editable-field selections.
  */
 export function useSelectionTarget(): SelectionTarget | null {
@@ -25,18 +38,7 @@ export function useSelectionTarget(): SelectionTarget | null {
 
   useEffect(() => {
     function update() {
-      const selection = window.getSelection();
-      const text = selection?.toString().trim() ?? '';
-      if (!selection || selection.isCollapsed || !text || exceedsSelectionLimit(text)) {
-        setTarget(null);
-        return;
-      }
-      if (isEditable(selection.anchorNode)) {
-        setTarget(null);
-        return;
-      }
-      const rect = selection.getRangeAt(0).getBoundingClientRect();
-      setTarget({ text, rect });
+      setTarget(readSelectionTarget());
     }
 
     document.addEventListener('mouseup', update);

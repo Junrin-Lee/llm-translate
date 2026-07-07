@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
+import type { ContentMessage } from '@/messaging/protocol';
 import { classifySelection } from '@/selection/classify';
 import { getSettings, updateSettings, watchSettings } from '@/storage';
 import type { AppSettings } from '@/storage/schema';
 import { TranslatePanel } from './TranslatePanel';
-import { useSelectionTarget } from './useSelection';
+import { readSelectionTarget, useSelectionTarget } from './useSelection';
 
 interface Active {
   text: string;
@@ -18,6 +19,18 @@ export function SelectionApp() {
   useEffect(() => {
     getSettings().then(setSettings);
     return watchSettings(setSettings);
+  }, []);
+
+  // Keyboard shortcut / context menu: open the panel for the current selection.
+  useEffect(() => {
+    const listener = (message: ContentMessage) => {
+      if (message?.type === 'open-selection-panel') {
+        const current = readSelectionTarget();
+        if (current) setActive({ text: current.text, rect: current.rect });
+      }
+    };
+    browser.runtime.onMessage.addListener(listener);
+    return () => browser.runtime.onMessage.removeListener(listener);
   }, []);
 
   const disabled = settings?.siteRules.disableSelection.includes(location.hostname) ?? false;
