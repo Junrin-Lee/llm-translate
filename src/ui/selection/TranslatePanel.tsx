@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { LANGUAGES } from '@/languages';
 import { openTranslateStream } from '@/messaging/port-client';
 import { parseDictResult } from '@/selection/dict-result';
 import { DictCard } from './DictCard';
@@ -9,6 +10,7 @@ interface Props {
   targetLang: string;
   initialMode: 'dict' | 'text';
   onClose: () => void;
+  onTargetLangChange: (code: string) => void;
 }
 
 type Status = 'streaming' | 'done' | 'error';
@@ -16,8 +18,16 @@ type Status = 'streaming' | 'done' | 'error';
 const PANEL_WIDTH = 360;
 const PANEL_EST_HEIGHT = 260;
 
-export function TranslatePanel({ text, rect, targetLang, initialMode, onClose }: Props) {
+export function TranslatePanel({
+  text,
+  rect,
+  targetLang,
+  initialMode,
+  onClose,
+  onTargetLangChange,
+}: Props) {
   const [mode, setMode] = useState<'dict' | 'text'>(initialMode);
+  const [lang, setLang] = useState(targetLang);
   const [attempt, setAttempt] = useState(0);
   const [output, setOutput] = useState('');
   const [status, setStatus] = useState<Status>('streaming');
@@ -33,7 +43,7 @@ export function TranslatePanel({ text, rect, targetLang, initialMode, onClose }:
         kind: 'translate-stream',
         feature: 'selection',
         promptKind: mode === 'dict' ? 'selectionDict' : 'selectionText',
-        vars: { text, targetLang },
+        vars: { text, targetLang: lang },
       },
       {
         onDelta: (chunk) => setOutput((prev) => prev + chunk),
@@ -45,7 +55,7 @@ export function TranslatePanel({ text, rect, targetLang, initialMode, onClose }:
       },
     );
     return () => handle.cancel();
-  }, [text, targetLang, mode, attempt]);
+  }, [text, lang, mode, attempt]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -111,7 +121,25 @@ export function TranslatePanel({ text, rect, targetLang, initialMode, onClose }:
       </div>
 
       <div className="llmt-panel__foot">
-        <span className="llmt-lang">→ {targetLang}</span>
+        <label className="llmt-lang">
+          <span aria-hidden="true">→</span>
+          <select
+            className="llmt-lang__select"
+            value={lang}
+            aria-label="Target language"
+            onChange={(e) => {
+              setLang(e.target.value);
+              onTargetLangChange(e.target.value);
+            }}
+          >
+            {!LANGUAGES.some((l) => l.code === lang) && <option value={lang}>{lang}</option>}
+            {LANGUAGES.map((l) => (
+              <option key={l.code} value={l.code}>
+                {l.label}
+              </option>
+            ))}
+          </select>
+        </label>
         <div className="llmt-actions">
           <button type="button" className="llmt-link" onClick={() => setAttempt((a) => a + 1)}>
             Retry

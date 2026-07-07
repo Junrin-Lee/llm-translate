@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { classifySelection } from '@/selection/classify';
-import { getSettings, watchSettings } from '@/storage';
+import { getSettings, updateSettings, watchSettings } from '@/storage';
 import type { AppSettings } from '@/storage/schema';
 import { TranslatePanel } from './TranslatePanel';
 import { useSelectionTarget } from './useSelection';
@@ -59,6 +59,9 @@ export function SelectionApp() {
           targetLang={settings.general.targetLang}
           initialMode={classifySelection(active.text)}
           onClose={() => setActive(null)}
+          onTargetLangChange={(code) =>
+            updateSettings({ general: { ...settings.general, targetLang: code } })
+          }
         />
       )}
     </>

@@ -184,8 +184,27 @@
 }
 
 .llmt-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   color: var(--llmt-muted);
   font-size: 12px;
+}
+
+.llmt-lang__select {
+  border: none;
+  background: transparent;
+  color: var(--llmt-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+}
+
+.llmt-lang__select:hover {
+  color: var(--llmt-text);
+  background: var(--llmt-surface-2);
 }
 
 .llmt-actions {
