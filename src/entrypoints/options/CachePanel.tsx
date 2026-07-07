@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useT } from '@/i18n/useI18n';
 
 const SELECTION_KEY = 'cache:selection';
 const PAGE_KEY = 'cache:page';
@@ -18,6 +19,7 @@ async function countEntries(area: StorageArea, key: string): Promise<number> {
 }
 
 export function CachePanel() {
+  const t = useT();
   const [selection, setSelection] = useState(0);
   const [page, setPage] = useState(0);
 
@@ -39,10 +41,8 @@ export function CachePanel() {
   return (
     <div className="defaults">
       <div className="field">
-        <span className="field__label">Translation cache</span>
-        <span className="field__hint">
-          Selection: {selection} entries · Page: {page} entries
-        </span>
+        <span className="field__label">{t('cacheLabel')}</span>
+        <span className="field__hint">{t('cacheStats', { selection, page })}</span>
         <div>
           <button
             type="button"
@@ -50,7 +50,7 @@ export function CachePanel() {
             onClick={clear}
             disabled={selection === 0 && page === 0}
           >
-            Clear cache
+            {t('cacheClear')}
           </button>
         </div>
       </div>

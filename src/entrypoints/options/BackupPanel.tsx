@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useT } from '@/i18n/useI18n';
 import { exportSettings, importSettings } from '@/storage/import-export';
 import type { AppSettings } from '@/storage/schema';
 
@@ -17,6 +18,7 @@ function download(filename: string, text: string): void {
 }
 
 export function BackupPanel({ settings }: Props) {
+  const t = useT();
   const [includeKeys, setIncludeKeys] = useState(false);
   const [error, setError] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
@@ -27,22 +29,22 @@ export function BackupPanel({ settings }: Props) {
 
   async function handleFile(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    event.target.value = ''; // allow re-selecting the same file later
+    event.target.value = '';
     if (!file) return;
     setError('');
     try {
       await importSettings(await file.text());
-      window.location.reload(); // reflect the imported settings
+      window.location.reload();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Import failed');
+      setError(err instanceof Error ? err.message : t('backupImportFailed'));
     }
   }
 
   return (
     <div className="defaults">
       <div className="field">
-        <span className="field__label">Export</span>
-        <span className="field__hint">Download your settings as a JSON file.</span>
+        <span className="field__label">{t('backupExport')}</span>
+        <span className="field__hint">{t('backupExportHint')}</span>
         <label className="radio">
           <input
             type="checkbox"
@@ -50,25 +52,23 @@ export function BackupPanel({ settings }: Props) {
             onChange={(e) => setIncludeKeys(e.target.checked)}
           />
           <span className="radio__body">
-            <span className="radio__label">Include API keys</span>
-            <span className="radio__hint">
-              Off by default — the file would hold your keys in plain text.
-            </span>
+            <span className="radio__label">{t('backupIncludeKeys')}</span>
+            <span className="radio__hint">{t('backupIncludeKeysHint')}</span>
           </span>
         </label>
         <div>
           <button type="button" className="btn btn--ghost" onClick={handleExport}>
-            Export settings
+            {t('backupExportBtn')}
           </button>
         </div>
       </div>
 
       <div className="field">
-        <span className="field__label">Import</span>
-        <span className="field__hint">Replace all settings from an exported file.</span>
+        <span className="field__label">{t('backupImport')}</span>
+        <span className="field__hint">{t('backupImportHint')}</span>
         <div>
           <button type="button" className="btn btn--ghost" onClick={() => fileRef.current?.click()}>
-            Import settings…
+            {t('backupImportBtn')}
           </button>
           <input
             ref={fileRef}

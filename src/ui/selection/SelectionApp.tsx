@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { setUiLanguage } from '@/i18n';
+import { useT } from '@/i18n/useI18n';
 import type { ContentMessage } from '@/messaging/protocol';
 import { classifySelection } from '@/selection/classify';
 import { getSettings, updateSettings, watchSettings } from '@/storage';
@@ -12,13 +14,18 @@ interface Active {
 }
 
 export function SelectionApp() {
+  const t = useT();
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [active, setActive] = useState<Active | null>(null);
   const target = useSelectionTarget();
 
   useEffect(() => {
-    getSettings().then(setSettings);
-    return watchSettings(setSettings);
+    const apply = (s: AppSettings) => {
+      setSettings(s);
+      setUiLanguage(s.general.uiLang);
+    };
+    getSettings().then(apply);
+    return watchSettings(apply);
   }, []);
 
   // Keyboard shortcut / context menu: open the panel for the current selection.
@@ -60,7 +67,7 @@ export function SelectionApp() {
           // Keep the selection alive through the click.
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => setActive({ text: target.text, rect: target.rect })}
-          aria-label="Translate selection"
+          aria-label={t('iconTranslateSelection')}
         >
           文
         </button>

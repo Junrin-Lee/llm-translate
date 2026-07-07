@@ -1,3 +1,4 @@
+import { setUiLanguage, t } from '@/i18n';
 import { createClient } from '@/llm/client';
 import { handleRequest } from '@/messaging/handler';
 import {
@@ -8,7 +9,7 @@ import {
   type TabMessage,
   TRANSLATE_PORT,
 } from '@/messaging/protocol';
-import { getSettings, resolveProfile } from '@/storage';
+import { getSettings, resolveProfile, watchSettings } from '@/storage';
 import { createCache, type StorageAreaLike } from '@/translator/cache';
 
 // Selection cache is in-memory (cleared on browser close, never hits disk);
@@ -37,7 +38,7 @@ const MENU_PAGE = 'llmt-translate-page';
 const MENU_SELECTION = 'llmt-translate-selection';
 
 async function syncPageMenu(status: PageStatusReply): Promise<void> {
-  const title = status === 'idle' ? 'Translate this page' : 'Restore original';
+  const title = status === 'idle' ? t('translatePage') : t('restoreOriginal');
   try {
     await browser.contextMenus.update(MENU_PAGE, { title });
   } catch {
@@ -45,8 +46,38 @@ async function syncPageMenu(status: PageStatusReply): Promise<void> {
   }
 }
 
+/** Re-title both menu items for the current locale + the active tab's state. */
+async function refreshMenusForActiveTab(): Promise<void> {
+  try {
+    await browser.contextMenus.update(MENU_SELECTION, { title: t('translateSelection') });
+  } catch {
+    // ignore
+  }
+  try {
+    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+    const status =
+      tab?.id != null
+        ? ((await browser.tabs.sendMessage(tab.id, { type: 'get-page-status' })) as
+            | PageStatusReply
+            | undefined)
+        : undefined;
+    await syncPageMenu(status ?? 'idle');
+  } catch {
+    await syncPageMenu('idle');
+  }
+}
+
 export default defineBackground(() => {
-  // Keyboard commands (declared in wxt.config manifest) route to the active tab.
+  // Apply the stored UI language on startup, then keep menus localized as it changes.
+  void getSettings().then((s) => {
+    setUiLanguage(s.general.uiLang);
+    void refreshMenusForActiveTab();
+  });
+  watchSettings((s) => {
+    setUiLanguage(s.general.uiLang);
+    void refreshMenusForActiveTab();
+  });
+
   browser.commands.onCommand.addListener((command) => {
     if (command === 'translate-selection') void sendToActiveTab({ type: 'open-selection-panel' });
     else if (command === 'translate-page') void sendToActiveTab({ type: 'translate-page' });
@@ -54,15 +85,13 @@ export default defineBackground(() => {
 
   // Right-click entries: whole page, or the current selection.
   browser.runtime.onInstalled.addListener(async () => {
+    const s = await getSettings();
+    setUiLanguage(s.general.uiLang);
     await browser.contextMenus.removeAll();
-    browser.contextMenus.create({
-      id: MENU_PAGE,
-      title: 'Translate this page',
-      contexts: ['page'],
-    });
+    browser.contextMenus.create({ id: MENU_PAGE, title: t('translatePage'), contexts: ['page'] });
     browser.contextMenus.create({
       id: MENU_SELECTION,
-      title: 'Translate selection',
+      title: t('translateSelection'),
       contexts: ['selection'],
     });
   });
@@ -78,23 +107,15 @@ export default defineBackground(() => {
     if (message) void browser.tabs.sendMessage(tab.id, message).catch(() => {});
   });
 
-  // Keep the "Translate this page" / "Restore original" label in sync with the
-  // active tab's translation state.
+  // Keep the page menu label in sync with the active tab's translation state.
   browser.runtime.onMessage.addListener((message: TabMessage, sender) => {
     if (message?.type === 'page-status-changed' && sender.tab?.active) {
       void syncPageMenu(message.status);
     }
   });
 
-  browser.tabs.onActivated.addListener(async ({ tabId }) => {
-    try {
-      const status = (await browser.tabs.sendMessage(tabId, { type: 'get-page-status' })) as
-        | PageStatusReply
-        | undefined;
-      await syncPageMenu(status ?? 'idle');
-    } catch {
-      await syncPageMenu('idle');
-    }
+  browser.tabs.onActivated.addListener(() => {
+    void refreshMenusForActiveTab();
   });
 
   // Single LLM request exit for the whole extension (ADR-0001). Content and

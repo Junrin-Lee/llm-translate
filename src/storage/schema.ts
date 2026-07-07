@@ -2,6 +2,8 @@ import type { ProviderProfile } from '@/llm/types';
 
 export type SelectionTrigger = 'icon' | 'instant' | 'shortcut-only';
 export type PageMode = 'bilingual' | 'replace';
+/** UI language: auto follows the browser, or force English / Chinese. */
+export type UiLang = 'auto' | 'en' | 'zh';
 
 export interface GeneralSettings {
   /** BCP-47 target language, e.g. 'zh-CN'. */
@@ -10,6 +12,8 @@ export interface GeneralSettings {
   secondaryTargetLang?: string;
   selectionTrigger: SelectionTrigger;
   pageMode: PageMode;
+  /** Language of the extension's own UI. */
+  uiLang: UiLang;
 }
 
 export interface SiteRules {
@@ -49,6 +53,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     targetLang: 'zh-CN',
     selectionTrigger: 'icon',
     pageMode: 'bilingual',
+    uiLang: 'auto',
   },
   siteRules: { autoTranslate: [], disableSelection: [] },
   prompts: {},

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BRAND } from '@/brand';
+import { setUiLanguage } from '@/i18n';
+import { useT } from '@/i18n/useI18n';
 import type { ContentMessage, PageStatusReply } from '@/messaging/protocol';
 import { getSettings, updateSettings } from '@/storage';
 
@@ -14,7 +16,7 @@ async function sendToActiveTab(message: ContentMessage): Promise<PageStatusReply
   try {
     return (await browser.tabs.sendMessage(tab.id, message)) as PageStatusReply | undefined;
   } catch {
-    return undefined; // No content script here (e.g. chrome:// page).
+    return undefined;
   }
 }
 
@@ -28,6 +30,7 @@ function hostOf(url: string | undefined): string {
 }
 
 export function App() {
+  const t = useT();
   const [translated, setTranslated] = useState(false);
   const [host, setHost] = useState('');
   const [autoSite, setAutoSite] = useState(false);
@@ -40,6 +43,7 @@ export function App() {
       setHost(currentHost);
 
       const settings = await getSettings();
+      setUiLanguage(settings.general.uiLang);
       setAutoSite(currentHost !== '' && settings.siteRules.autoTranslate.includes(currentHost));
 
       if (tab?.id != null) {
@@ -67,11 +71,7 @@ export function App() {
   return (
     <main className="popup">
       <h1 className="popup__title">{BRAND.name}</h1>
-      <p className="popup__hint">
-        {translated
-          ? 'This page is translated. Restore the original below, or select text for a quick translation.'
-          : 'Translate the whole page, or select text on any page for a quick translation.'}
-      </p>
+      <p className="popup__hint">{translated ? t('popupHintTranslated') : t('popupHintDefault')}</p>
       <div className="popup__actions">
         <button
           type="button"
@@ -81,21 +81,21 @@ export function App() {
             window.close();
           }}
         >
-          {translated ? 'Restore original' : 'Translate this page'}
+          {translated ? t('restoreOriginal') : t('translatePage')}
         </button>
         <button
           type="button"
           className="popup__btn popup__btn--secondary"
           onClick={() => browser.runtime.openOptionsPage()}
         >
-          Open settings
+          {t('openSettings')}
         </button>
       </div>
       {host && (
         <label className="popup__check">
           <input type="checkbox" checked={autoSite} onChange={toggleAutoSite} />
           <span>
-            Always translate <b>{host}</b>
+            {t('popupAutoSite')} <b>{host}</b>
           </span>
         </label>
       )}

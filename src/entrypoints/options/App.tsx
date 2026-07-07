@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 import { BRAND } from '@/brand';
+import { setUiLanguage } from '@/i18n';
+import type { MessageKey } from '@/i18n/messages';
+import { useT } from '@/i18n/useI18n';
 import type { ProviderProfile } from '@/llm/types';
 import type { GeneralSettings, ProfileDefaults, PromptOverrides } from '@/storage/schema';
 import { BackupPanel } from './BackupPanel';
@@ -11,13 +14,13 @@ import { ProviderCard } from './ProviderCard';
 import { useSettings } from './useSettings';
 
 const SECTIONS = [
-  { id: 'providers', label: 'Providers' },
-  { id: 'routing', label: 'Routing' },
-  { id: 'translation', label: 'Translation' },
-  { id: 'prompts', label: 'Prompts' },
-  { id: 'backup', label: 'Backup' },
-  { id: 'cache', label: 'Cache' },
-] as const;
+  { id: 'providers', key: 'navProviders' },
+  { id: 'routing', key: 'navRouting' },
+  { id: 'translation', key: 'navTranslation' },
+  { id: 'prompts', key: 'navPrompts' },
+  { id: 'backup', key: 'navBackup' },
+  { id: 'cache', key: 'navCache' },
+] as const satisfies ReadonlyArray<{ id: string; key: MessageKey }>;
 
 type SectionId = (typeof SECTIONS)[number]['id'];
 
@@ -40,6 +43,7 @@ function newProvider(): ProviderProfile {
 export function App() {
   const { settings, mutate } = useSettings();
   const [active, setActive] = useState<SectionId>(sectionFromHash);
+  const t = useT();
 
   useEffect(() => {
     document.title = `${BRAND.name} — Settings`;
@@ -51,8 +55,12 @@ export function App() {
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
+  useEffect(() => {
+    if (settings) setUiLanguage(settings.general.uiLang);
+  }, [settings]);
+
   if (!settings) {
-    return <main className="page page--loading">Loading…</main>;
+    return <main className="page page--loading">…</main>;
   }
 
   const navigate = (id: SectionId) => {
@@ -77,7 +85,7 @@ export function App() {
     }));
 
   const deleteProvider = (id: string) => {
-    if (!confirm('Delete this provider? This cannot be undone.')) return;
+    if (!confirm(t('confirmDeleteProvider'))) return;
     mutate((s) => {
       const providers = s.providers.filter((p) => p.id !== id);
       const defaults: ProfileDefaults = {
@@ -101,15 +109,13 @@ export function App() {
   const setPrompts = (prompts: PromptOverrides) => mutate((s) => ({ ...s, prompts }));
 
   const { providers, defaults } = settings;
-  const activeLabel = SECTIONS.find((s) => s.id === active)?.label ?? '';
+  const activeKey = SECTIONS.find((s) => s.id === active)?.key ?? 'navProviders';
 
   return (
     <main className="page">
       <header className="masthead">
         <h1 className="masthead__title">{BRAND.name}</h1>
-        <p className="masthead__tagline">
-          Bring your own OpenAI- or Anthropic-compatible API. Keys stay on this device.
-        </p>
+        <p className="masthead__tagline">{t('optionsTagline')}</p>
       </header>
 
       <div className="layout">
@@ -122,17 +128,17 @@ export function App() {
               aria-current={active === s.id ? 'page' : undefined}
               onClick={() => navigate(s.id)}
             >
-              {s.label}
+              {t(s.key)}
             </button>
           ))}
         </nav>
 
         <div className="content">
           <div className="content__head">
-            <h2 className="content__title">{activeLabel}</h2>
+            <h2 className="content__title">{t(activeKey)}</h2>
             {active === 'providers' && (
               <button type="button" className="btn btn--primary" onClick={addProvider}>
-                Add provider
+                {t('providersAdd')}
               </button>
             )}
           </div>
@@ -140,13 +146,10 @@ export function App() {
           {active === 'providers' &&
             (providers.length === 0 ? (
               <div className="empty">
-                <p className="empty__title">No providers yet</p>
-                <p className="empty__body">
-                  Add a provider and paste an API key to start translating. Nothing leaves this
-                  device except requests to the endpoint you configure.
-                </p>
+                <p className="empty__title">{t('providersEmptyTitle')}</p>
+                <p className="empty__body">{t('providersEmptyBody')}</p>
                 <button type="button" className="btn btn--primary" onClick={addProvider}>
-                  Add your first provider
+                  {t('providersAddFirst')}
                 </button>
               </div>
             ) : (

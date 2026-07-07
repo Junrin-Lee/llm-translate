@@ -1,6 +1,12 @@
 import type { Protocol, ProviderProfile } from '@/llm/types';
 import { replaceSettings } from './index';
-import { type AppSettings, DEFAULT_SETTINGS, type PageMode, type SelectionTrigger } from './schema';
+import {
+  type AppSettings,
+  DEFAULT_SETTINGS,
+  type PageMode,
+  type SelectionTrigger,
+  type UiLang,
+} from './schema';
 
 /** Serialize settings to pretty JSON; API keys are stripped unless requested. */
 export function exportSettings(settings: AppSettings, includeKeys: boolean): string {
@@ -24,6 +30,7 @@ export async function importSettings(json: string): Promise<void> {
 const PROTOCOLS: readonly Protocol[] = ['openai', 'anthropic'];
 const SELECTION_TRIGGERS: readonly SelectionTrigger[] = ['icon', 'instant', 'shortcut-only'];
 const PAGE_MODES: readonly PageMode[] = ['bilingual', 'replace'];
+const UI_LANGS: readonly UiLang[] = ['auto', 'en', 'zh'];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -89,6 +96,9 @@ export function normalizeSettings(parsed: unknown): AppSettings {
     pageMode: PAGE_MODES.includes(generalRaw.pageMode as PageMode)
       ? (generalRaw.pageMode as PageMode)
       : DEFAULT_SETTINGS.general.pageMode,
+    uiLang: UI_LANGS.includes(generalRaw.uiLang as UiLang)
+      ? (generalRaw.uiLang as UiLang)
+      : DEFAULT_SETTINGS.general.uiLang,
   };
   if (typeof generalRaw.secondaryTargetLang === 'string') {
     general.secondaryTargetLang = generalRaw.secondaryTargetLang;

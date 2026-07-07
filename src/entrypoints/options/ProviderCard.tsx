@@ -1,4 +1,5 @@
 import { useId, useState } from 'react';
+import { useT } from '@/i18n/useI18n';
 import type { Protocol, ProviderProfile } from '@/llm/types';
 import { runRpc } from '@/messaging/port-client';
 
@@ -21,6 +22,7 @@ const PLACEHOLDERS: Record<Protocol, { baseUrl: string; model: string }> = {
 };
 
 export function ProviderCard({ profile, isGlobalDefault, onPatch, onDelete }: Props) {
+  const t = useT();
   const listId = useId();
   const [revealKey, setRevealKey] = useState(false);
   const [test, setTest] = useState<TestState>({ status: 'idle' });
@@ -72,11 +74,11 @@ export function ProviderCard({ profile, isGlobalDefault, onPatch, onDelete }: Pr
         <input
           className="card__name"
           value={profile.name}
-          placeholder="Untitled provider"
-          aria-label="Provider name"
+          placeholder={t('providerNamePlaceholder')}
+          aria-label={t('providerNameAria')}
           onChange={(e) => onPatch({ name: e.target.value })}
         />
-        {isGlobalDefault && <span className="badge">Using</span>}
+        {isGlobalDefault && <span className="badge">{t('providerUsing')}</span>}
         <div className="segmented">
           {(['openai', 'anthropic'] as const).map((p) => (
             <button
@@ -94,7 +96,7 @@ export function ProviderCard({ profile, isGlobalDefault, onPatch, onDelete }: Pr
       </header>
 
       <label className="field">
-        <span className="field__label">Base URL</span>
+        <span className="field__label">{t('fieldBaseUrl')}</span>
         <input
           className="field__input mono"
           value={profile.baseUrl}
@@ -106,7 +108,7 @@ export function ProviderCard({ profile, isGlobalDefault, onPatch, onDelete }: Pr
       </label>
 
       <label className="field">
-        <span className="field__label">API key</span>
+        <span className="field__label">{t('fieldApiKey')}</span>
         <div className="field__row">
           <input
             className="field__input mono"
@@ -118,14 +120,14 @@ export function ProviderCard({ profile, isGlobalDefault, onPatch, onDelete }: Pr
             onChange={(e) => onPatch({ apiKey: e.target.value })}
           />
           <button type="button" className="btn btn--ghost" onClick={() => setRevealKey((v) => !v)}>
-            {revealKey ? 'Hide' : 'Show'}
+            {revealKey ? t('actionHide') : t('actionShow')}
           </button>
         </div>
-        <span className="field__hint">Stored only on this device.</span>
+        <span className="field__hint">{t('apiKeyHint')}</span>
       </label>
 
       <label className="field">
-        <span className="field__label">Model</span>
+        <span className="field__label">{t('fieldModel')}</span>
         <div className="field__row">
           <input
             className="field__input mono"
@@ -142,14 +144,12 @@ export function ProviderCard({ profile, isGlobalDefault, onPatch, onDelete }: Pr
             onClick={handleFetchModels}
             disabled={fetchingModels}
           >
-            {fetchingModels ? 'Fetching…' : 'Fetch models'}
+            {fetchingModels ? t('actionFetching') : t('actionFetchModels')}
           </button>
         </div>
         {models && (
           <span className="field__hint">
-            {models.length > 0
-              ? `${models.length} models available — pick from the list.`
-              : 'No models returned. Enter the model name manually.'}
+            {models.length > 0 ? t('modelsAvailable', { count: models.length }) : t('modelsNone')}
           </span>
         )}
         <datalist id={listId}>
@@ -160,10 +160,10 @@ export function ProviderCard({ profile, isGlobalDefault, onPatch, onDelete }: Pr
       </label>
 
       <details className="advanced">
-        <summary>Advanced</summary>
+        <summary>{t('advanced')}</summary>
         <div className="advanced__grid">
           <label className="field">
-            <span className="field__label">Temperature</span>
+            <span className="field__label">{t('fieldTemperature')}</span>
             <input
               className="field__input"
               type="number"
@@ -171,19 +171,19 @@ export function ProviderCard({ profile, isGlobalDefault, onPatch, onDelete }: Pr
               min="0"
               max="2"
               value={profile.params?.temperature ?? ''}
-              placeholder="default"
+              placeholder={t('placeholderDefault')}
               onChange={(e) => patchParam('temperature', e.target.value)}
             />
           </label>
           <label className="field">
-            <span className="field__label">Max tokens</span>
+            <span className="field__label">{t('fieldMaxTokens')}</span>
             <input
               className="field__input"
               type="number"
               step="1"
               min="1"
               value={profile.params?.maxTokens ?? ''}
-              placeholder={profile.protocol === 'anthropic' ? '4096' : 'default'}
+              placeholder={profile.protocol === 'anthropic' ? '4096' : t('placeholderDefault')}
               onChange={(e) => patchParam('maxTokens', e.target.value)}
             />
           </label>
@@ -192,12 +192,15 @@ export function ProviderCard({ profile, isGlobalDefault, onPatch, onDelete }: Pr
 
       <footer className="card__foot">
         <button type="button" className="btn btn--primary" onClick={handleTest}>
-          Test connection
+          {t('actionTestConnection')}
         </button>
-        {test.status === 'testing' && <span className="status status--muted">Testing…</span>}
+        {test.status === 'testing' && (
+          <span className="status status--muted">{t('statusTesting')}</span>
+        )}
         {test.status === 'ok' && (
           <span className="status status--ok">
-            Connected{test.latencyMs != null ? ` · ${test.latencyMs}ms` : ''}
+            {t('statusConnected')}
+            {test.latencyMs != null ? ` · ${test.latencyMs}ms` : ''}
           </span>
         )}
         {test.status === 'error' && (
@@ -206,7 +209,7 @@ export function ProviderCard({ profile, isGlobalDefault, onPatch, onDelete }: Pr
           </span>
         )}
         <button type="button" className="btn btn--danger-ghost card__delete" onClick={onDelete}>
-          Delete
+          {t('actionDelete')}
         </button>
       </footer>
     </article>

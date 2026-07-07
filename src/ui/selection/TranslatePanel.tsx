@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useT } from '@/i18n/useI18n';
 import { LANGUAGES } from '@/languages';
 import { openTranslateStream } from '@/messaging/port-client';
 import { parseDictResult } from '@/selection/dict-result';
@@ -26,6 +27,7 @@ export function TranslatePanel({
   onClose,
   onTargetLangChange,
 }: Props) {
+  const t = useT();
   const [mode, setMode] = useState<'dict' | 'text'>(initialMode);
   const [lang, setLang] = useState(targetLang);
   const [attempt, setAttempt] = useState(0);
@@ -96,7 +98,7 @@ export function TranslatePanel({
       className="llmt-panel"
       style={{ left: `${left}px`, ...position }}
       role="dialog"
-      aria-label="Translation"
+      aria-label={t('panelTranslation')}
       onMouseDown={(e) => e.stopPropagation()}
     >
       <div className="llmt-panel__head">
@@ -106,17 +108,17 @@ export function TranslatePanel({
             className={`llmt-seg__opt${mode === 'dict' ? ' is-active' : ''}`}
             onClick={() => setMode('dict')}
           >
-            Dictionary
+            {t('panelDictionary')}
           </button>
           <button
             type="button"
             className={`llmt-seg__opt${mode === 'text' ? ' is-active' : ''}`}
             onClick={() => setMode('text')}
           >
-            Translation
+            {t('panelTranslation')}
           </button>
         </div>
-        <button type="button" className="llmt-x" onClick={onClose} aria-label="Close">
+        <button type="button" className="llmt-x" onClick={onClose} aria-label={t('panelClose')}>
           ×
         </button>
       </div>
@@ -125,11 +127,13 @@ export function TranslatePanel({
         {status === 'error' ? (
           <p className="llmt-error">{error}</p>
         ) : mode === 'dict' && status !== 'done' ? (
-          <p className="llmt-muted">Looking up…</p>
+          <p className="llmt-muted">{t('panelLookingUp')}</p>
         ) : dict ? (
           <DictCard result={dict} />
         ) : (
-          <p className="llmt-text">{output || <span className="llmt-muted">Translating…</span>}</p>
+          <p className="llmt-text">
+            {output || <span className="llmt-muted">{t('panelTranslating')}</span>}
+          </p>
         )}
       </div>
 
@@ -139,7 +143,7 @@ export function TranslatePanel({
           <select
             className="llmt-lang__select"
             value={lang}
-            aria-label="Target language"
+            aria-label={t('targetLanguage')}
             onChange={(e) => {
               setLang(e.target.value);
               onTargetLangChange(e.target.value);
@@ -155,7 +159,7 @@ export function TranslatePanel({
         </label>
         <div className="llmt-actions">
           <button type="button" className="llmt-link" onClick={() => setAttempt((a) => a + 1)}>
-            Retry
+            {t('panelRetry')}
           </button>
           <button
             type="button"
@@ -163,7 +167,7 @@ export function TranslatePanel({
             disabled={!copyText}
             onClick={() => navigator.clipboard?.writeText(copyText)}
           >
-            Copy
+            {t('panelCopy')}
           </button>
         </div>
       </div>

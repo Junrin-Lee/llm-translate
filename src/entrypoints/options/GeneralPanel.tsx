@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import type { MessageKey } from '@/i18n/messages';
+import { useT } from '@/i18n/useI18n';
 import { LANGUAGES } from '@/languages';
-import type { GeneralSettings, SelectionTrigger } from '@/storage/schema';
+import type { GeneralSettings, SelectionTrigger, UiLang } from '@/storage/schema';
 
 interface Props {
   general: GeneralSettings;
@@ -9,18 +11,10 @@ interface Props {
   onDisabledSites: (sites: string[]) => void;
 }
 
-const TRIGGERS: Array<{ value: SelectionTrigger; label: string; hint: string }> = [
-  { value: 'icon', label: 'Show an icon', hint: 'Select text, then click the icon to translate.' },
-  {
-    value: 'instant',
-    label: 'Translate instantly',
-    hint: 'Translate as soon as you select text — uses more tokens.',
-  },
-  {
-    value: 'shortcut-only',
-    label: 'Shortcut only',
-    hint: 'No icon; press the translate-selection shortcut instead.',
-  },
+const TRIGGERS: Array<{ value: SelectionTrigger; labelKey: MessageKey; hintKey: MessageKey }> = [
+  { value: 'icon', labelKey: 'triggerIconLabel', hintKey: 'triggerIconHint' },
+  { value: 'instant', labelKey: 'triggerInstantLabel', hintKey: 'triggerInstantHint' },
+  { value: 'shortcut-only', labelKey: 'triggerShortcutLabel', hintKey: 'triggerShortcutHint' },
 ];
 
 /** Normalize a user-typed site to a bare lowercase hostname. */
@@ -33,6 +27,7 @@ function toHostname(input: string): string {
 }
 
 export function GeneralPanel({ general, disabledSites, onGeneral, onDisabledSites }: Props) {
+  const t = useT();
   const [siteInput, setSiteInput] = useState('');
 
   const addSite = () => {
@@ -48,7 +43,20 @@ export function GeneralPanel({ general, disabledSites, onGeneral, onDisabledSite
   return (
     <div className="defaults">
       <label className="field">
-        <span className="field__label">Target language</span>
+        <span className="field__label">{t('genUiLang')}</span>
+        <select
+          className="field__input"
+          value={general.uiLang}
+          onChange={(e) => onGeneral({ uiLang: e.target.value as UiLang })}
+        >
+          <option value="auto">{t('uiLangAuto')}</option>
+          <option value="en">English</option>
+          <option value="zh">中文</option>
+        </select>
+      </label>
+
+      <label className="field">
+        <span className="field__label">{t('targetLanguage')}</span>
         <select
           className="field__input"
           value={general.targetLang}
@@ -63,25 +71,25 @@ export function GeneralPanel({ general, disabledSites, onGeneral, onDisabledSite
       </label>
 
       <fieldset className="radios">
-        <legend className="field__label">Selection trigger</legend>
-        {TRIGGERS.map((t) => (
-          <label key={t.value} className="radio">
+        <legend className="field__label">{t('genTrigger')}</legend>
+        {TRIGGERS.map((tr) => (
+          <label key={tr.value} className="radio">
             <input
               type="radio"
               name="selection-trigger"
-              checked={general.selectionTrigger === t.value}
-              onChange={() => onGeneral({ selectionTrigger: t.value })}
+              checked={general.selectionTrigger === tr.value}
+              onChange={() => onGeneral({ selectionTrigger: tr.value })}
             />
             <span className="radio__body">
-              <span className="radio__label">{t.label}</span>
-              <span className="radio__hint">{t.hint}</span>
+              <span className="radio__label">{t(tr.labelKey)}</span>
+              <span className="radio__hint">{t(tr.hintKey)}</span>
             </span>
           </label>
         ))}
       </fieldset>
 
       <div className="field">
-        <span className="field__label">Disable the selection icon on these sites</span>
+        <span className="field__label">{t('genDisableSites')}</span>
         <div className="field__row">
           <input
             className="field__input mono"
@@ -98,7 +106,7 @@ export function GeneralPanel({ general, disabledSites, onGeneral, onDisabledSite
             }}
           />
           <button type="button" className="btn btn--ghost" onClick={addSite}>
-            Add
+            {t('actionAdd')}
           </button>
         </div>
         {disabledSites.length > 0 && (
@@ -111,7 +119,7 @@ export function GeneralPanel({ general, disabledSites, onGeneral, onDisabledSite
                   className="btn btn--danger-ghost"
                   onClick={() => onDisabledSites(disabledSites.filter((s) => s !== site))}
                 >
-                  Remove
+                  {t('actionRemove')}
                 </button>
               </li>
             ))}

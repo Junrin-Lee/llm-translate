@@ -1,7 +1,9 @@
 import { useRef, useState, useSyncExternalStore } from 'react';
+import { useT } from '@/i18n/useI18n';
 import { cancel, getState, restore, setMode, subscribe } from './store';
 
 export function PageToolbar() {
+  const t = useT();
   const state = useSyncExternalStore(subscribe, getState);
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
@@ -42,38 +44,38 @@ export function PageToolbar() {
 
   return (
     <div ref={ref} className="llmt-toolbar" style={style} role="status" aria-live="polite">
-      <span className="llmt-toolbar__grip" onPointerDown={startDrag} title="Drag to move">
+      <span className="llmt-toolbar__grip" onPointerDown={startDrag} title={t('toolbarDrag')}>
         ⠿
       </span>
       <button
         type="button"
         className="llmt-toolbar__btn"
-        title="Switch between bilingual and translation-only"
+        title={t('toolbarModeTitle')}
         onClick={() => void setMode(state.mode === 'bilingual' ? 'replace' : 'bilingual')}
       >
-        {state.mode === 'bilingual' ? 'Bilingual' : 'Only'}
+        {state.mode === 'bilingual' ? t('toolbarBilingual') : t('toolbarOnly')}
       </button>
       {translating ? (
         <>
           <span className="llmt-toolbar__label">
-            Translating {state.done}/{state.total}
+            {t('toolbarTranslating')} {state.done}/{state.total}
           </span>
           <span className="llmt-toolbar__bar">
             <span className="llmt-toolbar__fill" style={{ width: `${pct}%` }} />
           </span>
           <button type="button" className="llmt-toolbar__btn" onClick={cancel}>
-            Cancel
+            {t('toolbarCancel')}
           </button>
         </>
       ) : (
         <>
-          <span className="llmt-toolbar__label">Translated</span>
+          <span className="llmt-toolbar__label">{t('toolbarTranslated')}</span>
           <button
             type="button"
             className="llmt-toolbar__btn llmt-toolbar__btn--primary"
             onClick={restore}
           >
-            Restore original
+            {t('restoreOriginal')}
           </button>
         </>
       )}
