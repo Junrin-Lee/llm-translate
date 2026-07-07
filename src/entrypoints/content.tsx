@@ -1,6 +1,7 @@
 import './selection.css';
 import ReactDOM from 'react-dom/client';
 import { setupPageTranslation } from '@/ui/page/controller';
+import { PageToolbar } from '@/ui/page/PageToolbar';
 import { SelectionApp } from '@/ui/selection/SelectionApp';
 
 export default defineContentScript({
@@ -18,7 +19,12 @@ export default defineContentScript({
       anchor: 'body',
       onMount: (container) => {
         const root = ReactDOM.createRoot(container);
-        root.render(<SelectionApp />);
+        root.render(
+          <>
+            <SelectionApp />
+            <PageToolbar />
+          </>,
+        );
         return root;
       },
       onRemove: (root) => root?.unmount(),
