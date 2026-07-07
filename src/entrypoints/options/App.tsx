@@ -3,6 +3,7 @@ import { BRAND } from '@/brand';
 import type { ProviderProfile } from '@/llm/types';
 import type { GeneralSettings, ProfileDefaults, PromptOverrides } from '@/storage/schema';
 import { BackupPanel } from './BackupPanel';
+import { CachePanel } from './CachePanel';
 import { DefaultsPanel } from './DefaultsPanel';
 import { GeneralPanel } from './GeneralPanel';
 import { PromptsPanel } from './PromptsPanel';
@@ -159,6 +160,15 @@ export function App() {
           </h2>
         </div>
         <BackupPanel settings={settings} />
+      </section>
+
+      <section className="section">
+        <div className="section__head">
+          <h2 className="section__title">
+            <span className="eyebrow">Cache</span>
+          </h2>
+        </div>
+        <CachePanel />
       </section>
     </main>
   );
