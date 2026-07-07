@@ -1,13 +1,20 @@
 name: Release
 
-# Skeleton (T0.5): on a version tag, produce the Chrome and Edge zips as build
-# artifacts. GitHub Release publishing and store submission are wired in T5.5.
+# Releasing: bump "version" in package.json (WXT derives the manifest version
+# from it), commit, then push a matching tag, e.g.
+#   git tag v0.1.0 && git push origin v0.1.0
+# This builds the Chrome + Edge zips and publishes them on a GitHub Release.
+# Uploading to the Chrome Web Store / Edge Add-ons is done manually (see
+# store-assets/ for the listing copy and permission justifications).
 on:
   push:
     tags: ['v*']
 
+permissions:
+  contents: write
+
 jobs:
-  package:
+  release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,9 +36,9 @@ jobs:
           pnpm zip
           pnpm zip:edge
 
-      - name: Upload extension zips
-        uses: actions/upload-artifact@v4
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: extension-zips
-          path: .output/*.zip
-          if-no-files-found: error
+          files: .output/*.zip
+          generate_release_notes: true
+          fail_on_unmatched_files: true
