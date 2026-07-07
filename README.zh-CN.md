@@ -74,6 +74,8 @@ pnpm build          # 产物输出到 .output/chrome-mv3/
 - 页面译文一律以 `textContent` 写入 DOM(LLM 输出视为不可信输入,防 XSS),全项目无 `innerHTML` / `eval`。
 - 设置导出默认**剥离** API Key;仅在你显式勾选「包含 API Key」时才写入(并有明文提示)。
 
+完整政策:[docs/privacy-policy.md](docs/privacy-policy.md)。
+
 ## 🛠️ 开发
 
 ### 环境要求
@@ -98,9 +100,12 @@ pnpm zip          # 打包上传商店用 → .output/llm-translate-<version>-ch
 pnpm zip:edge     # → .output/llm-translate-<version>-edge.zip
 
 pnpm test         # vitest 单测
+pnpm e2e          # Playwright 端到端(加载构建后的扩展)
 pnpm typecheck    # tsc --noEmit
 pnpm lint         # biome(lint + 格式检查)
 pnpm format       # biome 自动修复
+
+pnpm screenshots  # 重新生成 store-assets/ 里的商店截图
 ```
 
 > `.zip` 仅用于上传商店后台,不能直接拖进浏览器安装;开发/本地安装请用上面的「加载已解压的扩展」。
@@ -125,7 +130,10 @@ src/
     page/             页内工具条、全文翻译状态 store / controller
   entrypoints/        background、content、popup/、options/(WXT 入口)
 tests/                与 src/ 镜像的 vitest 套件
-docs/                 CONTEXT 术语表、ADR、开发路线图
+e2e/                  Playwright 用例 + mock LLM server + fixtures
+scripts/              工具脚本(商店截图生成)
+store-assets/         商店文案、权限 justification、截图
+docs/                 CONTEXT 术语表、ADR、隐私政策、开发路线图
 ```
 
 ## 🗺️ 路线图

@@ -75,6 +75,8 @@ selection trigger, and the per-site disable list.
 - Page translations are written to the DOM with `textContent` only (LLM output is treated as untrusted input — XSS-safe); there is no `innerHTML` / `eval` anywhere in the codebase.
 - Settings export **strips** API keys by default; keys are included only if you explicitly opt in (with a plain-text warning).
 
+Full policy: [docs/privacy-policy.md](docs/privacy-policy.md).
+
 ## 🛠️ Development
 
 ### Requirements
@@ -99,9 +101,12 @@ pnpm zip          # store upload package → .output/llm-translate-<version>-chr
 pnpm zip:edge     # → .output/llm-translate-<version>-edge.zip
 
 pnpm test         # vitest unit suite
+pnpm e2e          # Playwright end-to-end (loads the built extension)
 pnpm typecheck    # tsc --noEmit
 pnpm lint         # biome (lint + format check)
 pnpm format       # biome autofix
+
+pnpm screenshots  # regenerate the store screenshots in store-assets/
 ```
 
 > The `.zip` is only for uploading to the store dashboards — you don't drag it into the
@@ -127,7 +132,10 @@ src/
     page/             in-page toolbar, page-translation store / controller
   entrypoints/        background, content, popup/, options/ (WXT entrypoints)
 tests/                vitest suites mirroring src/
-docs/                 CONTEXT glossary, ADRs, and the dev roadmap
+e2e/                  Playwright specs + mock LLM server + fixtures
+scripts/              tooling (store screenshot capture)
+store-assets/         listing copy, permission justifications, screenshots
+docs/                 CONTEXT glossary, ADRs, privacy policy, dev roadmap
 ```
 
 ## 🗺️ Roadmap
