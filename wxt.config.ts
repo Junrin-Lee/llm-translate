@@ -11,6 +11,8 @@ export default defineConfig({
     'build:manifestGenerated': (_wxt, manifest) => {
       manifest.action ??= {};
       manifest.action.default_title = BRAND.name;
+      // Open the settings page as a full tab (WXT defaults options_ui to embedded).
+      if (manifest.options_ui) manifest.options_ui.open_in_tab = true;
     },
   },
   manifest: {
