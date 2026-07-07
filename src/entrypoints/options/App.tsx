@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { BRAND } from '@/brand';
 import type { ProviderProfile } from '@/llm/types';
 import type { GeneralSettings, ProfileDefaults, PromptOverrides } from '@/storage/schema';
@@ -9,6 +9,22 @@ import { GeneralPanel } from './GeneralPanel';
 import { PromptsPanel } from './PromptsPanel';
 import { ProviderCard } from './ProviderCard';
 import { useSettings } from './useSettings';
+
+const SECTIONS = [
+  { id: 'providers', label: 'Providers' },
+  { id: 'defaults', label: 'Defaults' },
+  { id: 'translation', label: 'Translation' },
+  { id: 'prompts', label: 'Prompts' },
+  { id: 'backup', label: 'Backup' },
+  { id: 'cache', label: 'Cache' },
+] as const;
+
+type SectionId = (typeof SECTIONS)[number]['id'];
+
+function sectionFromHash(): SectionId {
+  const hash = location.hash.replace('#', '');
+  return SECTIONS.some((s) => s.id === hash) ? (hash as SectionId) : 'providers';
+}
 
 function newProvider(): ProviderProfile {
   return {
@@ -23,14 +39,26 @@ function newProvider(): ProviderProfile {
 
 export function App() {
   const { settings, mutate } = useSettings();
+  const [active, setActive] = useState<SectionId>(sectionFromHash);
 
   useEffect(() => {
     document.title = `${BRAND.name} — Settings`;
   }, []);
 
+  useEffect(() => {
+    const onHashChange = () => setActive(sectionFromHash());
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
   if (!settings) {
     return <main className="page page--loading">Loading…</main>;
   }
+
+  const navigate = (id: SectionId) => {
+    location.hash = id;
+    setActive(id);
+  };
 
   const addProvider = () =>
     mutate((s) => {
@@ -73,6 +101,7 @@ export function App() {
   const setPrompts = (prompts: PromptOverrides) => mutate((s) => ({ ...s, prompts }));
 
   const { providers, defaults } = settings;
+  const activeLabel = SECTIONS.find((s) => s.id === active)?.label ?? '';
 
   return (
     <main className="page">
@@ -83,93 +112,79 @@ export function App() {
         </p>
       </header>
 
-      <section className="section">
-        <div className="section__head">
-          <h2 className="section__title">
-            <span className="eyebrow">Providers</span>
-          </h2>
-          <button type="button" className="btn btn--primary" onClick={addProvider}>
-            Add provider
-          </button>
-        </div>
-
-        {providers.length === 0 ? (
-          <div className="empty">
-            <p className="empty__title">No providers yet</p>
-            <p className="empty__body">
-              Add a provider and paste an API key to start translating. Nothing leaves this device
-              except requests to the endpoint you configure.
-            </p>
-            <button type="button" className="btn btn--primary" onClick={addProvider}>
-              Add your first provider
+      <div className="layout">
+        <nav className="sidenav" aria-label="Settings sections">
+          {SECTIONS.map((s) => (
+            <button
+              type="button"
+              key={s.id}
+              className={`sidenav__item${active === s.id ? ' is-active' : ''}`}
+              aria-current={active === s.id ? 'page' : undefined}
+              onClick={() => navigate(s.id)}
+            >
+              {s.label}
             </button>
+          ))}
+        </nav>
+
+        <div className="content">
+          <div className="content__head">
+            <h2 className="content__title">{activeLabel}</h2>
+            {active === 'providers' && (
+              <button type="button" className="btn btn--primary" onClick={addProvider}>
+                Add provider
+              </button>
+            )}
           </div>
-        ) : (
-          <div className="cards">
-            {providers.map((profile) => (
-              <ProviderCard
-                key={profile.id}
-                profile={profile}
-                isGlobalDefault={defaults.global === profile.id}
-                onPatch={(patch) => patchProvider(profile.id, patch)}
-                onDelete={() => deleteProvider(profile.id)}
-              />
+
+          {active === 'providers' &&
+            (providers.length === 0 ? (
+              <div className="empty">
+                <p className="empty__title">No providers yet</p>
+                <p className="empty__body">
+                  Add a provider and paste an API key to start translating. Nothing leaves this
+                  device except requests to the endpoint you configure.
+                </p>
+                <button type="button" className="btn btn--primary" onClick={addProvider}>
+                  Add your first provider
+                </button>
+              </div>
+            ) : (
+              <div className="cards">
+                {providers.map((profile) => (
+                  <ProviderCard
+                    key={profile.id}
+                    profile={profile}
+                    isGlobalDefault={defaults.global === profile.id}
+                    onPatch={(patch) => patchProvider(profile.id, patch)}
+                    onDelete={() => deleteProvider(profile.id)}
+                  />
+                ))}
+              </div>
             ))}
-          </div>
-        )}
-      </section>
 
-      {providers.length > 0 && (
-        <section className="section">
-          <div className="section__head">
-            <h2 className="section__title">
-              <span className="eyebrow">Defaults</span>
-            </h2>
-          </div>
-          <DefaultsPanel providers={providers} defaults={defaults} onChange={setDefaults} />
-        </section>
-      )}
+          {active === 'defaults' && (
+            <DefaultsPanel providers={providers} defaults={defaults} onChange={setDefaults} />
+          )}
 
-      <section className="section">
-        <div className="section__head">
-          <h2 className="section__title">
-            <span className="eyebrow">Translation</span>
-          </h2>
+          {active === 'translation' && (
+            <GeneralPanel
+              general={settings.general}
+              disabledSites={settings.siteRules.disableSelection}
+              onGeneral={setGeneral}
+              onDisabledSites={setDisabledSites}
+            />
+          )}
+
+          {active === 'prompts' && (
+            <PromptsPanel prompts={settings.prompts} onChange={setPrompts} />
+          )}
+
+          {active === 'backup' && <BackupPanel settings={settings} />}
+
+          {active === 'cache' && <CachePanel />}
         </div>
-        <GeneralPanel
-          general={settings.general}
-          disabledSites={settings.siteRules.disableSelection}
-          onGeneral={setGeneral}
-          onDisabledSites={setDisabledSites}
-        />
-      </section>
-
-      <section className="section">
-        <div className="section__head">
-          <h2 className="section__title">
-            <span className="eyebrow">Prompts</span>
-          </h2>
-        </div>
-        <PromptsPanel prompts={settings.prompts} onChange={setPrompts} />
-      </section>
-
-      <section className="section">
-        <div className="section__head">
-          <h2 className="section__title">
-            <span className="eyebrow">Backup</span>
-          </h2>
-        </div>
-        <BackupPanel settings={settings} />
-      </section>
-
-      <section className="section">
-        <div className="section__head">
-          <h2 className="section__title">
-            <span className="eyebrow">Cache</span>
-          </h2>
-        </div>
-        <CachePanel />
-      </section>
+      </div>
     </main>
   );
 }
