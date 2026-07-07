@@ -12,7 +12,7 @@ import { useSettings } from './useSettings';
 
 const SECTIONS = [
   { id: 'providers', label: 'Providers' },
-  { id: 'defaults', label: 'Defaults' },
+  { id: 'routing', label: 'Routing' },
   { id: 'translation', label: 'Translation' },
   { id: 'prompts', label: 'Prompts' },
   { id: 'backup', label: 'Backup' },
@@ -163,7 +163,7 @@ export function App() {
               </div>
             ))}
 
-          {active === 'defaults' && (
+          {active === 'routing' && (
             <DefaultsPanel providers={providers} defaults={defaults} onChange={setDefaults} />
           )}
 
