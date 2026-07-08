@@ -84,6 +84,18 @@ describe('import/export', () => {
     expect(restored.defaults.global).toBe('a');
   });
 
+  it('imports a provider whose name is empty (name is an optional label)', async () => {
+    const settings = {
+      ...DEFAULT_SETTINGS,
+      providers: [{ ...p('a'), name: '' }],
+      defaults: { global: 'a' },
+    };
+    await importSettings(exportSettings(settings, true));
+    const restored = await getSettings();
+    expect(restored.providers[0]?.id).toBe('a');
+    expect(restored.providers[0]?.name).toBe('');
+  });
+
   it('throws on invalid JSON', async () => {
     await expect(importSettings('{not json')).rejects.toThrow();
   });

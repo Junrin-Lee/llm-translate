@@ -39,7 +39,7 @@ _Avoid_: whitelist, auto site
 ### Provider
 
 **Provider Profile (Provider 配置)**:
-A named configuration for connecting to a translation service, made up of a Protocol, Base URL, API Key, model name, and optional parameters. Users can save several.
+A named configuration for connecting to a translation service, made up of a Protocol, Base URL, API Key, model name, and optional parameters. Users can save several. The name is an optional display label chosen by the user; each profile is referenced internally by a stable id, so a profile with no name still works.
 _Avoid_: translation engine, vendor, channel, account
 
 **Protocol (协议类型)**:

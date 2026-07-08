@@ -39,7 +39,7 @@ _Avoid_: 白名单、自动站点
 ### Provider
 
 **Provider 配置 (Provider Profile)**:
-一条命名的翻译服务接入配置,由协议类型、Base URL、API Key、模型名和可选参数组成。用户可保存多条。
+一条命名的翻译服务接入配置,由协议类型、Base URL、API Key、模型名和可选参数组成。用户可保存多条。其中 name 是用户自定义的可选展示标签;每条配置在内部通过稳定的 id 引用,因此 name 为空的配置也能正常工作。
 _Avoid_: 翻译引擎、服务商、渠道、账号
 
 **协议类型 (Protocol)**:

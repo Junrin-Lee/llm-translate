@@ -131,7 +131,7 @@ interface TranslationClient {
 
 > 翻译缓存**不在** `AppSettings` 内,而是独立的存储键(划词用 `storage.session`、全文用 `storage.local`),按内容 key、LRU 淘汰、可一键清空;详见 roadmap「缓存设计」。
 
-导入/导出:JSON 文件;导出默认**不含** API Key,勾选「包含 Key」才导出并给敏感提示。
+导入/导出:JSON 文件;导出默认**不含** API Key,勾选「包含 Key」才导出并给敏感提示。导入时 `id` / `baseUrl` / `model` 必填;`name` 可选(允许为空,因为配置按 id 绑定)。
 
 ## 8. Prompt 层
 

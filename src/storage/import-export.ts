@@ -46,7 +46,7 @@ function normalizeProfile(value: unknown): ProviderProfile {
   if (typeof protocol !== 'string' || !PROTOCOLS.includes(protocol as Protocol)) {
     throw new Error(`Invalid provider protocol: ${String(protocol)}`);
   }
-  for (const key of ['id', 'name', 'baseUrl', 'model'] as const) {
+  for (const key of ['id', 'baseUrl', 'model'] as const) {
     if (typeof value[key] !== 'string' || (value[key] as string).length === 0) {
       throw new Error(`Provider field "${key}" must be a non-empty string`);
     }
@@ -54,7 +54,7 @@ function normalizeProfile(value: unknown): ProviderProfile {
 
   const profile: ProviderProfile = {
     id: value.id as string,
-    name: value.name as string,
+    name: typeof value.name === 'string' ? value.name : '',
     protocol: protocol as Protocol,
     baseUrl: value.baseUrl as string,
     apiKey: typeof value.apiKey === 'string' ? value.apiKey : '',

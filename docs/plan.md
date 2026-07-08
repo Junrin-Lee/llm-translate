@@ -131,7 +131,7 @@ interface TranslationClient {
 
 > The translation cache is **not** inside `AppSettings`; it lives under separate storage keys (`storage.session` for selection, `storage.local` for page), keyed by content, evicted by LRU, and clearable in one click; see "Cache design" in the roadmap for details.
 
-Import/export: JSON files; export **excludes** the API Key by default — only when "Include keys" is checked does it export them, with a sensitivity warning.
+Import/export: JSON files; export **excludes** the API Key by default — only when "Include keys" is checked does it export them, with a sensitivity warning. On import, `id` / `baseUrl` / `model` are required; `name` is optional (empty allowed, since profiles are bound by id).
 
 ## 8. Prompt Layer
 
