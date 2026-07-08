@@ -7,7 +7,7 @@
 
 **当前状态:** 划词翻译与全文翻译已完整可用。目前通过浏览器开发者模式「加载已解压的扩展」
 运行;尚未上架商店(端到端测试、图标素材、隐私政策、双商店提交为发布前收尾项,见
-[路线图](docs/superpowers/plans/2026-07-06-llm-translate-roadmap.md))。
+[路线图](docs/superpowers/plans/2026-07-06-llm-translate-roadmap.zh-CN.md))。
 
 ## ✨ 功能特性
 
@@ -72,7 +72,7 @@ pnpm build          # 产物输出到 .output/chrome-mv3/
 
 ## 🔒 隐私与安全
 
-- 所有配置与 API Key 仅存于 `storage.local`,**从不同步、从不上传**——唯一的网络请求是发往**你自己配置的** API 端点,内容为待翻译文本。见 [ADR-0002](docs/adr/0002-local-only-storage.md)。
+- 所有配置与 API Key 仅存于 `storage.local`,**从不同步、从不上传**——唯一的网络请求是发往**你自己配置的** API 端点,内容为待翻译文本。见 [ADR-0002](docs/adr/0002-local-only-storage.zh-CN.md)。
 - 所有 LLM 网络请求只从 background service worker 发出;content script 与页面上下文永不接触密钥。
 - 页面译文一律以 `textContent` 写入 DOM(LLM 输出视为不可信输入,防 XSS),全项目无 `innerHTML` / `eval`。
 - 设置导出默认**剥离** API Key;仅在你显式勾选「包含 API Key」时才写入(并有明文提示)。
@@ -150,5 +150,5 @@ docs/                 CONTEXT 术语表、ADR、隐私政策、开发路线图
 | M4 | 设置完善(Prompt 编辑器、导入导出、缓存清理、界面 i18n) | ✅ |
 | M5 | 上架(E2E、图标素材、隐私政策、品牌定稿、双商店提交) | ⬜ |
 
-完整任务拆分见 [开发路线图](docs/superpowers/plans/2026-07-06-llm-translate-roadmap.md)。
-架构取舍见 [docs/adr/](docs/adr/);术语见 [CONTEXT.md](CONTEXT.md)。
+完整任务拆分见 [开发路线图](docs/superpowers/plans/2026-07-06-llm-translate-roadmap.zh-CN.md)。
+架构取舍见 [docs/adr/](docs/adr/);术语见 [CONTEXT.zh-CN.md](CONTEXT.zh-CN.md)。

@@ -1,60 +1,62 @@
-# LLM 翻译浏览器扩展
+# LLM Translation Browser Extension
 
-一个面向 Chrome Web Store / Edge Add-ons 发布的浏览器扩展:提供划词翻译与全文翻译两个功能,翻译能力完全由用户自带的 LLM API(OpenAI 兼容协议或 Anthropic 兼容协议)提供,无自建后端、无账号体系。
+**English** · [简体中文](./CONTEXT.zh-CN.md)
+
+A browser extension built for release to the Chrome Web Store / Edge Add-ons: it provides two features, Selection Translation and Page Translation. Its translation capability comes entirely from the user's own LLM API (an OpenAI-compatible or Anthropic-compatible protocol) — no self-hosted backend, no account system.
 
 ## Language
 
-### 翻译功能
+### Translation features
 
-**划词翻译 (Selection Translation)**:
-用户在网页上选中一段文本后触发的即时翻译,结果以浮层就地展示。根据选区形态输出词典卡片或译文卡片。
-_Avoid_: 取词翻译、悬停翻译、查词
+**Selection Translation (划词翻译)**:
+The instant translation triggered after a user selects a span of text on a web page; the result is shown in place as a popover. Depending on the shape of the selection, it outputs either a Dictionary Card or a Translation Card.
+_Avoid_: word-capture translation, hover translation, word lookup
 
-**词典卡片 (Dictionary Card)**:
-选区被判定为单词或短语时,划词翻译输出的词典式结果:音标、词性、多义、例句。
-_Avoid_: 查词结果、单词卡
+**Dictionary Card (词典卡片)**:
+The dictionary-style result that Selection Translation outputs when the selection is judged to be a word or phrase: phonetics, part of speech, multiple senses, example sentences.
+_Avoid_: lookup result, word card
 
-**译文卡片 (Translation Card)**:
-选区为句子或段落时,划词翻译输出的纯译文结果。
-_Avoid_: 翻译结果框
+**Translation Card (译文卡片)**:
+The plain-translation result that Selection Translation outputs when the selection is a sentence or paragraph.
+_Avoid_: translation result box
 
-**全文翻译 (Page Translation)**:
-对当前网页可读正文的整页翻译,有双语对照与仅译文两种展示模式。
-_Avoid_: 网页翻译、沉浸式翻译、整页翻译
+**Page Translation (全文翻译)**:
+Whole-page translation of the readable body text of the current web page; it has two display modes, Bilingual Mode and Translation-only Mode.
+_Avoid_: webpage translation, immersive translation, full-page translation
 
-**双语对照 (Bilingual Mode)**:
-全文翻译的默认展示模式:译文块插在对应原文块下方,原文保留。
-_Avoid_: 对照模式、上下对照
+**Bilingual Mode (双语对照)**:
+The default display mode of Page Translation: each translated block is inserted below its corresponding source block, and the original text is kept.
+_Avoid_: comparison mode, stacked comparison
 
-**仅译文 (Translation-only Mode)**:
-全文翻译的可选展示模式:译文原地替换原文,原文隐藏但可一键还原。
-_Avoid_: 替换模式
+**Translation-only Mode (仅译文)**:
+An optional display mode of Page Translation: the translation replaces the original text in place; the original is hidden but can be restored with one click.
+_Avoid_: replace mode
 
-**自动翻译站点 (Auto-translate Site)**:
-被用户标记为"总是翻译"的域名;访问其页面时自动触发全文翻译。
-_Avoid_: 白名单、自动站点
+**Auto-translate Site (自动翻译站点)**:
+A domain the user has marked as "always translate"; visiting its pages automatically triggers Page Translation.
+_Avoid_: whitelist, auto site
 
 ### Provider
 
-**Provider 配置 (Provider Profile)**:
-一条命名的翻译服务接入配置,由协议类型、Base URL、API Key、模型名和可选参数组成。用户可保存多条。
-_Avoid_: 翻译引擎、服务商、渠道、账号
+**Provider Profile (Provider 配置)**:
+A named configuration for connecting to a translation service, made up of a Protocol, Base URL, API Key, model name, and optional parameters. Users can save several.
+_Avoid_: translation engine, vendor, channel, account
 
-**协议类型 (Protocol)**:
-Provider 配置遵循的 API 形态,只有两种:OpenAI 兼容、Anthropic 兼容。
-_Avoid_: 厂商类型、接口类型
+**Protocol (协议类型)**:
+The API shape a Provider Profile follows; there are only two: OpenAI-compatible, Anthropic-compatible.
+_Avoid_: vendor type, interface type
 
-**全局默认 Provider (Global Default Provider)**:
-未被功能级覆盖时,所有翻译功能实际使用的那条 Provider 配置。
-_Avoid_: 当前引擎、激活配置
+**Global Default Provider (全局默认 Provider)**:
+The Provider Profile that every translation feature actually uses when it is not overridden at the feature level.
+_Avoid_: current engine, active profile
 
-**功能级覆盖 (Feature Override)**:
-划词翻译或全文翻译各自单独指定的 Provider 配置;设置后优先于全局默认 Provider,不设置则跟随全局。
-_Avoid_: 独立配置、分渠道
+**Feature Override (功能级覆盖)**:
+A Provider Profile specified separately for Selection Translation or Page Translation; once set, it takes precedence over the Global Default Provider, and when unset it follows the global one.
+_Avoid_: standalone config, per-channel
 
 ## Example dialogue
 
-> **Dev**: 用户划词之后走哪个模型?
-> **Expert**: 先看划词翻译有没有功能级覆盖,有就用覆盖指定的那条 Provider 配置;没有就用全局默认 Provider。
-> **Dev**: 那"Provider 配置"里存的是厂商吗?比如 DeepSeek?
-> **Expert**: 不是厂商,是一条接入配置。DeepSeek 官方、公司网关代理的 DeepSeek,可以是两条不同的 Provider 配置,它们的协议类型都是 OpenAI 兼容。
+> **Dev**: After a user selects text, which model handles it?
+> **Expert**: First check whether Selection Translation has a Feature Override — if so, use the Provider Profile that override specifies; if not, use the Global Default Provider.
+> **Dev**: So does a "Provider Profile" store a vendor? Like DeepSeek?
+> **Expert**: Not a vendor — it's a connection configuration. DeepSeek's official endpoint and a DeepSeek proxied through the company gateway can be two different Provider Profiles, and both have the Protocol OpenAI-compatible.

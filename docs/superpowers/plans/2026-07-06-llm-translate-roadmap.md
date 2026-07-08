@@ -1,40 +1,42 @@
-# LLM 翻译扩展 — 总体开发计划(Roadmap)
+# LLM Translation Extension — Overall Development Plan (Roadmap)
 
-> **定位**:本文档是 M0–M5 全量任务拆分与接口契约,依据 [docs/plan.md](../../plan.md)(方案)与 [CONTEXT.md](../../../CONTEXT.md)(术语)。
-> **执行方式**:每个里程碑开工前,基于本文档生成该里程碑的详细实现计划(superpowers:writing-plans 格式,含完整 TDD 代码步骤),存放于本目录 `YYYY-MM-DD-m<N>-<name>.md`;随后用 superpowers:subagent-driven-development 或 executing-plans 逐任务执行。
-> **接口契约**:本文档「接口契约」一节的签名是跨任务的权威定义,后续详细计划不得擅自改名;确需变更时先改本文档。
+**English** · [简体中文](./2026-07-06-llm-translate-roadmap.zh-CN.md)
 
-**Goal:** 上架 Chrome Web Store + Edge Add-ons 的 MV3 扩展:划词翻译 + 全文翻译,BYOK 支持 OpenAI 兼容与 Anthropic 兼容协议。
+> **Scope:** This document is the full M0–M5 task breakdown and interface contract, based on [docs/plan.md](../../plan.md) (solution) and [CONTEXT.md](../../../CONTEXT.md) (terminology).
+> **Execution:** Before starting each milestone, generate that milestone's detailed implementation plan based on this document (superpowers:writing-plans format, with complete TDD code steps), stored in this directory as `YYYY-MM-DD-m<N>-<name>.md`; then execute task by task with superpowers:subagent-driven-development or executing-plans.
+> **Interface contract:** The signatures in the "Interface contract" section of this document are the authoritative cross-task definitions; subsequent detailed plans must not rename them arbitrarily. When a change is truly needed, update this document first.
 
-**Architecture:** WXT + React + TS;content script 常驻 `<all_urls>` 负责 UI 与 DOM;所有 LLM 请求仅由 background service worker 发出;content ↔ background 用 Port 通道传流式结果;纯逻辑模块(协议、分块、判定、prompt)与入口解耦,重点单测。
+**Goal:** An MV3 extension published to the Chrome Web Store + Edge Add-ons: Selection Translation + Page Translation, BYOK with support for OpenAI-compatible and Anthropic-compatible protocols.
 
-**Tech Stack:** WXT、React 19、TypeScript(strict)、pnpm、Biome、vitest(+ WxtVitest/fake-browser)、Playwright、GitHub Actions。
+**Architecture:** WXT + React + TS; the content script runs persistently on `<all_urls>` and handles UI and DOM; all LLM requests are issued only by the background service worker; content ↔ background stream results over a Port channel; pure-logic modules (protocol, segmentation, classification, prompt) are decoupled from the entrypoints, with a focus on unit tests.
 
-> **进度(截至 2026-07-07):** M0–M5 主体已完成(164 单测 + 2 Playwright E2E 冒烟通过);仅剩 Chrome/Edge 商店的**实际提交**(需开发者账号,由维护者手动完成)。下方各里程碑标题的 ✅ / ⬜ 表示当前状态。
+**Tech Stack:** WXT, React 19, TypeScript (strict), pnpm, Biome, vitest (+ WxtVitest/fake-browser), Playwright, GitHub Actions.
 
-## 全局约束(每个任务隐含遵守)
+> **Progress (as of 2026-07-07):** The bulk of M0–M5 is complete (164 unit tests + 2 Playwright E2E smoke tests passing); only the **actual submission** to the Chrome/Edge stores remains (requires a developer account, done manually by the maintainer). The ✅ / ⬜ on each milestone heading below indicates its current status.
 
-- TypeScript `strict: true`;包管理 pnpm(经 `packageManager` 固定 9.15.9);Node 20(pnpm 10/11 需 Node 22+,故留在 pnpm 9)。
-- 所有对 LLM API 的网络请求只允许出现在 background;content script 禁止 fetch 外部服务。
-- 译文写入 DOM 一律 `textContent`,禁止 `innerHTML`(LLM 输出按不可信输入处理)。
-- API Key 不得出现在日志、错误信息、异常堆栈;导出默认不含 Key。
-- 品牌名经 `src/brand.ts` 的 `BRAND` 常量引用,禁止硬编码字符串。
-- 纯逻辑模块(`src/llm|segmenter|selection|prompts|translator|storage`)走 TDD;UI 任务以手动验收清单为主。
-- 每任务独立 commit,Conventional Commits(`feat:`/`fix:`/`test:`/`chore:`)。
-- CI(typecheck + Biome + vitest + build)必须绿才算任务完成。
+## Global constraints (implicitly followed by every task)
 
-## 文件结构总图
+- TypeScript `strict: true`; package manager pnpm (pinned to 9.15.9 via `packageManager`); Node 20 (pnpm 10/11 require Node 22+, so we stay on pnpm 9).
+- All network requests to the LLM API are allowed only in the background; the content script must not fetch external services.
+- Translations are always written to the DOM via `textContent`; `innerHTML` is forbidden (LLM output is treated as untrusted input).
+- The API Key must not appear in logs, error messages, or exception stack traces; exports exclude the Key by default.
+- The brand name is referenced via the `BRAND` constant in `src/brand.ts`; hardcoded strings are forbidden.
+- Pure-logic modules (`src/llm|segmenter|selection|prompts|translator|storage`) follow TDD; UI tasks rely mainly on manual acceptance checklists.
+- Each task is its own commit, Conventional Commits (`feat:`/`fix:`/`test:`/`chore:`).
+- CI (typecheck + Biome + vitest + build) must be green for a task to be considered complete.
+
+## File structure overview
 
 ```
 ├── wxt.config.ts / tsconfig.json / biome.json / vitest.config.ts / package.json
 ├── entrypoints/
-│   ├── background.ts            # 消息路由 + LLM 出口 + 菜单/快捷键
-│   ├── content.tsx              # 划词 + 全文 DOM 引擎 + Shadow DOM UI 挂载
+│   ├── background.ts            # message routing + LLM egress + menus/shortcuts
+│   ├── content.tsx              # selection + page DOM engine + Shadow DOM UI mounting
 │   ├── popup/ (index.html, App.tsx)
 │   └── options/ (index.html, App.tsx, components/)
 ├── src/
 │   ├── brand.ts / languages.ts
-│   ├── i18n/       messages.ts, index.ts, useI18n.ts(应用内 en/zh 文案)
+│   ├── i18n/       messages.ts, index.ts, useI18n.ts (in-app en/zh strings)
 │   ├── llm/        types.ts, sse.ts, base-url.ts, openai.ts, anthropic.ts, http.ts, client.ts
 │   ├── messaging/  protocol.ts, handler.ts, port-client.ts
 │   ├── storage/    schema.ts, index.ts, import-export.ts
@@ -42,13 +44,13 @@
 │   ├── selection/  classify.ts, dict-result.ts
 │   ├── segmenter/  index.ts
 │   ├── translator/ batch.ts, orchestrator.ts, cache.ts, inject.ts
-│   └── ui/         selection/(图标·浮层), page/(工具条·store)
-├── tests/          # 与 src/ 镜像的 *.test.ts;fixtures/
+│   └── ui/         selection/ (icon · panel), page/ (toolbar · store)
+├── tests/          # *.test.ts mirroring src/; fixtures/
 ├── e2e/            # Playwright + mock-llm server
 └── .github/workflows/ ci.yml, release.yml
 ```
 
-## 接口契约(权威定义)
+## Interface contract (authoritative definitions)
 
 ```ts
 // src/llm/types.ts
@@ -56,7 +58,7 @@ export type Protocol = 'openai' | 'anthropic';
 export interface ProviderProfile {
   id: string; name: string; protocol: Protocol;
   baseUrl: string; apiKey: string; model: string;
-  params?: { temperature?: number; maxTokens?: number; timeoutMs?: number };  // timeout 默认 60_000
+  params?: { temperature?: number; maxTokens?: number; timeoutMs?: number };  // timeout defaults to 60_000
 }
 export interface ChatRequest {
   system: string; user: string; model: string;
@@ -82,7 +84,7 @@ export function createClient(profile: ProviderProfile): TranslationClient;
 export async function* parseSse(stream: ReadableStream<Uint8Array>):
   AsyncGenerator<{ event?: string; data: string }>;
 
-// src/llm/base-url.ts — 规范化规则:去尾斜杠;openai 无 path 时补 /v1
+// src/llm/base-url.ts — normalization rules: strip trailing slash; append /v1 for openai when no path
 export function normalizeBaseUrl(raw: string, protocol: Protocol): string;
 export function endpointFor(base: string, protocol: Protocol, kind: 'chat' | 'models'): string;
 
@@ -91,7 +93,7 @@ export interface GeneralSettings {
   targetLang: string; secondaryTargetLang?: string;
   selectionTrigger: 'icon' | 'instant' | 'shortcut-only';
   pageMode: 'bilingual' | 'replace';
-  uiLang: 'auto' | 'en' | 'zh';   // 界面语言(T4.3 i18n)
+  uiLang: 'auto' | 'en' | 'zh';   // UI language (T4.3 i18n)
 }
 export interface SiteRules { autoTranslate: string[]; disableSelection: string[] }
 export interface PromptOverrides { selectionDict?: string; selectionText?: string; pageBatch?: string }
@@ -109,18 +111,18 @@ export function resolveProfile(feature: 'selection' | 'page'): Promise<ProviderP
 
 // src/storage/import-export.ts
 export function exportSettings(s: AppSettings, includeKeys: boolean): string;
-export function importSettings(json: string): Promise<void>;   // 校验 + 合并写入
+export function importSettings(json: string): Promise<void>;   // validate + merge-write
 
 // src/prompts/index.ts
 export type PromptKind = 'selectionDict' | 'selectionText' | 'pageBatch';
 export interface PromptVars { text: string; targetLang: string; sourceLang?: string; siteTitle?: string }
 export function renderPrompt(kind: PromptKind, vars: PromptVars, overrides?: PromptOverrides):
-  { system: string; user: string; version: string };   // version 参与缓存 key
+  { system: string; user: string; version: string };   // version participates in the cache key
 
-// src/messaging/protocol.ts —— Port 名称常量 + 消息类型(以代码为准;路由逻辑在 src/messaging/handler.ts 便于单测)
+// src/messaging/protocol.ts —— Port name constants + message types (code is authoritative; routing logic in src/messaging/handler.ts for easier unit testing)
 export type BgRequest =
   | { kind: 'translate-stream'; feature: 'selection'; promptKind: 'selectionDict' | 'selectionText'; vars: PromptVars; bypassCache?: boolean }
-  | { kind: 'translate-batch'; feature: 'page'; payload: string; vars: Omit<PromptVars, 'text'> }  // payload = 已编码批次,编解码归 orchestrator
+  | { kind: 'translate-batch'; feature: 'page'; payload: string; vars: Omit<PromptVars, 'text'> }  // payload = already-encoded batch, encoding/decoding belongs to the orchestrator
   | { kind: 'list-models'; profileId: string }
   | { kind: 'test-connection'; profileId: string };
 export type BgEvent =
@@ -130,7 +132,7 @@ export type BgEvent =
   | { type: 'models'; models: string[] }
   | { type: 'test-result'; ok: boolean; latencyMs?: number; errorCode?: LlmErrorCode; message?: string }
   | { type: 'error'; code: LlmErrorCode; message: string };
-// 另有 background/popup → content 的一次性消息:
+// Also one-off messages from background/popup → content:
 //   ContentMessage = { type: 'open-selection-panel' | 'translate-page' | 'get-page-status' }
 //   PageStatusReply = 'idle' | 'translating' | 'done';  TabMessage = { type: 'page-status-changed'; status: PageStatusReply }
 
@@ -138,15 +140,15 @@ export type BgEvent =
 export function classifySelection(text: string): 'dict' | 'text';
 // src/selection/dict-result.ts
 export interface DictResult { word: string; phonetic?: string; senses: { pos?: string; meaning: string }[]; examples?: string[] }
-export function parseDictResult(raw: string): DictResult | null;  // null = 降级纯文本
+export function parseDictResult(raw: string): DictResult | null;  // null = fall back to plain text
 
 // src/segmenter/index.ts
 export interface Segment { id: number; element: Element; text: string }
 export function collectSegments(root: ParentNode): Segment[];
 
-// src/translator/batch.ts —— 编号标记协议
+// src/translator/batch.ts —— numbered-marker protocol
 export function encodeBatch(items: { id: number; text: string }[]): string;
-export function decodeBatch(raw: string): Map<number, string>;   // 容忍缺号/乱序/多余
+export function decodeBatch(raw: string): Map<number, string>;   // tolerates missing numbers/out-of-order/extras
 
 // src/translator/orchestrator.ts
 export interface PageTranslateController { pause(): void; resume(): void; cancel(): void }
@@ -164,120 +166,120 @@ export function cacheKey(p: { protocol: string; model: string; promptVersion: st
 
 ---
 
-## M0 脚手架(可加载、CI 绿) ✅
+## M0 Scaffolding (loadable, CI green) ✅
 
-| 任务 | 内容 | Files | 验收 | 依赖 | 估 |
+| Task | Content | Files | Acceptance | Deps | Est |
 |---|---|---|---|---|---|
-| **T0.1** 项目初始化 | `pnpm dlx wxt@latest init`(react-ts 模板)后调整:strict tsconfig、`@/` 别名、`src/brand.ts`、四入口空壳(background/content/popup/options) | package.json, wxt.config.ts, tsconfig.json, entrypoints/*, src/brand.ts | `pnpm dev` 后 Chrome 开发者模式可加载,四入口无报错 | — | M |
-| **T0.2** Biome | biome.json(recommended + organize imports),scripts:`lint`/`format` | biome.json, package.json | `pnpm lint` 0 error | T0.1 | S |
-| **T0.3** vitest | vitest.config.ts(WxtVitest 插件 + fake-browser),一个冒烟测试 | vitest.config.ts, tests/smoke.test.ts | `pnpm test` 绿 | T0.1 | S |
-| **T0.4** manifest 与权限 | permissions: `storage`,`contextMenus`;host_permissions `<all_urls>`;content script matches `<all_urls>`;commands 骨架(`translate-selection`/`translate-page`);name 引 BRAND | wxt.config.ts, entrypoints/content.tsx | chrome://extensions 显示权限正确;快捷键出现在 chrome://extensions/shortcuts | T0.1 | S |
-| **T0.5** CI | ci.yml:PR/push → pnpm install + typecheck + lint + test + `wxt build`;release.yml 骨架(tag 触发,先只 build) | .github/workflows/ci.yml, release.yml | PR 上 CI 全绿 | T0.2-3 | S |
+| **T0.1** Project initialization | After `pnpm dlx wxt@latest init` (react-ts template), adjust: strict tsconfig, `@/` alias, `src/brand.ts`, four empty entrypoint stubs (background/content/popup/options) | package.json, wxt.config.ts, tsconfig.json, entrypoints/*, src/brand.ts | Loads in Chrome developer mode after `pnpm dev`, all four entrypoints without errors | — | M |
+| **T0.2** Biome | biome.json (recommended + organize imports), scripts: `lint`/`format` | biome.json, package.json | `pnpm lint` 0 errors | T0.1 | S |
+| **T0.3** vitest | vitest.config.ts (WxtVitest plugin + fake-browser), one smoke test | vitest.config.ts, tests/smoke.test.ts | `pnpm test` green | T0.1 | S |
+| **T0.4** manifest & permissions | permissions: `storage`, `contextMenus`; host_permissions `<all_urls>`; content script matches `<all_urls>`; commands skeleton (`translate-selection`/`translate-page`); name references BRAND | wxt.config.ts, entrypoints/content.tsx | chrome://extensions shows correct permissions; shortcuts appear in chrome://extensions/shortcuts | T0.1 | S |
+| **T0.5** CI | ci.yml: PR/push → pnpm install + typecheck + lint + test + `wxt build`; release.yml skeleton (tag-triggered, build only for now) | .github/workflows/ci.yml, release.yml | CI all green on PRs | T0.2-3 | S |
 
-## M1 协议层与 Provider 管理(options 真实连通两协议) ✅
+## M1 Protocol layer & Provider management (options page really connects to both protocols) ✅
 
-| 任务 | 内容 | Files | 验收 | 依赖 | 估 |
+| Task | Content | Files | Acceptance | Deps | Est |
 |---|---|---|---|---|---|
-| **T1.1** 类型层 | 契约中 `src/llm/types.ts` 全量类型 + `LlmError` | src/llm/types.ts | typecheck 过;LlmError 可 instanceof | T0 | S |
-| **T1.2** SSE 解析器 | `parseSse`:按行组装事件;覆盖半包分割、一包多事件、CRLF、`event:` 行、`[DONE]` 不特殊处理(交给 adapter) | src/llm/sse.ts, tests/llm/sse.test.ts | 单测:≥8 个分包边界 case 绿 | T1.1 | M |
-| **T1.3** Base URL 规范化 | `normalizeBaseUrl`/`endpointFor`;规则:去尾 `/`;openai 无 path 补 `/v1`,chat=`{base}/chat/completions`,models=`{base}/models`;anthropic chat=`{base}/v1/messages`(base 已含 `/v1` 则不重复),models 同理 | src/llm/base-url.ts, tests/llm/base-url.test.ts | 单测:官方/网关/带路径/带尾斜杠矩阵绿 | T1.1 | S |
-| **T1.4** OpenAI adapter | 请求构造(Bearer、messages 首条 system、`stream:true`)、`choices[0].delta.content` 增量、`[DONE]` 结束、非流 `complete`、HTTP→LlmError 映射 | src/llm/openai.ts, tests/llm/openai.test.ts | mock fetch 单测:流/非流/401/404/429/500/超时/中断 | T1.2-3 | M |
-| **T1.5** Anthropic adapter | 头:`x-api-key`+`anthropic-version: 2023-06-01`+`anthropic-dangerous-direct-browser-access: true`;顶层 `system`;`max_tokens` 必填(默认 4096 或 params.maxTokens);`content_block_delta`/`text_delta` 增量,`message_stop` 结束 | src/llm/anthropic.ts, tests/llm/anthropic.test.ts | 同 T1.4 的用例矩阵绿 | T1.2-3 | M |
-| **T1.6** 客户端工厂 | `createClient` 按 protocol 分发;共享重试(429 读 retry-after、5xx,≤2 次指数退避);`testConnection`(1 token 请求测延迟);`listModels`(失败返回 `[]` 不抛) | src/llm/client.ts, tests/llm/client.test.ts | 单测:重试次数/退避/两协议分发 | T1.4-5 | M |
-| **T1.7** 存储层 | schema 默认值、`getSettings/updateSettings/watchSettings/resolveProfile`(覆盖→全局回退)、version 迁移骨架、导入导出(includeKeys 开关、导入校验) | src/storage/*, tests/storage/*.test.ts | fake-browser 单测:读写/回退/导出脱敏/导入非法 JSON 报错 | T1.1 | M |
-| **T1.8** Prompt 层 | 三套内置模板(词典 JSON 输出/划词译文/全文批量编号协议)+ `renderPrompt` 插值 + overrides 生效 + version 常量 | src/prompts/*, tests/prompts/*.test.ts | 单测:插值/覆盖/未知变量保留原样 | T1.1 | S |
-| **T1.9** background 路由 | `src/messaging/protocol.ts` + background:onConnect 处理 4 类 BgRequest,translate-stream 经 `resolveProfile`+`renderPrompt`+`createClient.stream` 把 delta 转发为 BgEvent;AbortController 绑定 port disconnect | src/messaging/protocol.ts, entrypoints/background.ts, tests/messaging/protocol.test.ts | 协议编解码单测绿;手动:options 控制台经 port 收到 delta | T1.6-8 | M |
-| **T1.10** Provider CRUD UI | options 页:Provider 列表/新增/编辑(协议、baseUrl、key 掩码、模型输入)/删除(默认项保护)/设全局默认/划词与全文覆盖下拉 | entrypoints/options/*, src/ui/* | 手动清单:CRUD 全通;刷新持久 | T1.7 | L |
-| **T1.11** 连通验证 | 「测试连接」「拉取模型」按钮走 background;错误按 LlmErrorCode 显示可读文案 | entrypoints/options/*, entrypoints/background.ts | 真实 OpenAI 兼容 + Anthropic 兼容端点各连通一次(冒烟记录) | T1.9-10 | S |
+| **T1.1** Type layer | All types from the contract's `src/llm/types.ts` + `LlmError` | src/llm/types.ts | typecheck passes; LlmError supports instanceof | T0 | S |
+| **T1.2** SSE parser | `parseSse`: assemble events line by line; covers split-packet fragmentation, multiple events per packet, CRLF, `event:` lines, `[DONE]` not handled specially (left to the adapter) | src/llm/sse.ts, tests/llm/sse.test.ts | unit tests: ≥8 packet-boundary cases green | T1.1 | M |
+| **T1.3** Base URL normalization | `normalizeBaseUrl`/`endpointFor`; rules: strip trailing `/`; append `/v1` for openai when no path, chat=`{base}/chat/completions`, models=`{base}/models`; anthropic chat=`{base}/v1/messages` (no duplication if base already contains `/v1`), models likewise | src/llm/base-url.ts, tests/llm/base-url.test.ts | unit tests: official/gateway/with-path/with-trailing-slash matrix green | T1.1 | S |
+| **T1.4** OpenAI adapter | request construction (Bearer, system as first message, `stream:true`), `choices[0].delta.content` deltas, `[DONE]` termination, non-streaming `complete`, HTTP→LlmError mapping | src/llm/openai.ts, tests/llm/openai.test.ts | mock-fetch unit tests: streaming/non-streaming/401/404/429/500/timeout/abort | T1.2-3 | M |
+| **T1.5** Anthropic adapter | headers: `x-api-key`+`anthropic-version: 2023-06-01`+`anthropic-dangerous-direct-browser-access: true`; top-level `system`; `max_tokens` required (default 4096 or params.maxTokens); `content_block_delta`/`text_delta` deltas, `message_stop` termination | src/llm/anthropic.ts, tests/llm/anthropic.test.ts | same case matrix as T1.4, green | T1.2-3 | M |
+| **T1.6** Client factory | `createClient` dispatches by protocol; shared retry (read retry-after on 429, 5xx, ≤2 exponential backoffs); `testConnection` (1-token request to measure latency); `listModels` (returns `[]` on failure, does not throw) | src/llm/client.ts, tests/llm/client.test.ts | unit tests: retry count/backoff/dispatch across both protocols | T1.4-5 | M |
+| **T1.7** Storage layer | schema defaults, `getSettings/updateSettings/watchSettings/resolveProfile` (override → global fallback), version migration skeleton, import/export (includeKeys toggle, import validation) | src/storage/*, tests/storage/*.test.ts | fake-browser unit tests: read/write, fallback, export redaction, error on invalid-JSON import | T1.1 | M |
+| **T1.8** Prompt layer | three built-in templates (dictionary JSON output / selection translation / page batch numbered protocol) + `renderPrompt` interpolation + overrides taking effect + version constant | src/prompts/*, tests/prompts/*.test.ts | unit tests: interpolation / override / unknown variables left as-is | T1.1 | S |
+| **T1.9** background routing | `src/messaging/protocol.ts` + background: onConnect handles the 4 kinds of BgRequest; translate-stream forwards deltas as BgEvent via `resolveProfile`+`renderPrompt`+`createClient.stream`; AbortController bound to port disconnect | src/messaging/protocol.ts, entrypoints/background.ts, tests/messaging/protocol.test.ts | protocol encode/decode unit tests green; manual: options console receives deltas over the port | T1.6-8 | M |
+| **T1.10** Provider CRUD UI | options page: Provider list/add/edit (protocol, baseUrl, key masking, model input)/delete (default-item protection)/set as Global Default/Selection & Page override dropdowns | entrypoints/options/*, src/ui/* | manual checklist: full CRUD works; persists across refresh | T1.7 | L |
+| **T1.11** Connectivity verification | "Test connection" and "Fetch models" buttons go through the background; errors shown as readable text by LlmErrorCode | entrypoints/options/*, entrypoints/background.ts | connect once each to a real OpenAI-compatible + Anthropic-compatible endpoint (smoke record) | T1.9-10 | S |
 
-## M2 划词翻译(任意站点可用) ✅
+## M2 Selection Translation (works on any site) ✅
 
-| 任务 | 内容 | Files | 验收 | 依赖 | 估 |
+| Task | Content | Files | Acceptance | Deps | Est |
 |---|---|---|---|---|---|
-| **T2.1** 选区判定 | `classifySelection`:≤3 词且无句末标点→`dict`(CJK 按字符数阈值);2000 字符上限校验独立导出 | src/selection/classify.ts, tests/selection/classify.test.ts | 中/英/混合 fixtures 单测绿 | — | S |
-| **T2.2** 划词图标 | content:`selectionchange`+`mouseup` 防抖;选区尾部定位小图标(`createShadowRootUi`);排除 input/textarea/contenteditable、密码域;`disableSelection` 站点不挂载;`instant`/`shortcut-only` 模式分支 | entrypoints/content.tsx, src/ui/SelectionIcon.tsx | 手动清单:Google/GitHub/知乎三站图标正常、输入框不出 | T1.7 | M |
-| **T2.3** 浮层面板 | 浮层组件:定位(视口边缘翻转)、加载骨架、Esc/外点关闭、pin、复制、重试、目标语言临时切换 | src/ui/TranslatePanel.tsx | 手动清单逐项过 | T2.2 | M |
-| **T2.4** 流式接线 | content 侧 port client(`useTranslateStream` hook):发 translate-stream、增量渲染 delta、error 态、断线重连一次 | src/ui/useTranslateStream.ts | 手动:真实 API 流式出字;断网出错误态 | T1.9, T2.3 | M |
-| **T2.5** 词典卡片 | `parseDictResult`(容忍 markdown 代码围栏)+ 词典卡片组件(音标/词性/义项/例句);解析失败降级纯文本;卡片内手动切换 词典⇄译文 | src/selection/dict-result.ts, src/ui/DictCard.tsx, tests/selection/dict-result.test.ts | 单测:标准 JSON/围栏包裹/坏 JSON→null;手动:单词出词典卡 | T2.4 | M |
-| **T2.6** 快捷键 | `translate-selection` command → background 转发当前 tab;`shortcut-only`/`instant` 模式接线 | entrypoints/background.ts, entrypoints/content.tsx | 手动:三种触发模式行为符合设置 | T2.4 | S |
-| **T2.7** 划词设置 | options:触发方式单选、目标语言选择、禁用站点清单编辑(增删域名) | entrypoints/options/* | 手动:改设置即时生效(watchSettings) | T2.2 | S |
+| **T2.1** Selection classification | `classifySelection`: ≤3 words and no sentence-ending punctuation → `dict` (CJK uses a character-count threshold); the 2000-character cap check is exported separately | src/selection/classify.ts, tests/selection/classify.test.ts | Chinese/English/mixed fixtures unit tests green | — | S |
+| **T2.2** Selection icon | content: `selectionchange`+`mouseup` debounce; small icon positioned at the end of the selection (`createShadowRootUi`); excludes input/textarea/contenteditable and password fields; not mounted on `disableSelection` sites; `instant`/`shortcut-only` mode branches | entrypoints/content.tsx, src/ui/SelectionIcon.tsx | manual checklist: icon works on Google/GitHub/Zhihu, does not appear in input fields | T1.7 | M |
+| **T2.3** Floating panel | floating panel component: positioning (flips at viewport edges), loading skeleton, close on Esc/outside-click, pin, copy, retry, temporary target-language switch | src/ui/TranslatePanel.tsx | manual checklist passes item by item | T2.2 | M |
+| **T2.4** Streaming wiring | content-side port client (`useTranslateStream` hook): sends translate-stream, renders deltas incrementally, error state, reconnects once on disconnect | src/ui/useTranslateStream.ts | manual: real API streams text; going offline shows an error state | T1.9, T2.3 | M |
+| **T2.5** Dictionary Card | `parseDictResult` (tolerates markdown code fences) + Dictionary Card component (phonetics/part of speech/senses/examples); falls back to plain text on parse failure; manual toggle between dictionary ⇄ translation inside the card | src/selection/dict-result.ts, src/ui/DictCard.tsx, tests/selection/dict-result.test.ts | unit tests: standard JSON / fence-wrapped / bad JSON → null; manual: a word produces a Dictionary Card | T2.4 | M |
+| **T2.6** Keyboard shortcuts | `translate-selection` command → background forwards to the current tab; `shortcut-only`/`instant` mode wiring | entrypoints/background.ts, entrypoints/content.tsx | manual: all three trigger modes behave per settings | T2.4 | S |
+| **T2.7** Selection settings | options: trigger-mode radio, target-language selection, disabled-site list editing (add/remove domains) | entrypoints/options/* | manual: setting changes take effect immediately (watchSettings) | T2.2 | S |
 
-## M3 全文翻译(新闻/文档/SPA 三类站点可用) ✅
+## M3 Page Translation (works on three site types: news/docs/SPA) ✅
 
-| 任务 | 内容 | Files | 验收 | 依赖 | 估 |
+| Task | Content | Files | Acceptance | Deps | Est |
 |---|---|---|---|---|---|
-| **T3.1** 分块器 | `collectSegments`:遍历 `p/li/h1-h6/td/blockquote/dd/figcaption` 等;短块合并(<20 字符并入相邻)、超长拆分(>1000 字符按句);跳过 code/pre/script/style/textarea/contenteditable/纯链接/纯数字;可见性过滤 | src/segmenter/index.ts, tests/segmenter/*.test.ts + fixtures/*.html | 新闻页/表格/代码文档/嵌套列表 4 组 fixture 单测绿 | — | L |
-| **T3.2** 批量协议 | `encodeBatch`(`@@n@@` 行标记)+ `decodeBatch`(缺号跳过、乱序容忍、多余丢弃) | src/translator/batch.ts, tests/translator/batch.test.ts | 单测:正常/缺号/乱序/粘连 case 绿 | — | S |
-| **T3.3** 编排器 | `translateSegments`:按 token 预算组包(估算 len/2,≤1500 输出)、并发池(默认 3)、失败批次重试 1 次、`chrome.i18n.detectLanguage` 跳过同目标语言块、AbortController 全局取消 | src/translator/orchestrator.ts, tests/translator/orchestrator.test.ts | 单测(mock client):组包/并发上限/取消/跳过 | T3.1-2, T1.6 | L |
-| **T3.4** 缓存 | 见下方「缓存设计」;background 集中缓存 + 浮层内记忆,按内容 key、LRU 淘汰,`cacheKey` 含 mode/promptVersion,Retry 绕过 | src/translator/cache.ts, tests/translator/cache.test.ts | 单测:命中/淘汰/清空;手动:切 dict/text 与刷新页面秒回 | T1.7 | M |
-| **T3.5** DOM 注入 | 双语对照:原块后插 `data-llmt` 标记节点(textContent);仅译文:隐藏原块;`restorePage()` 全还原;模式热切换 | entrypoints/content.tsx, src/ui/inject.ts, tests/ui/inject.test.ts(happy-dom) | 单测:注入/还原幂等;手动:两模式切换无残留 | T3.1 | M |
-| **T3.6** 懒翻译 | IntersectionObserver:视口 ±1 屏优先入队,滚动追加;与编排器队列衔接 | entrypoints/content.tsx | 手动:长页首屏先出,滚动补翻 | T3.3, T3.5 | M |
-| **T3.7** 动态内容 | MutationObserver 增量收块进队;SPA URL 变化(history hook)重置翻译态 | entrypoints/content.tsx | 手动:Twitter/官方文档 SPA 切页正常 | T3.6 | M |
-| **T3.8** 页内工具条 | 浮动工具条:进度 n/N、暂停/继续、取消、双语⇄仅译文、还原、关闭 | src/ui/PageToolbar.tsx | 手动清单逐项过 | T3.6 | M |
-| **T3.9** popup | 翻译此页(触发/还原态切换)、模式选择、本站自动翻译开关、当前生效 Provider 展示、跳设置 | entrypoints/popup/* | 手动清单逐项过 | T3.5 | M |
-| **T3.10** 触发收口 | 右键菜单(翻译此页/翻译所选)、`translate-page` 快捷键、autoTranslate 站点加载即翻 | entrypoints/background.ts, entrypoints/content.tsx | 手动:四种触发路径全通 | T3.8-9 | S |
+| **T3.1** Segmenter | `collectSegments`: traverses `p/li/h1-h6/td/blockquote/dd/figcaption` etc.; merges short blocks (<20 chars merged into a neighbor), splits over-long ones (>1000 chars by sentence); skips code/pre/script/style/textarea/contenteditable/link-only/number-only; visibility filtering | src/segmenter/index.ts, tests/segmenter/*.test.ts + fixtures/*.html | 4 fixture sets (news page/table/code docs/nested list) unit tests green | — | L |
+| **T3.2** Batch protocol | `encodeBatch` (`@@n@@` line markers) + `decodeBatch` (skip missing numbers, tolerate out-of-order, drop extras) | src/translator/batch.ts, tests/translator/batch.test.ts | unit tests: normal/missing-number/out-of-order/run-together cases green | — | S |
+| **T3.3** Orchestrator | `translateSegments`: batches by token budget (estimate len/2, ≤1500 output), concurrency pool (default 3), retry failed batches once, `chrome.i18n.detectLanguage` skips blocks already in the target language, AbortController global cancel | src/translator/orchestrator.ts, tests/translator/orchestrator.test.ts | unit tests (mock client): batching/concurrency cap/cancel/skip | T3.1-2, T1.6 | L |
+| **T3.4** Cache | see "Cache design" below; centralized background cache + in-panel memory, keyed by content, LRU eviction, `cacheKey` includes mode/promptVersion, bypassed by Retry | src/translator/cache.ts, tests/translator/cache.test.ts | unit tests: hit/eviction/clear; manual: switching dict/text and refreshing the page return instantly | T1.7 | M |
+| **T3.5** DOM injection | Bilingual Mode: insert a `data-llmt` marker node after the original block (textContent); Translation-only Mode: hide the original block; `restorePage()` full restore; hot mode switching | entrypoints/content.tsx, src/ui/inject.ts, tests/ui/inject.test.ts (happy-dom) | unit tests: injection/restore idempotent; manual: switching between the two modes leaves no residue | T3.1 | M |
+| **T3.6** Lazy translation | IntersectionObserver: viewport ±1 screen enqueued first, appended on scroll; hooks into the orchestrator queue | entrypoints/content.tsx | manual: on a long page the first screen appears first, more is translated as you scroll | T3.3, T3.5 | M |
+| **T3.7** Dynamic content | MutationObserver incrementally collects blocks into the queue; SPA URL changes (history hook) reset the translation state | entrypoints/content.tsx | manual: SPA page navigation on Twitter/official docs works correctly | T3.6 | M |
+| **T3.8** In-page toolbar | floating toolbar: progress n/N, pause/resume, cancel, Bilingual ⇄ Translation-only, restore, close | src/ui/PageToolbar.tsx | manual checklist passes item by item | T3.6 | M |
+| **T3.9** popup | Translate this page (toggle between trigger/restore states), mode selection, Auto-translate Site toggle, display of the currently active Provider, jump to settings | entrypoints/popup/* | manual checklist passes item by item | T3.5 | M |
+| **T3.10** Trigger wrap-up | context menu (Translate this page/Translate selection), `translate-page` shortcut, autoTranslate sites translate on load | entrypoints/background.ts, entrypoints/content.tsx | manual: all four trigger paths work | T3.8-9 | S |
 
-## M4 设置完善 ✅
+## M4 Settings refinement ✅
 
-| 任务 | 内容 | Files | 验收 | 依赖 | 估 |
+| Task | Content | Files | Acceptance | Deps | Est |
 |---|---|---|---|---|---|
-| **T4.1** Prompt 编辑器 | 三套模板 textarea、变量说明、实时预览(renderPrompt)、恢复默认 | entrypoints/options/* | 手动:覆盖生效且缓存 key 变化(version) | T1.8 | M |
-| **T4.2** 导入导出 UI | 导出下载 JSON(默认不含 Key,勾选含 Key+敏感提示);导入文件校验+确认覆盖 | entrypoints/options/* | 手动:往返导入导出等价;脱敏正确 | T1.7 | S |
-| **T4.3** i18n | WXT i18n 模块;zh_CN + en 两套 messages;UI 文案全部走 i18n key | public/_locales/*, 全 UI 文件 | 切换浏览器语言 UI 跟随;无硬编码文案(grep 检查) | M2-3 | M |
-| **T4.4** 杂项收尾 | 缓存用量显示/一键清空;快捷键说明+跳转 `chrome://extensions/shortcuts`(MV3 不可编程修改);「选中即翻」防抖参数与费用提示文案 | entrypoints/options/* | 手动清单逐项过 | T3.4 | S |
+| **T4.1** Prompt editor | three template textareas, variable descriptions, live preview (renderPrompt), restore defaults | entrypoints/options/* | manual: overrides take effect and the cache key changes (version) | T1.8 | M |
+| **T4.2** Import/export UI | export downloads JSON (excludes Key by default; checkbox to include Key + sensitive-data warning); import validates the file + confirms overwrite | entrypoints/options/* | manual: export/import round-trip is equivalent; redaction is correct | T1.7 | S |
+| **T4.3** i18n | WXT i18n module; two message sets, zh_CN + en; all UI strings go through i18n keys | public/_locales/*, all UI files | UI follows when the browser language changes; no hardcoded strings (grep check) | M2-3 | M |
+| **T4.4** Miscellaneous wrap-up | cache-usage display / one-click clear; shortcut instructions + link to `chrome://extensions/shortcuts` (MV3 cannot modify them programmatically); debounce parameter for "translate on select" and cost-warning copy | entrypoints/options/* | manual checklist passes item by item | T3.4 | S |
 
-## M5 质量与上架 ✅(除商店实际提交)
+## M5 Quality & store launch ✅ (except the actual store submission)
 
-> 状态:T5.1/T5.2 E2E(Playwright 加载扩展 + mock LLM + 划词/全文冒烟 + CI e2e job)✅;
-> T5.3 品牌定稿(LLM Translate)+ 图标(见 `assets/logo/`)+ 商店截图(`pnpm screenshots` → `store-assets/screenshots/`)+ 中英 listing(`store-assets/listing.*.md`)✅;
-> T5.4 隐私政策(`docs/privacy-policy.md`)+ 权限 justification(`store-assets/justifications.md`)✅;
-> T5.5 release.yml(tag→build→zip→GH Release)✅、版本 0.1.0 ✅。**唯一待办:CWS + Edge 首次人工提交(需维护者账号)。**
+> Status: T5.1/T5.2 E2E (Playwright loads the extension + mock LLM + selection/page smoke + CI e2e job) ✅;
+> T5.3 brand finalized (LLM Translate) + icons (see `assets/logo/`) + store screenshots (`pnpm screenshots` → `store-assets/screenshots/`) + Chinese/English listing (`store-assets/listing.*.md`) ✅;
+> T5.4 privacy policy (`docs/privacy-policy.md`) + permission justification (`store-assets/justifications.md`) ✅;
+> T5.5 release.yml (tag→build→zip→GH Release) ✅, version 0.1.0 ✅. **Only remaining to-do: first manual submission to CWS + Edge (requires a maintainer account).**
 
-| 任务 | 内容 | Files | 验收 | 依赖 | 估 |
+| Task | Content | Files | Acceptance | Deps | Est |
 |---|---|---|---|---|---|
-| **T5.1** E2E 脚手架 | Playwright chromium `--load-extension` 加载 `wxt build` 产物;`e2e/mock-llm.ts` 本地 server(两协议、可 SSE);用例1:配 Provider→划词→浮层出译文 | e2e/*, playwright.config.ts | 本地 `pnpm e2e` 绿 | M2 | L |
-| **T5.2** E2E 全文 + CI | 用例2:fixture 页全文翻译→双语注入→还原;CI 加 e2e job | e2e/page.spec.ts, ci.yml | CI 含 E2E 全绿 | T5.1, M3 | M |
-| **T5.3** 品牌与素材 | 品牌名定稿(改 `src/brand.ts` 一处)、图标全尺寸(16-128)、商店截图、zh/en listing 文案 | src/brand.ts, public/icon/*, store-assets/* | 素材齐全过一遍商店规格 | M4 | M |
-| **T5.4** 合规文档 | 隐私政策页(GitHub Pages 或 static)、`<all_urls>`/host_permissions/storage/contextMenus 用途 justification 文案 | docs/privacy-policy.md, store-assets/justifications.md | 对照 CWS 政策自查通过 | T5.3 | S |
-| **T5.5** 发布 | release.yml 完成(tag→build→`wxt zip`→GH Release 附产物);CWS + Edge Add-ons 首次人工提交 | .github/workflows/release.yml | 双商店提交成功进入审核 | T5.2-4 | M |
+| **T5.1** E2E scaffolding | Playwright chromium `--load-extension` loads the `wxt build` output; `e2e/mock-llm.ts` local server (both protocols, SSE-capable); case 1: configure Provider → select text → panel shows translation | e2e/*, playwright.config.ts | local `pnpm e2e` green | M2 | L |
+| **T5.2** E2E page + CI | case 2: Page Translation of a fixture page → bilingual injection → restore; add an e2e job to CI | e2e/page.spec.ts, ci.yml | CI with E2E all green | T5.1, M3 | M |
+| **T5.3** Branding & assets | finalize brand name (single change in `src/brand.ts`), icons in all sizes (16-128), store screenshots, zh/en listing copy | src/brand.ts, public/icon/*, store-assets/* | assets complete and checked against store specs | M4 | M |
+| **T5.4** Compliance docs | privacy policy page (GitHub Pages or static), justification copy for the purpose of `<all_urls>`/host_permissions/storage/contextMenus | docs/privacy-policy.md, store-assets/justifications.md | self-review against CWS policy passes | T5.3 | S |
+| **T5.5** Release | release.yml complete (tag→build→`wxt zip`→GH Release with artifacts); first manual submission to CWS + Edge Add-ons | .github/workflows/release.yml | both store submissions succeed and enter review | T5.2-4 | M |
 
-## 里程碑后增强(用户反馈驱动,post-M5)
+## Post-milestone enhancements (user-feedback-driven, post-M5)
 
-- **全文失败重试**:批次失败的块标 `⚠`,可**逐块点击重试**,或用工具条**「重试 N 项失败」一键重试**;保留已成功译文,重试时后台重读设置(改好 key/URL 即生效)。相关:`src/translator/inject.ts`(countErrored / collectErroredElements / erroredSourceOf)、`src/ui/page/store.ts`(retryFailed + 委托点击)。
-- **划词浮层可拖拽 + 智能定位**:浮层可从标题栏拖走避让正文;按上下可用空间择优弹出,body 高度按可用空间封顶不溢出屏幕。共享拖拽 hook `src/ui/useDrag.ts`(工具条与浮层共用);定位纯函数 `src/ui/selection/panel-position.ts`(含单测)。
+- **Page-translation failure retry**: blocks in a failed batch are marked `⚠` and can be **retried per block by clicking**, or **retried all at once via the toolbar's "Retry N failed"**; already-successful translations are kept, and on retry the background re-reads settings (fixing the key/URL takes effect immediately). Related: `src/translator/inject.ts` (countErrored / collectErroredElements / erroredSourceOf), `src/ui/page/store.ts` (retryFailed + delegated click).
+- **Draggable selection panel + smart positioning**: the panel can be dragged away by its title bar to avoid covering the body text; it opens into whichever of the space above/below is larger, and the body height is capped to the available space so it doesn't overflow the screen. Shared drag hook `src/ui/useDrag.ts` (shared by the toolbar and the panel); positioning pure function `src/ui/selection/panel-position.ts` (with unit tests).
 
-## 依赖关系与并行机会
+## Dependencies and parallelization opportunities
 
 ```
-M0 → M1(T1.1 → {T1.2,T1.3} → {T1.4,T1.5} → T1.6 → T1.9 → T1.11;T1.7/T1.8 可并行;T1.10 依赖 T1.7)
-M1 → M2(T2.1 可提前并行)
-M1 → M3(T3.1/T3.2 纯逻辑可与 M2 并行;T3.3 起依赖 T1.6)
-M2+M3 → M4 → M5(T5.1 只依赖 M2,可提前)
+M0 → M1 (T1.1 → {T1.2,T1.3} → {T1.4,T1.5} → T1.6 → T1.9 → T1.11; T1.7/T1.8 can run in parallel; T1.10 depends on T1.7)
+M1 → M2 (T2.1 can start early in parallel)
+M1 → M3 (T3.1/T3.2 pure logic can run in parallel with M2; from T3.3 on, depends on T1.6)
+M2+M3 → M4 → M5 (T5.1 depends only on M2, can start early)
 ```
 
-**估算汇总**:S=≤0.5 天,M=1 天,L=1.5-2 天;合计约 **35-40 人天**。
+**Estimate summary:** S = ≤0.5 day, M = 1 day, L = 1.5-2 days; totaling roughly **35-40 person-days**.
 
-## 缓存设计(2026-07-07 与产品负责人讨论确认)
+## Cache design (discussed and confirmed with the product owner on 2026-07-07)
 
-翻译结果对固定输入是稳定的,**按内容做 key、按容量淘汰(LRU),不按时间过期**;"强制刷新"由 Retry 承担(绕过缓存)。分两层:
+Translation results are stable for a fixed input, so we **key by content, evict by capacity (LRU), and do not expire by time**; "force refresh" is handled by Retry (which bypasses the cache). Two layers:
 
-- **第一层 · 浮层内记忆**(随 M2 划词做,零存储):浮层把 dict / text 两种模式的结果留在组件 state,切换模式或来回查看**瞬时命中、零请求**;切换目标语言才失效。直接消除"切换即重发"的体验问题。
-- **第二层 · background 集中缓存**(T3.4):所有请求走单一出口,在 background 按 `hash(protocol + model + promptVersion + targetLang + mode + 原文)` 缓存。命中则把完整结果当一个 delta + done 发回(不改消息协议、不调 API);未命中则流式并在结束后写入。
-  - 存储介质:划词用 **`chrome.storage.session`**(内存、关浏览器自动清、不落盘,隐私最好);全文翻译用 **`storage.local`**(跨会话持久,体量大)。
-  - 容量:LRU 上限(≈5MB 或 N 条),配 T4.4 的用量显示 + 一键清空。
-- **明确不引入 Redis / 任何服务端缓存**:违背无后端(ADR-0001)与数据只在本机(ADR-0002)的核心定位;客户端存储已免费覆盖需求。
+- **Layer 1 · in-panel memory** (built with M2 selection, zero storage): the panel keeps the results of both dict / text modes in component state, so switching modes or looking back and forth is an **instant hit with zero requests**; only switching the target language invalidates it. This directly eliminates the "switch = resend" experience problem.
+- **Layer 2 · centralized background cache** (T3.4): all requests go through a single egress and are cached in the background keyed by `hash(protocol + model + promptVersion + targetLang + mode + sourceText)`. On a hit, the full result is sent back as a single delta + done (no change to the message protocol, no API call); on a miss, it streams and is written to the cache when finished.
+  - Storage medium: selection uses **`chrome.storage.session`** (in-memory, auto-cleared when the browser closes, never written to disk, best for privacy); Page Translation uses **`storage.local`** (persistent across sessions, large volume).
+  - Capacity: LRU cap (≈5MB or N entries), paired with T4.4's usage display + one-click clear.
+- **Explicitly no Redis / any server-side cache**: it would violate the core positioning of no-backend (ADR-0001) and data-only-on-device (ADR-0002); client-side storage already covers the need at no cost.
 
-## 里程碑验收(来自 docs/plan.md §11)
+## Milestone acceptance (from docs/plan.md §11)
 
-- M0:dev 模式加载运行,CI 绿
-- M1:单测绿;设置页真实连通两协议
-- M2:任意站点划词可用(三站手动清单)
-- M3:新闻站/文档站/SPA 三类站点全文翻译可用
-- M4:全量设置可用,i18n 无硬编码
-- M5:双商店过审
+- M0: loads and runs in dev mode, CI green
+- M1: unit tests green; settings page really connects to both protocols
+- M2: Selection Translation works on any site (three-site manual checklist)
+- M3: Page Translation works on all three site types: news/docs/SPA
+- M4: all settings functional, i18n with no hardcoding
+- M5: approved on both stores
 
-## 风险与预研标记
+## Risks and research flags
 
-- **MV3 SW 休眠**:超长流式任务中 SW 被杀 → Port 消息与进行中 fetch 可保活,T1.9 实现时验证 5 分钟长流;若不足加 port 心跳。
-- **decodeBatch 对弱模型的容错**(T3.2):标记协议在小模型上可能格式漂移,单测覆盖粘连/缺号,必要时 M3 中切 JSON 数组输出做 A/B。
-- **CWS 审核周期**(T5.5):`<all_urls>` 扩展审核可能 1-3 周,提前准备 justification(T5.4)。
+- **MV3 SW suspension**: the SW is killed during a very long streaming task → Port messages and an in-flight fetch can keep it alive; verify a 5-minute long stream when implementing T1.9; if that's not enough, add a port heartbeat.
+- **decodeBatch fault-tolerance for weak models** (T3.2): the marker protocol may drift in format on small models; unit tests cover run-together/missing-number, and if necessary we switch to JSON-array output in M3 for an A/B test.
+- **CWS review cycle** (T5.5): review of an `<all_urls>` extension may take 1-3 weeks, so prepare the justification in advance (T5.4).
