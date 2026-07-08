@@ -11,7 +11,8 @@ const PAGE_CSS = `
   background:linear-gradient(90deg,rgba(128,128,128,.12) 25%,rgba(128,128,128,.28) 37%,rgba(128,128,128,.12) 63%);
   background-size:400% 100%;animation:llmt-shimmer 1.4s ease infinite;
 }
-[${MARK}].llmt-error{color:#c0392b;font-size:.9em;}
+[${MARK}].llmt-error{color:#c0392b;font-size:.9em;cursor:pointer;}
+[${MARK}].llmt-error:hover{text-decoration:underline;}
 [${ORIG_MARK}]{display:contents;}
 .${REPLACE_CLASS} [${ORIG_MARK}]{display:none;}
 @keyframes llmt-shimmer{0%{background-position:100% 50%}100%{background-position:0 50%}}
@@ -57,6 +58,7 @@ function nodeFor(element: Element): Element {
 export function injectPlaceholder(element: Element): void {
   ensurePageStyles(element.ownerDocument);
   const node = nodeFor(element);
+  node.classList.remove('llmt-error');
   node.classList.add('llmt-loading');
   node.textContent = '';
 }
@@ -72,14 +74,36 @@ export function injectTranslation(element: Element, text: string): void {
   node.textContent = text;
 }
 
-/** Turn any still-pending placeholders under root into a small error marker. */
-export function finalizeErrors(root: ParentNode): void {
+/** Turn any still-pending placeholders under root into a small, clickable error marker. */
+export function finalizeErrors(root: ParentNode, retryHint = 'Translation failed'): void {
   for (const node of root.querySelectorAll(`[${MARK}].llmt-loading`)) {
     node.classList.remove('llmt-loading');
     node.classList.add('llmt-error');
     node.textContent = '⚠';
-    (node as HTMLElement).title = 'Translation failed';
+    (node as HTMLElement).title = retryHint;
   }
+}
+
+/** How many segments currently show a translation error. */
+export function countErrored(root: ParentNode): number {
+  return root.querySelectorAll(`[${MARK}].llmt-error`).length;
+}
+
+/** The source elements (segments) whose translation currently errored. */
+export function collectErroredElements(root: ParentNode): Element[] {
+  const out: Element[] = [];
+  for (const node of root.querySelectorAll(`[${MARK}].llmt-error`)) {
+    const src = node.closest(`[${SRC_MARK}]`);
+    if (src) out.push(src);
+  }
+  return out;
+}
+
+/** If an event target sits inside an error marker, the segment element it belongs to. */
+export function erroredSourceOf(target: EventTarget | null): Element | null {
+  const el = target instanceof Element ? target : null;
+  const node = el?.closest(`[${MARK}].llmt-error`);
+  return node ? node.closest(`[${SRC_MARK}]`) : null;
 }
 
 /** Toggle "translation only" mode (hides the original via the wrapper). */

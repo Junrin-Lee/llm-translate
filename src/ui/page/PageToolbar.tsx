@@ -1,6 +1,6 @@
 import { useRef, useState, useSyncExternalStore } from 'react';
 import { useT } from '@/i18n/useI18n';
-import { cancel, getState, restore, setMode, subscribe } from './store';
+import { cancel, getState, restore, retryFailed, setMode, subscribe } from './store';
 
 export function PageToolbar() {
   const t = useT();
@@ -70,9 +70,18 @@ export function PageToolbar() {
       ) : (
         <>
           <span className="llmt-toolbar__label">{t('toolbarTranslated')}</span>
+          {state.errors > 0 && (
+            <button
+              type="button"
+              className="llmt-toolbar__btn llmt-toolbar__btn--primary"
+              onClick={retryFailed}
+            >
+              {t('toolbarRetryFailed', { count: state.errors })}
+            </button>
+          )}
           <button
             type="button"
-            className="llmt-toolbar__btn llmt-toolbar__btn--primary"
+            className={`llmt-toolbar__btn${state.errors > 0 ? '' : ' llmt-toolbar__btn--primary'}`}
             onClick={restore}
           >
             {t('restoreOriginal')}

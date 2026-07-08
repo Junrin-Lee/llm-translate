@@ -1,8 +1,12 @@
+import { t } from '@/i18n';
 import { runRpc } from '@/messaging/port-client';
 import { collectSegments, type Segment } from '@/segmenter';
 import { getSettings, updateSettings } from '@/storage';
 import type { PageMode } from '@/storage/schema';
 import {
+  collectErroredElements,
+  countErrored,
+  erroredSourceOf,
   finalizeErrors,
   injectPlaceholder,
   injectTranslation,
@@ -23,6 +27,8 @@ export interface PageState {
   done: number;
   total: number;
   mode: PageMode;
+  /** Segments currently showing a translation error (retryable). */
+  errors: number;
 }
 
 // Translate a bit beyond the viewport so content is ready before it scrolls in.
@@ -31,7 +37,7 @@ const FLUSH_DELAY_MS = 150;
 const RESCAN_DELAY_MS = 300;
 const LOCATION_EVENT = 'llmt:locationchange';
 
-let state: PageState = { status: 'idle', done: 0, total: 0, mode: 'bilingual' };
+let state: PageState = { status: 'idle', done: 0, total: 0, mode: 'bilingual', errors: 0 };
 const listeners = new Set<() => void>();
 
 let observer: IntersectionObserver | null = null;
@@ -138,8 +144,8 @@ function flush(): void {
           flushing = false;
           if (pending.length > 0) scheduleFlush();
           else {
-            finalizeErrors(document.body);
-            setState({ status: 'done' });
+            finalizeErrors(document.body, t('pageRetryHint'));
+            setState({ status: 'done', errors: countErrored(document.body) });
           }
         }
       },
@@ -230,7 +236,7 @@ async function translate(): Promise<void> {
   total = 0;
   const mode = settings.general.pageMode;
   setReplaceMode(mode === 'replace');
-  setState({ status: 'translating', done: 0, total: 0, mode });
+  setState({ status: 'translating', done: 0, total: 0, mode, errors: 0 });
 
   observer = new IntersectionObserver(onIntersect, { rootMargin: ROOT_MARGIN });
   trackNewSegments(segments);
@@ -241,6 +247,8 @@ async function translate(): Promise<void> {
   installHistoryPatch();
   lastHref = location.href;
   window.addEventListener(LOCATION_EVENT, onLocationChange);
+  // Clicking a failed block's marker retries just that block.
+  document.body.addEventListener('click', onErrorClick);
 }
 
 function teardown(): void {
@@ -249,6 +257,7 @@ function teardown(): void {
   mutationObserver?.disconnect();
   mutationObserver = null;
   window.removeEventListener(LOCATION_EVENT, onLocationChange);
+  document.body.removeEventListener('click', onErrorClick);
   if (flushTimer !== null) {
     clearTimeout(flushTimer);
     flushTimer = null;
@@ -272,14 +281,48 @@ function teardown(): void {
 
 export function cancel(): void {
   teardown();
-  finalizeErrors(document.body); // freeze any pending placeholders instead of endless shimmer
-  setState({ status: isPageTranslated(document.body) ? 'done' : 'idle' });
+  finalizeErrors(document.body, t('pageRetryHint')); // freeze pending placeholders instead of endless shimmer
+  setState({
+    status: isPageTranslated(document.body) ? 'done' : 'idle',
+    errors: countErrored(document.body),
+  });
 }
 
 export function restore(): void {
   teardown();
   restorePage(document.body);
-  setState({ status: 'idle', done: 0, total: 0 });
+  setState({ status: 'idle', done: 0, total: 0, errors: 0 });
+}
+
+/**
+ * Re-queue segments for another translation pass, keeping already-translated
+ * ones. Used by both the per-block marker click and the toolbar retry-all.
+ */
+function retrySegments(segments: Segment[]): void {
+  if (segments.length === 0) return;
+  for (const segment of segments) injectPlaceholder(segment.element);
+  // They already advanced `done` when their batch failed; roll it back so the
+  // progress bar doesn't overshoot when they translate again.
+  globalDone = Math.max(0, globalDone - segments.length);
+  pending.push(...segments);
+  setState({ status: 'translating', done: globalDone, total, errors: countErrored(document.body) });
+  scheduleFlush();
+}
+
+/** Toolbar action: retry every segment that failed. */
+export function retryFailed(): void {
+  const segments = collectErroredElements(document.body)
+    .map((element) => segmentByElement.get(element))
+    .filter((segment): segment is Segment => segment !== undefined);
+  retrySegments(segments);
+}
+
+/** Delegated click: retry a single failed block when its marker is clicked. */
+function onErrorClick(event: Event): void {
+  const element = erroredSourceOf(event.target);
+  if (!element) return;
+  const segment = segmentByElement.get(element);
+  if (segment) retrySegments([segment]);
 }
 
 /** Toggle used by the popup button and keyboard shortcut. */

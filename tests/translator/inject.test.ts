@@ -1,6 +1,9 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
+  collectErroredElements,
+  countErrored,
+  erroredSourceOf,
   finalizeErrors,
   injectPlaceholder,
   injectTranslation,
@@ -139,5 +142,57 @@ describe('translation-only mode', () => {
     setReplaceMode(true);
     restorePage(document.body);
     expect(document.documentElement.classList.contains('llmt-mode-replace')).toBe(false);
+  });
+});
+
+describe('retry helpers', () => {
+  beforeEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  // p0 resolves; p1 and p2 are left errored.
+  function makeErrored(): HTMLParagraphElement[] {
+    document.body.innerHTML = '<p>a</p><p>b</p><p>c</p>';
+    const ps = [...document.querySelectorAll('p')];
+    for (const p of ps) injectPlaceholder(p);
+    injectTranslation(ps[0]!, 'done');
+    finalizeErrors(document.body, 'Click to retry');
+    return ps;
+  }
+
+  it('counts and collects the errored segments', () => {
+    const ps = makeErrored();
+    expect(countErrored(document.body)).toBe(2);
+
+    const errored = collectErroredElements(document.body);
+    expect(errored).toHaveLength(2);
+    expect(errored).toContain(ps[1]);
+    expect(errored).toContain(ps[2]);
+  });
+
+  it('finalizeErrors applies the retry hint as the marker title', () => {
+    makeErrored();
+    const node = document.querySelector('[data-llmt].llmt-error') as HTMLElement;
+    expect(node.title).toBe('Click to retry');
+  });
+
+  it('injectPlaceholder resets an errored node back to loading (retry path)', () => {
+    const ps = makeErrored();
+    injectPlaceholder(ps[1]!);
+
+    const node = ps[1]!.querySelector('[data-llmt]')!;
+    expect(node.classList.contains('llmt-error')).toBe(false);
+    expect(node.classList.contains('llmt-loading')).toBe(true);
+    expect(countErrored(document.body)).toBe(1);
+  });
+
+  it('erroredSourceOf maps a click inside an error marker to its segment', () => {
+    const ps = makeErrored();
+    const errorNode = ps[2]!.querySelector('[data-llmt].llmt-error')!;
+    expect(erroredSourceOf(errorNode)).toBe(ps[2]);
+
+    // A resolved node (or nothing) is not a retry target.
+    expect(erroredSourceOf(ps[0]!.querySelector('[data-llmt]'))).toBeNull();
+    expect(erroredSourceOf(null)).toBeNull();
   });
 });

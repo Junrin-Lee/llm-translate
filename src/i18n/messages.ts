@@ -115,6 +115,8 @@ const EN = {
   toolbarOnly: 'Only',
   toolbarDrag: 'Drag to move',
   toolbarModeTitle: 'Switch between bilingual and translation-only',
+  toolbarRetryFailed: 'Retry {count} failed',
+  pageRetryHint: 'Click to retry',
 
   // Shared (popup buttons, context menu, commands)
   translatePage: 'Translate this page',
@@ -228,6 +230,8 @@ const ZH: Record<MessageKey, string> = {
   toolbarOnly: '仅译文',
   toolbarDrag: '拖动移动',
   toolbarModeTitle: '在双语和仅译文之间切换',
+  toolbarRetryFailed: '重试 {count} 项失败',
+  pageRetryHint: '点击重试',
 
   translatePage: '翻译此页',
   translateSelection: '翻译所选',
