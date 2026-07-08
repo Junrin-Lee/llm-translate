@@ -62,10 +62,23 @@
 .llmt-panel__head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 8px;
   padding: 8px 10px;
   border-bottom: 1px solid var(--llmt-border);
+}
+
+.llmt-panel__grip {
+  cursor: grab;
+  color: var(--llmt-muted);
+  font-size: 13px;
+  line-height: 1;
+  user-select: none;
+  touch-action: none;
+}
+
+.llmt-panel__grip:active {
+  cursor: grabbing;
 }
 
 .llmt-seg {
@@ -102,6 +115,7 @@
   cursor: pointer;
   padding: 2px 6px;
   border-radius: 6px;
+  margin-left: auto;
 }
 
 .llmt-x:hover {

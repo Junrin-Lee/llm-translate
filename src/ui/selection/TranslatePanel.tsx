@@ -1,9 +1,18 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useT } from '@/i18n/useI18n';
 import { LANGUAGES } from '@/languages';
 import { openTranslateStream } from '@/messaging/port-client';
 import { parseDictResult } from '@/selection/dict-result';
+import { useDrag } from '@/ui/useDrag';
 import { DictCard } from './DictCard';
+import { bodyMaxHeightAt, computePanelPlacement } from './panel-position';
 
 interface Props {
   text: string;
@@ -15,9 +24,6 @@ interface Props {
 }
 
 type Status = 'streaming' | 'done' | 'error';
-
-const PANEL_WIDTH = 360;
-const PANEL_EST_HEIGHT = 260;
 
 export function TranslatePanel({
   text,
@@ -35,6 +41,7 @@ export function TranslatePanel({
   const [status, setStatus] = useState<Status>('streaming');
   const [error, setError] = useState('');
   const panelRef = useRef<HTMLDivElement>(null);
+  const { pos, startDrag } = useDrag(panelRef);
 
   useEffect(() => {
     setOutput('');
@@ -86,22 +93,33 @@ export function TranslatePanel({
 
   const copyText = dict ? dict.senses.map((s) => s.meaning).join('; ') : output;
 
-  const left = Math.max(8, Math.min(rect.left, window.innerWidth - PANEL_WIDTH - 8));
-  const opensDownward = rect.bottom + 8 + PANEL_EST_HEIGHT <= window.innerHeight;
-  const position = opensDownward
-    ? { top: `${rect.bottom + 8}px` }
-    : { bottom: `${window.innerHeight - rect.top + 8}px` };
+  const placement = computePanelPlacement(rect, window.innerWidth, window.innerHeight);
+  const style: CSSProperties = pos
+    ? { left: pos.x, top: pos.y, right: 'auto', bottom: 'auto' }
+    : placement.anchor === 'top'
+      ? { left: placement.left, top: placement.offset }
+      : { left: placement.left, bottom: placement.offset };
+  const bodyMaxHeight = pos ? bodyMaxHeightAt(pos.y, window.innerHeight) : placement.bodyMaxHeight;
+
+  // Drag the panel by its header; the tabs and close button keep their own clicks.
+  const onHeadPointerDown = (e: ReactPointerEvent) => {
+    if ((e.target as HTMLElement).closest('button')) return;
+    startDrag(e);
+  };
 
   return (
     <div
       ref={panelRef}
       className="llmt-panel"
-      style={{ left: `${left}px`, ...position }}
+      style={style}
       role="dialog"
       aria-label={t('panelTranslation')}
       onMouseDown={(e) => e.stopPropagation()}
     >
-      <div className="llmt-panel__head">
+      <div className="llmt-panel__head" onPointerDown={onHeadPointerDown}>
+        <span className="llmt-panel__grip" title={t('toolbarDrag')} aria-hidden="true">
+          ⠿
+        </span>
         <div className="llmt-seg">
           <button
             type="button"
@@ -123,7 +141,7 @@ export function TranslatePanel({
         </button>
       </div>
 
-      <div className="llmt-panel__body">
+      <div className="llmt-panel__body" style={{ maxHeight: bodyMaxHeight }}>
         {status === 'error' ? (
           <p className="llmt-error">{error}</p>
         ) : mode === 'dict' && status !== 'done' ? (
