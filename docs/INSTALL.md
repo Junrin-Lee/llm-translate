@@ -53,6 +53,8 @@ pin it so it's always visible.
 > is normal for any extension installed this way — dismiss it; the extension keeps
 > working.
 
+<a id="open-a-normal-page"></a>
+
 ## ⚠️ Read this before step 3: switch to a normal web page
 
 > [!IMPORTANT]

@@ -46,6 +46,8 @@ pnpm build          # outputs to .output/chrome-mv3/
 2. Toggle **Developer mode** on (top-right)
 3. Click **Load unpacked** and select the **`.output/chrome-mv3/`** folder (the folder itself, not a zip)
 
+> **Loaded it but no toolbar icon, or can't find settings?** The extension doesn't run on the `chrome://extensions` page itself — open any normal web page first, then click its toolbar icon → **Open settings**. See [the install guide](docs/INSTALL.md#open-a-normal-page) for the full walkthrough.
+
 > For development, prefer `pnpm dev` — WXT launches a browser with the extension loaded and hot-reloads on save (see [Development](#-development)).
 
 ### 2. Configure a provider

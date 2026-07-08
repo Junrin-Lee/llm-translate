@@ -46,6 +46,8 @@ pnpm build          # 产物输出到 .output/chrome-mv3/
 2. 右上角开启 **开发者模式 / Developer mode**
 3. 点 **加载已解压的扩展程序 / Load unpacked**,选择 **`.output/chrome-mv3/`** 文件夹(选文件夹本身,不是 zip)
 
+> **加载后却没有工具栏图标、或找不到设置入口?** 扩展在 `chrome://extensions` 页面本身不会运行——先打开任意一个普通网页,再点它的工具栏图标 → **打开设置**。完整说明见[安装指南](docs/INSTALL.zh-CN.md#open-a-normal-page)。
+
 > 开发时更推荐 `pnpm dev`,WXT 会启动带扩展的浏览器并在保存时热重载(见下方「开发」)。
 
 ### 2. 配置一个 Provider
