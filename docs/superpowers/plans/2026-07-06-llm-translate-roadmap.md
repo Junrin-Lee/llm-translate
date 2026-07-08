@@ -241,6 +241,11 @@ export function cacheKey(p: { protocol: string; model: string; promptVersion: st
 | **T5.4** 合规文档 | 隐私政策页(GitHub Pages 或 static)、`<all_urls>`/host_permissions/storage/contextMenus 用途 justification 文案 | docs/privacy-policy.md, store-assets/justifications.md | 对照 CWS 政策自查通过 | T5.3 | S |
 | **T5.5** 发布 | release.yml 完成(tag→build→`wxt zip`→GH Release 附产物);CWS + Edge Add-ons 首次人工提交 | .github/workflows/release.yml | 双商店提交成功进入审核 | T5.2-4 | M |
 
+## 里程碑后增强(用户反馈驱动,post-M5)
+
+- **全文失败重试**:批次失败的块标 `⚠`,可**逐块点击重试**,或用工具条**「重试 N 项失败」一键重试**;保留已成功译文,重试时后台重读设置(改好 key/URL 即生效)。相关:`src/translator/inject.ts`(countErrored / collectErroredElements / erroredSourceOf)、`src/ui/page/store.ts`(retryFailed + 委托点击)。
+- **划词浮层可拖拽 + 智能定位**:浮层可从标题栏拖走避让正文;按上下可用空间择优弹出,body 高度按可用空间封顶不溢出屏幕。共享拖拽 hook `src/ui/useDrag.ts`(工具条与浮层共用);定位纯函数 `src/ui/selection/panel-position.ts`(含单测)。
+
 ## 依赖关系与并行机会
 
 ```

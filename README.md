@@ -17,11 +17,11 @@ remaining release chores — see the
 - **Selection translation** — translate selected text in place via a streaming popup:
   - single words / short phrases → a **dictionary card** (phonetics, part of speech, senses, examples)
   - sentences / paragraphs → a **translation card**
-  - copy, retry, switch target language on the fly; toggle between dictionary and translation views
+  - copy, retry, switch target language, drag the popup aside; toggle between dictionary and translation views
 - **Full-page translation** — translate the readable body, two display modes:
   - **Bilingual** (default): translations inserted under each original block, original kept
   - **Translation-only**: replaces the original in place, restorable in one click
-  - viewport-first lazy loading, follows SPA route changes and dynamic content, in-page toolbar (progress / cancel / restore / mode toggle)
+  - viewport-first lazy loading, follows SPA route changes and dynamic content, retry failed blocks (per-block or all at once), draggable in-page toolbar (progress / cancel / restore / mode toggle)
 - **Multiple providers + routing** — save several provider profiles (protocol / Base URL / key / model / optional params), set a global default, and optionally override the provider per feature (selection, page)
 - **Dual protocol** — OpenAI-compatible (`/chat/completions`) and Anthropic-compatible (`/v1/messages`), hand-rolled lightweight client, no vendor SDK
 - **Flexible triggers** — selection icon / instant / shortcut-only; page translation via the popup, keyboard shortcut, right-click menu, or an auto-translate site list
