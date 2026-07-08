@@ -53,6 +53,23 @@ pin it so it's always visible.
 > is normal for any extension installed this way — dismiss it; the extension keeps
 > working.
 
+## ⚠️ Read this before step 3: switch to a normal web page
+
+> [!IMPORTANT]
+> **The extension does not run on the browser's internal pages
+> (`chrome://extensions`, `edge://extensions`).** If you stay on that page after
+> installing, you'll see no translation features and no way into settings — this
+> does **not** mean the install failed.
+
+Open **any website in a new tab** (or refresh a page you already had open), then:
+
+1. Click the **LLM Translate icon** in the toolbar (don't see it? click the
+   **puzzle-piece icon** at the top-right and pin it).
+2. Choose **Open settings** to reach the configuration in step 3 below.
+
+> Tabs that were already open need a **refresh** first — the content script only
+> injects into pages opened or refreshed after install.
+
 ## 3. Add your API key
 
 1. Click the LLM Translate icon → **Open settings** (or right-click the icon →
