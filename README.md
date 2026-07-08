@@ -30,6 +30,9 @@ remaining release chores — see the
 
 ## 🚀 Quick start
 
+> New to browser extensions? Follow the step-by-step [install guide](docs/INSTALL.md) —
+> it covers the prebuilt-zip route, first-run setup, updating, and troubleshooting.
+
 ### 1. Get the extension
 
 Before publication, build from source and load it in developer mode:
