@@ -35,7 +35,7 @@ A streamlined take on Trancy: just two features — **Selection Translation** an
 entrypoints/
 ├── background.ts          # Service worker: the only LLM egress; menu/shortcut registration
 ├── content.tsx            # persistent content script: selection listening + panel UI + page-translation DOM engine
-├── popup/                 # extension-icon popup: translate-page button, mode toggle, auto-translate-site switch, current Provider
+├── popup/                 # extension-icon popup: translate-page button, mode toggle, auto-translate-site switch
 └── options/               # settings page: Provider CRUD, trigger mode, Prompt templates, import/export
 ```
 
@@ -92,9 +92,9 @@ interface TranslationClient {
 | Streaming | SSE, `choices[0].delta.content`, ends with `[DONE]` | SSE, `text_delta` from `content_block_delta` events |
 | Model list | `GET {base}/models` | `GET {base}/v1/models` |
 
-- Error normalization: 401/403 (credentials), 404 (endpoint or model), 429 (rate limit; read `retry-after` and back off, retry ≤2 times), 5xx (retry), network errors, timeout (default 60s, configurable). Error messages are user-readable (Chinese and English).
+- Error normalization: 401/403 (credentials), 404 (endpoint or model), 429 (rate limit; read `retry-after` and back off, retry ≤2 times), 5xx (retry), network errors, timeout (default 60s, configurable per profile via `params.timeoutMs` — no dedicated UI field yet). Error messages are user-readable (Chinese and English).
 - **No official SDK**; a hand-rolled lightweight client: symmetric across both protocols, small bundle size, zero adaptation for the MV3 SW environment (see ADR-0003).
-- Base URL normalization: tolerates a trailing `/` and auto-appends `/v1` (can be disabled) — a common pitfall in compatible-gateway scenarios.
+- Base URL normalization: tolerates a trailing `/` and auto-appends `/v1` for OpenAI-compatible bases entered without a path (a bare origin) — a common pitfall in compatible-gateway scenarios; a base that already has a path is left untouched.
 
 ## 5. Selection Translation
 
@@ -102,14 +102,14 @@ interface TranslationClient {
 2. Click the icon / hotkey → open the floating panel (mounted via `createShadowRootUi`, with Shadow DOM isolating site styles).
 3. **Form detection** (`selection/` pure function): a selection of ≤ 3 words with no end-of-sentence punctuation → Dictionary Card, otherwise Translation Card; the two forms can be switched manually in the panel (detection is only the default).
 4. Streaming rendering; the Dictionary Card asks the LLM to output an agreed-upon JSON (phonetics/part of speech/senses/example sentences), falling back to plain-text display if parsing fails.
-5. Panel interactions: copy, retry, switch target language, drag to move the panel, and smart positioning based on available space above/below to avoid covering the body text (clicking elsewhere on the page closes it by default, Escape closes it).
+5. Panel interactions: copy, retry, switch target language (this updates the default target language), drag to move the panel, and smart positioning based on available space above/below to avoid covering the body text (clicking elsewhere on the page closes it by default, Escape closes it).
 6. Site exclusion list: disable the selection icon on specified sites (stored under the same site-rules set as the Auto-translate Site list).
 
 ## 6. Page Translation
 
-- **Segmentation** (`segmenter/`): traverse block-level semantic units (`p/li/h1-h6/td/blockquote/dd`, etc.), merging short blocks and splitting over-long ones by text length; skip `code/pre/script/style/textarea/contenteditable`, link-only/number-only blocks, and blocks already in the target language (local detection via `chrome.i18n.detectLanguage`).
+- **Segmentation** (`segmenter/`): collect leaf block-level semantic units (`p/li/h1-h6/td/blockquote/dd/figcaption`, etc.) with normalized text, so each maps 1:1 to a DOM element; skip `code/pre/script/style/textarea/contenteditable`, hidden elements, and too-short (needs at least one letter) / link-only blocks. _(Short-block merging, over-long splitting, and same-target-language skipping via `chrome.i18n.detectLanguage` were planned here but are not implemented.)_
 - **Viewport-first lazy translation**: translate the visible area and its vicinity first, with IntersectionObserver driving scroll-based loading; saves tokens and makes the first screen fast.
-- **Batched requests**: multiple blocks are combined into one LLM call (with a numbered-marker protocol, responses backfilled by number), each request estimated at ≤ ~1500 output tokens, concurrency default 3, configurable.
+- **Batched requests**: multiple blocks are combined into one LLM call (with a numbered-marker protocol, responses backfilled by number), each request estimated at ≤ ~1500 output tokens, concurrency default 3 (a code constant, not user-configurable).
 - **Injection**: Bilingual Mode = insert a translation node with an extension-marker class after the source block; Translation-only Mode = hide the source node (without destroying it). **Translations are always written via `textContent`, never `innerHTML`** (LLM output is treated as untrusted input, to prevent XSS). One-click restore = remove all extension nodes + restore hidden nodes.
 - **Dynamic content**: MutationObserver watches for newly added blocks and translates them incrementally while the page is in a translated state (SPA route changes reset state on URL change).
 - **Progress and control**: a draggable in-page floating toolbar (progress, cancel, mode switch, restore, retry failed blocks).
@@ -123,7 +123,7 @@ interface TranslationClient {
   version: 1,
   providers: ProviderProfile[],            // {id, name, protocol, baseUrl, apiKey, model, params?}
   defaults: { global: id, selection?: id, page?: id },   // feature-level overrides
-  general: { targetLang, secondaryTargetLang?, selectionTrigger, pageMode, uiLang },  // uiLang: UI language auto/en/zh
+  general: { targetLang, secondaryTargetLang?, selectionTrigger, pageMode, uiLang },  // secondaryTargetLang: reserved, not yet wired to any UI; uiLang: UI language auto/en/zh
   siteRules: { autoTranslate: string[], disableSelection: string[] },
   prompts: { selectionDict?, selectionText?, pageBatch? },  // unset = use built-in default
 }
@@ -135,7 +135,7 @@ Import/export: JSON files; export **excludes** the API Key by default — only w
 
 ## 8. Prompt Layer
 
-Three built-in templates: `selectionDict` (Dictionary Card, JSON output), `selectionText` (Selection Translation), `pageBatch` (Page Translation, numbered-marker protocol). Variables: `{{text}}`, `{{targetLang}}`, `{{sourceLang?}}`, `{{siteTitle?}}`. Each can be overridden and restored to default in the settings Advanced area; the template version number is part of the cache key.
+Three built-in templates: `selectionDict` (Dictionary Card, JSON output), `selectionText` (Selection Translation), `pageBatch` (Page Translation, numbered-marker protocol). Variables actually used: `{{text}}` and `{{targetLang}}`. The template layer also defines `{{sourceLang}}` / `{{siteTitle}}`, but callers don't populate them yet, so they currently render empty. Each can be overridden and restored to default in the settings Advanced area; the template version number is part of the cache key.
 
 ## 9. Permissions and Store Compliance
 

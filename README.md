@@ -6,18 +6,18 @@
 > OpenAI-compatible or Anthropic-compatible API key (BYOK). No account, no backend, no
 > telemetry — all settings stay on your machine.
 
-**Status:** Selection and full-page translation are fully working. It currently runs by
-loading the unpacked build in the browser's developer mode; it is not published to the
-stores yet (end-to-end tests, icon assets, privacy policy, and store submission are the
-remaining release chores — see the
-[roadmap](docs/superpowers/plans/2026-07-06-llm-translate-roadmap.md)).
+**Status:** Selection and full-page translation are fully working, with E2E tests, icon
+assets, and the privacy policy all in place. It currently runs by loading the unpacked
+build in the browser's developer mode; the only remaining release chore is the first
+manual submission to the Chrome Web Store / Edge Add-ons — see the
+[roadmap](docs/superpowers/plans/2026-07-06-llm-translate-roadmap.md).
 
 ## ✨ Features
 
 - **Selection translation** — translate selected text in place via a streaming popup:
   - single words / short phrases → a **dictionary card** (phonetics, part of speech, senses, examples)
   - sentences / paragraphs → a **translation card**
-  - copy, retry, switch target language, drag the popup aside; toggle between dictionary and translation views
+  - copy, retry, switch target language (updates your default target language), drag the popup aside; toggle between dictionary and translation views
 - **Full-page translation** — translate the readable body, two display modes:
   - **Bilingual** (default): translations inserted under each original block, original kept
   - **Translation-only**: replaces the original in place, restorable in one click
@@ -150,7 +150,7 @@ docs/                 CONTEXT glossary, ADRs, privacy policy, dev roadmap
 | M2 | Selection translation (icon / popup / dictionary + translation cards / shortcut) | ✅ |
 | M3 | Full-page translation (segment / batch / lazy / bilingual & replace / SPA / cache) | ✅ |
 | M4 | Settings polish (prompt editor, import/export, cache clearing, in-app i18n) | ✅ |
-| M5 | Release (E2E, icon assets, privacy policy, brand finalization, store submission) | ⬜ |
+| M5 | Release (E2E, icons, privacy policy, brand finalized) | 🚧 only store submission left |
 
 Full task breakdown in the [roadmap](docs/superpowers/plans/2026-07-06-llm-translate-roadmap.md).
 Architectural decisions in [docs/adr/](docs/adr/); glossary in [CONTEXT.md](CONTEXT.md).

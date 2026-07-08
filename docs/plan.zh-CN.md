@@ -35,7 +35,7 @@
 entrypoints/
 ├── background.ts          # Service worker:唯一的 LLM 请求出口、菜单/快捷键注册
 ├── content.tsx            # 常驻 content script:划词监听 + 浮层 UI + 全文翻译 DOM 引擎
-├── popup/                 # 扩展图标弹窗:翻译此页按钮、模式切换、自动翻译站点开关、当前 Provider
+├── popup/                 # 扩展图标弹窗:翻译此页按钮、模式切换、自动翻译站点开关
 └── options/               # 设置页:Provider CRUD、触发方式、Prompt 模板、导入导出
 ```
 
@@ -92,9 +92,9 @@ interface TranslationClient {
 | 流式 | SSE,`choices[0].delta.content`,`[DONE]` 结尾 | SSE,`content_block_delta` 事件的 `text_delta` |
 | 模型列表 | `GET {base}/models` | `GET {base}/v1/models` |
 
-- 错误归一化:401/403(凭证)、404(端点或模型)、429(限流,读 `retry-after` 退避重试 ≤2 次)、5xx(重试)、网络错误、超时(默认 60s,可配)。错误信息面向用户可读(中英)。
+- 错误归一化:401/403(凭证)、404(端点或模型)、429(限流,读 `retry-after` 退避重试 ≤2 次)、5xx(重试)、网络错误、超时(默认 60s,可经每个 Provider 的 `params.timeoutMs` 配置——暂无独立 UI 输入项)。错误信息面向用户可读(中英)。
 - **不引入官方 SDK**,自研轻量客户端:双协议对称、包体积小、MV3 SW 环境零适配(见 ADR-0003)。
-- Base URL 规范化:自动容错末尾 `/`、自动补 `/v1`(可关闭),这是兼容网关场景的高频坑。
+- Base URL 规范化:自动容错末尾 `/`;对**无 path**(裸 origin)的 OpenAI 兼容 base 自动补 `/v1`(已带 path 的 base 原样保留),这是兼容网关场景的高频坑。
 
 ## 5. 划词翻译
 
@@ -102,14 +102,14 @@ interface TranslationClient {
 2. 点击图标 / 快捷键 → 打开浮层(`createShadowRootUi` 挂载,Shadow DOM 隔离站点样式)。
 3. **形态判定**(`selection/` 纯函数):选区 ≤ 3 个词且无句末标点 → 词典卡片,否则译文卡片;浮层内可手动切换两种形态(判定只是默认值)。
 4. 流式渲染;词典卡片要求 LLM 按约定 JSON 输出(音标/词性/义项/例句),解析失败降级为纯文本展示。
-5. 浮层交互:复制、重试、切换目标语言、拖拽移动浮层、按上下空间智能定位避让正文(点击页面其他区域默认关闭,Escape 关闭)。
+5. 浮层交互:复制、重试、切换目标语言(会更新默认目标语言)、拖拽移动浮层、按上下空间智能定位避让正文(点击页面其他区域默认关闭,Escape 关闭)。
 6. 站点排除清单:在指定站点禁用划词图标(与自动翻译站点清单同一套站点规则存储)。
 
 ## 6. 全文翻译
 
-- **分块**(`segmenter/`):遍历 block 级语义单元(`p/li/h1-h6/td/blockquote/dd` 等),按文本长度合并短块、拆分超长块;跳过 `code/pre/script/style/textarea/contenteditable`、纯链接/纯数字块、与目标语言相同的块(`chrome.i18n.detectLanguage` 本地检测)。
+- **分块**(`segmenter/`):收集叶子 block 级语义单元(`p/li/h1-h6/td/blockquote/dd/figcaption` 等)并规范化文本,每块与一个 DOM 元素 1:1 对应;跳过 `code/pre/script/style/textarea/contenteditable`、隐藏元素、过短(至少含一个字母)/纯链接块。_(短块合并、超长拆分、以及用 `chrome.i18n.detectLanguage` 跳过同目标语言块,当初在此规划过,但未实现。)_
 - **视口优先懒翻译**:先翻可视区域及附近,IntersectionObserver 驱动滚动加载;省 token、首屏快。
-- **批量请求**:多块合并为一次 LLM 调用(带编号标记协议,响应按编号回填),单请求 ≤ 约 1500 输出 token 预估,并发默认 3,可配。
+- **批量请求**:多块合并为一次 LLM 调用(带编号标记协议,响应按编号回填),单请求 ≤ 约 1500 输出 token 预估,并发默认 3(代码常量,不可由用户配置)。
 - **注入**:双语对照 = 在原文块后插入带扩展标记 class 的译文节点;仅译文 = 隐藏原文节点(不销毁)。**译文一律以 `textContent` 写入,绝不 `innerHTML`**(LLM 输出视为不可信输入,防 XSS)。一键还原 = 移除所有扩展节点 + 恢复隐藏节点。
 - **动态内容**:MutationObserver 监听新增块,页面处于已翻译状态时增量翻译(SPA 路由切换按 URL 变化重置状态)。
 - **进度与控制**:可拖拽的页内浮动工具条(进度、取消、模式切换、还原、重试失败块)。
@@ -123,7 +123,7 @@ interface TranslationClient {
   version: 1,
   providers: ProviderProfile[],            // {id, name, protocol, baseUrl, apiKey, model, params?}
   defaults: { global: id, selection?: id, page?: id },   // 功能级覆盖
-  general: { targetLang, secondaryTargetLang?, selectionTrigger, pageMode, uiLang },  // uiLang: 界面语言 auto/en/zh
+  general: { targetLang, secondaryTargetLang?, selectionTrigger, pageMode, uiLang },  // secondaryTargetLang:预留,暂未接入任何 UI;uiLang: 界面语言 auto/en/zh
   siteRules: { autoTranslate: string[], disableSelection: string[] },
   prompts: { selectionDict?, selectionText?, pageBatch? },  // 未设置 = 用内置默认
 }
@@ -135,7 +135,7 @@ interface TranslationClient {
 
 ## 8. Prompt 层
 
-三套内置模板:`划词-词典`(JSON 输出)、`划词-译文`、`全文-批量`(编号标记协议)。变量:`{{text}}`、`{{targetLang}}`、`{{sourceLang?}}`、`{{siteTitle?}}`。设置页高级区每套可覆盖、可恢复默认;模板版本号参与缓存 key。
+三套内置模板:`划词-词典`(JSON 输出)、`划词-译文`、`全文-批量`(编号标记协议)。实际使用的变量:`{{text}}` 与 `{{targetLang}}`。模板层还定义了 `{{sourceLang}}` / `{{siteTitle}}`,但调用方尚未赋值,当前恒为空。设置页高级区每套可覆盖、可恢复默认;模板版本号参与缓存 key。
 
 ## 9. 权限与商店合规
 

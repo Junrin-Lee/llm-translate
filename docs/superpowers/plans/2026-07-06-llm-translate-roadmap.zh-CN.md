@@ -12,7 +12,9 @@
 
 **Tech Stack:** WXT、React 19、TypeScript(strict)、pnpm、Biome、vitest(+ WxtVitest/fake-browser)、Playwright、GitHub Actions。
 
-> **进度(截至 2026-07-07):** M0–M5 主体已完成(164 单测 + 2 Playwright E2E 冒烟通过);仅剩 Chrome/Edge 商店的**实际提交**(需开发者账号,由维护者手动完成)。下方各里程碑标题的 ✅ / ⬜ 表示当前状态。
+> **进度(截至 2026-07-07):** M0–M5 主体已完成(175 单测 + 4 Playwright E2E 通过);仅剩 Chrome/Edge 商店的**实际提交**(需开发者账号,由维护者手动完成)。下方各里程碑标题的 ✅ / ⬜ 表示当前状态。
+>
+> **说明(保留历史):** 本文档是带日期的规划快照。下方少数任务描述列出了**当初规划、但最终未实现**的子项;这些以行内 _(实际:…)_ 注记标出,而非改写原文,以保留最初意图。
 
 ## 全局约束(每个任务隐含遵守)
 
@@ -198,8 +200,8 @@ export function cacheKey(p: { protocol: string; model: string; promptVersion: st
 |---|---|---|---|---|---|
 | **T2.1** 选区判定 | `classifySelection`:≤3 词且无句末标点→`dict`(CJK 按字符数阈值);2000 字符上限校验独立导出 | src/selection/classify.ts, tests/selection/classify.test.ts | 中/英/混合 fixtures 单测绿 | — | S |
 | **T2.2** 划词图标 | content:`selectionchange`+`mouseup` 防抖;选区尾部定位小图标(`createShadowRootUi`);排除 input/textarea/contenteditable、密码域;`disableSelection` 站点不挂载;`instant`/`shortcut-only` 模式分支 | entrypoints/content.tsx, src/ui/SelectionIcon.tsx | 手动清单:Google/GitHub/知乎三站图标正常、输入框不出 | T1.7 | M |
-| **T2.3** 浮层面板 | 浮层组件:定位(视口边缘翻转)、加载骨架、Esc/外点关闭、pin、复制、重试、目标语言临时切换 | src/ui/TranslatePanel.tsx | 手动清单逐项过 | T2.2 | M |
-| **T2.4** 流式接线 | content 侧 port client(`useTranslateStream` hook):发 translate-stream、增量渲染 delta、error 态、断线重连一次 | src/ui/useTranslateStream.ts | 手动:真实 API 流式出字;断网出错误态 | T1.9, T2.3 | M |
+| **T2.3** 浮层面板 | 浮层组件:定位(视口边缘翻转)、加载骨架、Esc/外点关闭、pin、复制、重试、目标语言切换 _(实际:切换会更新默认目标语言,而非仅面板本地)_ | src/ui/TranslatePanel.tsx | 手动清单逐项过 | T2.2 | M |
+| **T2.4** 流式接线 | content 侧 port client(`useTranslateStream` hook):发 translate-stream、增量渲染 delta、error 态、断线重连一次 _(实际:`src/messaging/port-client.ts` 断线时仅显示错误态,未做自动重连)_ | src/ui/useTranslateStream.ts | 手动:真实 API 流式出字;断网出错误态 | T1.9, T2.3 | M |
 | **T2.5** 词典卡片 | `parseDictResult`(容忍 markdown 代码围栏)+ 词典卡片组件(音标/词性/义项/例句);解析失败降级纯文本;卡片内手动切换 词典⇄译文 | src/selection/dict-result.ts, src/ui/DictCard.tsx, tests/selection/dict-result.test.ts | 单测:标准 JSON/围栏包裹/坏 JSON→null;手动:单词出词典卡 | T2.4 | M |
 | **T2.6** 快捷键 | `translate-selection` command → background 转发当前 tab;`shortcut-only`/`instant` 模式接线 | entrypoints/background.ts, entrypoints/content.tsx | 手动:三种触发模式行为符合设置 | T2.4 | S |
 | **T2.7** 划词设置 | options:触发方式单选、目标语言选择、禁用站点清单编辑(增删域名) | entrypoints/options/* | 手动:改设置即时生效(watchSettings) | T2.2 | S |
@@ -208,15 +210,15 @@ export function cacheKey(p: { protocol: string; model: string; promptVersion: st
 
 | 任务 | 内容 | Files | 验收 | 依赖 | 估 |
 |---|---|---|---|---|---|
-| **T3.1** 分块器 | `collectSegments`:遍历 `p/li/h1-h6/td/blockquote/dd/figcaption` 等;短块合并(<20 字符并入相邻)、超长拆分(>1000 字符按句);跳过 code/pre/script/style/textarea/contenteditable/纯链接/纯数字;可见性过滤 | src/segmenter/index.ts, tests/segmenter/*.test.ts + fixtures/*.html | 新闻页/表格/代码文档/嵌套列表 4 组 fixture 单测绿 | — | L |
+| **T3.1** 分块器 | `collectSegments`:遍历 `p/li/h1-h6/td/blockquote/dd/figcaption` 等;短块合并(<20 字符并入相邻)、超长拆分(>1000 字符按句);跳过 code/pre/script/style/textarea/contenteditable/纯链接/纯数字;可见性过滤 _(实际:仅做叶子块收集 + 跳过/可见性/过短与纯链接过滤;短块合并与超长拆分未实现)_ | src/segmenter/index.ts, tests/segmenter/*.test.ts + fixtures/*.html | 新闻页/表格/代码文档/嵌套列表 4 组 fixture 单测绿 | — | L |
 | **T3.2** 批量协议 | `encodeBatch`(`@@n@@` 行标记)+ `decodeBatch`(缺号跳过、乱序容忍、多余丢弃) | src/translator/batch.ts, tests/translator/batch.test.ts | 单测:正常/缺号/乱序/粘连 case 绿 | — | S |
-| **T3.3** 编排器 | `translateSegments`:按 token 预算组包(估算 len/2,≤1500 输出)、并发池(默认 3)、失败批次重试 1 次、`chrome.i18n.detectLanguage` 跳过同目标语言块、AbortController 全局取消 | src/translator/orchestrator.ts, tests/translator/orchestrator.test.ts | 单测(mock client):组包/并发上限/取消/跳过 | T3.1-2, T1.6 | L |
+| **T3.3** 编排器 | `translateSegments`:按 token 预算组包(估算 len/2,≤1500 输出)、并发池(默认 3)、失败批次重试 1 次、`chrome.i18n.detectLanguage` 跳过同目标语言块、AbortController 全局取消 _(实际:组包 + 并发池 + 全局取消;`detectLanguage` 同语言跳过未实现)_ | src/translator/orchestrator.ts, tests/translator/orchestrator.test.ts | 单测(mock client):组包/并发上限/取消/跳过 | T3.1-2, T1.6 | L |
 | **T3.4** 缓存 | 见下方「缓存设计」;background 集中缓存 + 浮层内记忆,按内容 key、LRU 淘汰,`cacheKey` 含 mode/promptVersion,Retry 绕过 | src/translator/cache.ts, tests/translator/cache.test.ts | 单测:命中/淘汰/清空;手动:切 dict/text 与刷新页面秒回 | T1.7 | M |
 | **T3.5** DOM 注入 | 双语对照:原块后插 `data-llmt` 标记节点(textContent);仅译文:隐藏原块;`restorePage()` 全还原;模式热切换 | entrypoints/content.tsx, src/ui/inject.ts, tests/ui/inject.test.ts(happy-dom) | 单测:注入/还原幂等;手动:两模式切换无残留 | T3.1 | M |
 | **T3.6** 懒翻译 | IntersectionObserver:视口 ±1 屏优先入队,滚动追加;与编排器队列衔接 | entrypoints/content.tsx | 手动:长页首屏先出,滚动补翻 | T3.3, T3.5 | M |
 | **T3.7** 动态内容 | MutationObserver 增量收块进队;SPA URL 变化(history hook)重置翻译态 | entrypoints/content.tsx | 手动:Twitter/官方文档 SPA 切页正常 | T3.6 | M |
-| **T3.8** 页内工具条 | 浮动工具条:进度 n/N、暂停/继续、取消、双语⇄仅译文、还原、关闭 | src/ui/PageToolbar.tsx | 手动清单逐项过 | T3.6 | M |
-| **T3.9** popup | 翻译此页(触发/还原态切换)、模式选择、本站自动翻译开关、当前生效 Provider 展示、跳设置 | entrypoints/popup/* | 手动清单逐项过 | T3.5 | M |
+| **T3.8** 页内工具条 | 浮动工具条:进度 n/N、暂停/继续、取消、双语⇄仅译文、还原、关闭 _(实际:进度、取消、模式切换、还原、重试失败;`pause()/resume()` 在编排器中存在但未接入工具条)_ | src/ui/PageToolbar.tsx | 手动清单逐项过 | T3.6 | M |
+| **T3.9** popup | 翻译此页(触发/还原态切换)、模式选择、本站自动翻译开关、当前生效 Provider 展示、跳设置 _(实际:未含当前 Provider 展示)_ | entrypoints/popup/* | 手动清单逐项过 | T3.5 | M |
 | **T3.10** 触发收口 | 右键菜单(翻译此页/翻译所选)、`translate-page` 快捷键、autoTranslate 站点加载即翻 | entrypoints/background.ts, entrypoints/content.tsx | 手动:四种触发路径全通 | T3.8-9 | S |
 
 ## M4 设置完善 ✅
@@ -225,15 +227,15 @@ export function cacheKey(p: { protocol: string; model: string; promptVersion: st
 |---|---|---|---|---|---|
 | **T4.1** Prompt 编辑器 | 三套模板 textarea、变量说明、实时预览(renderPrompt)、恢复默认 | entrypoints/options/* | 手动:覆盖生效且缓存 key 变化(version) | T1.8 | M |
 | **T4.2** 导入导出 UI | 导出下载 JSON(默认不含 Key,勾选含 Key+敏感提示);导入文件校验+确认覆盖 | entrypoints/options/* | 手动:往返导入导出等价;脱敏正确 | T1.7 | S |
-| **T4.3** i18n | WXT i18n 模块;zh_CN + en 两套 messages;UI 文案全部走 i18n key | public/_locales/*, 全 UI 文件 | 切换浏览器语言 UI 跟随;无硬编码文案(grep 检查) | M2-3 | M |
-| **T4.4** 杂项收尾 | 缓存用量显示/一键清空;快捷键说明+跳转 `chrome://extensions/shortcuts`(MV3 不可编程修改);「选中即翻」防抖参数与费用提示文案 | entrypoints/options/* | 手动清单逐项过 | T3.4 | S |
+| **T4.3** i18n | WXT i18n 模块;zh_CN + en 两套 messages;UI 文案全部走 i18n key | public/_locales/*, 全 UI 文件 | 切换浏览器语言 UI 跟随;无硬编码文案(grep 检查) _(实际:自研应用内 i18n 模块 `src/i18n/*`,含 en/zh 文案与 `t()`/`useT()`,非 WXT `public/_locales/`;`browser.i18n` 仅用于解析 auto 界面语言)_ | M2-3 | M |
+| **T4.4** 杂项收尾 | 缓存用量显示/一键清空;快捷键说明+跳转 `chrome://extensions/shortcuts`(MV3 不可编程修改);「选中即翻」防抖参数与费用提示文案 _(实际:仅实现缓存用量显示 + 一键清空;设置页内的快捷键说明/链接、「选中即翻」防抖参数与费用提示文案未实现——README/INSTALL 仍引导用户到 `chrome://extensions/shortcuts` 重新绑定)_ | entrypoints/options/* | 手动清单逐项过 | T3.4 | S |
 
 ## M5 质量与上架 ✅(除商店实际提交)
 
 > 状态:T5.1/T5.2 E2E(Playwright 加载扩展 + mock LLM + 划词/全文冒烟 + CI e2e job)✅;
 > T5.3 品牌定稿(LLM Translate)+ 图标(见 `assets/logo/`)+ 商店截图(`pnpm screenshots` → `store-assets/screenshots/`)+ 中英 listing(`store-assets/listing.*.md`)✅;
 > T5.4 隐私政策(`docs/privacy-policy.md`)+ 权限 justification(`store-assets/justifications.md`)✅;
-> T5.5 release.yml(tag→build→zip→GH Release)✅、版本 0.1.0 ✅。**唯一待办:CWS + Edge 首次人工提交(需维护者账号)。**
+> T5.5 release.yml(tag→build→zip→GH Release)✅、当前版本 0.1.1 ✅。**唯一待办:CWS + Edge 首次人工提交(需维护者账号)。**
 
 | 任务 | 内容 | Files | 验收 | 依赖 | 估 |
 |---|---|---|---|---|---|
