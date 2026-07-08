@@ -77,7 +77,7 @@ pnpm build          # 产物输出到 .output/chrome-mv3/
 - 页面译文一律以 `textContent` 写入 DOM(LLM 输出视为不可信输入,防 XSS),全项目无 `innerHTML` / `eval`。
 - 设置导出默认**剥离** API Key;仅在你显式勾选「包含 API Key」时才写入(并有明文提示)。
 
-完整政策:[docs/privacy-policy.md](docs/privacy-policy.md)。
+完整政策:[docs/privacy-policy.zh-CN.md](docs/privacy-policy.zh-CN.md)。
 
 ## 🛠️ 开发
 

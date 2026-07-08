@@ -1,5 +1,7 @@
 # Privacy Policy — LLM Translate
 
+**English** · [简体中文](./privacy-policy.zh-CN.md)
+
 _Last updated: 2026-07-07_
 
 LLM Translate is a browser extension for selection and full-page translation.
