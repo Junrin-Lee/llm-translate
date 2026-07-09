@@ -122,6 +122,19 @@ const EN = {
   translatePage: 'Translate this page',
   translateSelection: 'Translate selection',
   restoreOriginal: 'Restore original',
+
+  // Permission onboarding (Firefox treats site access as optional — ADR-0005)
+  permBannerText: 'Site access is off — translation cannot run on any page.',
+  permBannerAction: 'Grant access',
+  onboardingTitle: 'One step before you translate',
+  onboardingWhy:
+    'LLM Translate reads the text of the page you are viewing to translate it, and talks only to the LLM endpoint you configure. Firefox asks you to grant this site access explicitly.',
+  onboardingGrant: 'Grant site access',
+  onboardingGranted: 'All set! You can close this page.',
+  onboardingNext: 'Next: add your LLM provider in Settings.',
+  onboardingOpenSettings: 'Open Settings',
+  onboardingManual:
+    'Firefox dismissed the request. You can also enable it under about:addons → LLM Translate → Permissions.',
 } as const;
 
 export type MessageKey = keyof typeof EN;
@@ -236,6 +249,19 @@ const ZH: Record<MessageKey, string> = {
   translatePage: '翻译此页',
   translateSelection: '翻译所选',
   restoreOriginal: '还原原文',
+
+  // Permission onboarding(Firefox 将站点访问视为可选权限 — ADR-0005)
+  permBannerText: '站点访问权限未开启——翻译功能无法在任何页面工作。',
+  permBannerAction: '立即授权',
+  onboardingTitle: '开始翻译前,还差一步',
+  onboardingWhy:
+    'LLM Translate 需要读取你正在浏览的页面文本来完成翻译,并且只与你自己配置的 LLM 接口通信。Firefox 要求你显式授予这项站点访问权限。',
+  onboardingGrant: '授予站点访问权限',
+  onboardingGranted: '搞定!可以关闭此页了。',
+  onboardingNext: '下一步:在设置中添加你的 LLM Provider。',
+  onboardingOpenSettings: '打开设置',
+  onboardingManual:
+    'Firefox 未完成授权。你也可以在 about:addons → LLM Translate → 权限 中手动开启。',
 };
 
 export const MESSAGES = { en: EN, zh: ZH } as const;
