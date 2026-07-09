@@ -14,7 +14,7 @@ A streamlined take on Trancy: just two features — **Selection Translation** an
 
 | # | Decision Point | Conclusion |
 |---|---|---|
-| 1 | Release target | Publish to Chrome Web Store + Edge Add-ons (same MV3 build) |
+| 1 | Release target | Publish to Chrome Web Store + Edge Add-ons (shared MV3 build) + Firefox Add-ons/AMO (own MV3 build, ADR-0005) |
 | 2 | Tech stack | WXT + React + TypeScript, pnpm |
 | 3 | Provider model | Multiple Provider Profiles; a Global Default Provider plus a per-feature Feature Override for Selection / Page |
 | 4 | Selection trigger | Default "show icon on selection, click to translate"; supports a hotkey for direct translation; settings can switch to translate-on-select / hotkey-only |

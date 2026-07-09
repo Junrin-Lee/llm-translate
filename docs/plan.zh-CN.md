@@ -14,7 +14,7 @@
 
 | # | 决策点 | 结论 |
 |---|---|---|
-| 1 | 发布目标 | 上架 Chrome Web Store + Edge Add-ons(同一份 MV3 产物) |
+| 1 | 发布目标 | 上架 Chrome Web Store + Edge Add-ons(同一份 MV3 产物)+ Firefox Add-ons/AMO(独立 MV3 产物,ADR-0005) |
 | 2 | 技术栈 | WXT + React + TypeScript,pnpm |
 | 3 | Provider 模型 | 多 Provider 配置;全局默认 + 划词/全文各自可功能级覆盖 |
 | 4 | 划词触发 | 默认「选中出图标、点击翻译」;支持快捷键直翻;设置可切换为选中即翻/仅快捷键 |

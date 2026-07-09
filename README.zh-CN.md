@@ -46,6 +46,8 @@ pnpm build          # 产物输出到 .output/chrome-mv3/
 2. 右上角开启 **开发者模式 / Developer mode**
 3. 点 **加载已解压的扩展程序 / Load unpacked**,选择 **`.output/chrome-mv3/`** 文件夹(选文件夹本身,不是 zip)
 
+- **Firefox**:*(链接将在首次 AMO 审核通过后补充)*——目前请运行 `pnpm zip:firefox`,在 Firefox 中打开 `about:debugging#/runtime/this-firefox`,点击**"临时载入附加组件…"**(Load Temporary Add-on…),直接选中生成的 `.output/llm-translate-<version>-firefox.zip`(不需要先解压)。Firefox 可能会请你授予站点访问权限——扩展会在首次运行时引导你完成。完整步骤见[安装指南](docs/INSTALL.zh-CN.md#install-on-firefox)。
+
 > **加载后却没有工具栏图标、或找不到设置入口?** 扩展在 `chrome://extensions` 页面本身不会运行——先打开任意一个普通网页,再点它的工具栏图标 → **打开设置**。完整说明见[安装指南](docs/INSTALL.zh-CN.md#open-a-normal-page)。
 
 > 开发时更推荐 `pnpm dev`,WXT 会启动带扩展的浏览器并在保存时热重载(见下方「开发」)。
@@ -98,15 +100,18 @@ pnpm build          # 产物输出到 .output/chrome-mv3/
 ```sh
 pnpm dev          # Chrome:启动带扩展的浏览器,保存热重载
 pnpm dev:edge     # Edge
+pnpm dev:firefox  # Firefox
 
 pnpm build        # 生产构建 → .output/chrome-mv3/
 pnpm build:edge   # → .output/edge-mv3/
 
 pnpm zip          # 打包上传商店用 → .output/llm-translate-<version>-chrome.zip
 pnpm zip:edge     # → .output/llm-translate-<version>-edge.zip
+pnpm zip:firefox  # → .output/llm-translate-<version>-firefox.zip
 
 pnpm test         # vitest 单测
 pnpm e2e          # Playwright 端到端(加载构建后的扩展)
+pnpm e2e:firefox  # 针对真实 Firefox 的 Selenium 冒烟套件
 pnpm typecheck    # tsc --noEmit
 pnpm lint         # biome(lint + 格式检查)
 pnpm format       # biome 自动修复
@@ -116,6 +121,10 @@ pnpm screenshots  # 重新生成 store-assets/ 里的商店截图
 
 > `.zip` 仅用于上传商店后台,不能直接拖进浏览器安装;开发/本地安装请用上面的「加载已解压的扩展」。
 > Chromium 系浏览器(Edge/Brave/Arc)也可直接安装已发布的 Chrome Web Store 版本。
+
+> Firefox 相关命令需要 Firefox ≥128,且与 Chrome/Edge 一样构建为 Manifest V3——见
+> [ADR-0005](docs/adr/0005-firefox-mv3-with-permission-onboarding.zh-CN.md)。`pnpm e2e:firefox`
+> 首次运行会经 Selenium Manager 自动下载匹配的 Firefox 与 geckodriver(需要联网)。
 
 ## 📁 项目结构
 

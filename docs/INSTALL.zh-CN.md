@@ -2,15 +2,16 @@
 
 [English](./INSTALL.md) · **简体中文**
 
-本指南带你在**不经过商店**的情况下,把 LLM Translate 装进 **Chrome 或 Edge**,并完成
-首次配置。大约两分钟。
+本指南带你在**不经过商店**的情况下,把 LLM Translate 装进 **Chrome、Edge 或
+Firefox**,并完成首次配置。大约两分钟。
 
-> LLM Translate 目前尚未上架 Chrome Web Store。Chrome / Edge 不允许非商店扩展的一键
-> 安装,所以需要用"加载已解压的扩展"的方式装入——按下面步骤即可。
+> LLM Translate 目前尚未上架 Chrome Web Store 或 Firefox Add-ons(AMO)。三款浏览器
+> 都不允许非商店扩展的一键安装,所以需要加载预构建的安装包——Chrome / Edge 见下文,
+> Firefox 见专门的章节([在 Firefox 上安装](#install-on-firefox))。
 
 ## 开始前准备
 
-- **Google Chrome 或 Microsoft Edge**(较新版本即可)。
+- **Google Chrome、Microsoft Edge 或 Firefox**(较新版本即可;Firefox 需 128 及以上)。
 - **一个 API Key**:来自 OpenAI 兼容或 Anthropic 兼容的服务商——真正负责翻译的是它
   (自带密钥 BYOK)。可在 OpenAI 平台、Anthropic 控制台,或任意兼容网关处获取。第 3 步
   会用到,先准备好。
@@ -85,6 +86,46 @@
 ![全文双语翻译](../store-assets/screenshots/02-page-bilingual.png)
 
 完整功能(词典卡片、双语 / 仅译文、自动翻译站点、自定义提示词等)见 [README](../README.zh-CN.md)。
+
+<a id="install-on-firefox"></a>
+
+## 在 Firefox 上安装
+
+Firefox 不在 Chrome Web Store 里,有自己的商店与独立构建(仍是 Manifest V3,与
+Chrome/Edge 一致——见 [ADR-0005](./adr/0005-firefox-mv3-with-permission-onboarding.zh-CN.md))。
+可选以下两种方式:
+
+### 方式一:Firefox Add-ons(AMO)
+
+*(链接将在首次 AMO 审核通过后补充,目前尚未上架。)* 上架后,从 AMO 安装只需一次
+点击,和安装其他 Firefox 扩展一样。
+
+### 方式二:临时装载(当前可用,或供开发者使用)
+
+1. 构建 zip:先 `pnpm install`,再执行 `pnpm zip:firefox` → 产物为
+   `.output/llm-translate-<version>-firefox.zip`(需要 Node.js 20 与 pnpm 9——见本
+   指南末尾的**备选:从源码构建**)。
+2. 在 Firefox 中打开 `about:debugging#/runtime/this-firefox`。
+3. 点击**"临时载入附加组件…"**(Load Temporary Add-on…),直接选中这个 `.zip` 文件——
+   Firefox 接受打包好的 zip,不需要先解压。
+
+> **临时装载的扩展会在 Firefox 关闭后被移除。** 在 AMO 正式上架前,每次重启
+> Firefox 都需要重复第 2–3 步。
+
+### 授予站点访问权限
+
+和 Chrome/Edge 不同,Firefox 把"读取并更改所有网站数据"这项权限当作**可选且可
+撤销**,不是安装时自动授予:
+
+- **安装 / 临时装载时** —— Firefox 可能会弹出权限确认框,或显示一个"允许此扩展在
+  所有网站上运行"的开关。请保持**开启**,划词翻译与全文翻译才能在任意页面工作。
+- **如果当时拒绝了(或这是第一次启动)** —— 扩展会自动打开一个 onboarding 标签
+  页,上面有一个**"授予站点访问权限"**按钮。
+- **如果之后撤销了权限**(`about:addons` → LLM Translate → **权限** → 关闭"访问
+  您在所有网站上的数据")—— 工具栏图标会出现红色**"!"**角标,popup 与设置页也会
+  显示警示条和**"立即授权"**按钮,点击任意一处即可恢复访问——无需重新安装。
+
+站点访问授权完成后,继续参考上文的**第 3 步:配置 API Key**即可。
 
 ## 更新
 

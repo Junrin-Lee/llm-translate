@@ -2,16 +2,18 @@
 
 **English** · [简体中文](./INSTALL.zh-CN.md)
 
-This guide installs LLM Translate in **Chrome or Edge** without the Web Store, and
-sets it up for first use. It takes about two minutes.
+This guide installs LLM Translate in **Chrome, Edge, or Firefox** without the store
+listings, and sets it up for first use. It takes about two minutes.
 
-> LLM Translate isn't on the Chrome Web Store yet. Chrome and Edge don't allow
-> one-click installs of off-store extensions, so you install it by loading a
-> prebuilt folder — the steps below.
+> LLM Translate isn't on the Chrome Web Store or Firefox Add-ons (AMO) yet. None of
+> the three browsers allow one-click installs of off-store extensions, so you install
+> it by loading a prebuilt package — Chrome/Edge below, Firefox in its own section
+> ([Install on Firefox](#install-on-firefox)).
 
 ## What you'll need
 
-- **Google Chrome or Microsoft Edge** (any recent version).
+- **Google Chrome, Microsoft Edge, or Firefox** (any recent version; Firefox needs
+  128 or later).
 - **An API key** from an OpenAI-compatible or Anthropic-compatible provider — this
   is what actually does the translating (you bring your own key). Get one from,
   e.g., the OpenAI platform or the Anthropic console, or use any compatible
@@ -99,6 +101,49 @@ Open **any website in a new tab** (or refresh a page you already had open), then
 
 For the full feature list (dictionary cards, bilingual / translation-only modes,
 auto-translate sites, custom prompts, and more), see the [README](../README.md).
+
+<a id="install-on-firefox"></a>
+
+## Install on Firefox
+
+Firefox isn't on the Chrome Web Store, so it gets its own listing and its own build
+(still Manifest V3, same as Chrome/Edge — see
+[ADR-0005](./adr/0005-firefox-mv3-with-permission-onboarding.md)). Pick one:
+
+### Option A: Firefox Add-ons (AMO)
+
+*(Link available after the first AMO review — not published yet.)* Once listed,
+installing from AMO is a single click, like any other Firefox extension.
+
+### Option B: Temporary install (for now, or for developers)
+
+1. Build the zip: `pnpm install`, then `pnpm zip:firefox` → outputs
+   `.output/llm-translate-<version>-firefox.zip`. (Needs Node.js 20 and pnpm 9 — see
+   **Alternative: build from source** near the end of this guide.)
+2. In Firefox, open `about:debugging#/runtime/this-firefox`.
+3. Click **Load Temporary Add-on…** and select that `.zip` file directly — Firefox
+   accepts the packed zip, no need to unzip it.
+
+> **Temporary add-ons are removed when Firefox closes.** Until the AMO listing is
+> live, you'll need to repeat steps 2–3 after every restart.
+
+### Grant site access
+
+Unlike Chrome/Edge, Firefox treats the "read and change data on all websites"
+permission as **optional and revocable**, not automatic:
+
+- **At install / temporary-load time** — Firefox may show a permission prompt or an
+  "Allow this extension to run on all sites" toggle. Keep it **on**; both Selection
+  Translation and Page Translation need it to work on any page.
+- **If you declined it (or this is the first launch)** — the extension opens an
+  onboarding tab automatically, with a single **Grant site access** button.
+- **If you revoke it later** (`about:addons` → LLM Translate → **Permissions** →
+  turn off "Access your data for all websites") — the toolbar icon shows a red
+  **"!"** badge, and both the popup and the settings page show a warning banner
+  with a **Grant access** button. Click either one to restore access — no
+  reinstall needed.
+
+Once site access is granted, continue with **step 3, Add your API key** above.
 
 ## Updating
 

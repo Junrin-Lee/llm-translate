@@ -46,6 +46,8 @@ pnpm build          # outputs to .output/chrome-mv3/
 2. Toggle **Developer mode** on (top-right)
 3. Click **Load unpacked** and select the **`.output/chrome-mv3/`** folder (the folder itself, not a zip)
 
+- **Firefox**: *(link available after the first AMO review)* — for now, run `pnpm zip:firefox`, open `about:debugging#/runtime/this-firefox` in Firefox, click **Load Temporary Add-on…**, and select the generated `.output/llm-translate-<version>-firefox.zip` directly (no need to unzip it). Firefox may ask you to grant site access — the extension guides you through it on first run. See the [install guide](docs/INSTALL.md#install-on-firefox) for the full walkthrough.
+
 > **Loaded it but no toolbar icon, or can't find settings?** The extension doesn't run on the `chrome://extensions` page itself — open any normal web page first, then click its toolbar icon → **Open settings**. See [the install guide](docs/INSTALL.md#open-a-normal-page) for the full walkthrough.
 
 > For development, prefer `pnpm dev` — WXT launches a browser with the extension loaded and hot-reloads on save (see [Development](#-development)).
@@ -98,15 +100,18 @@ Full policy: [docs/privacy-policy.md](docs/privacy-policy.md).
 ```sh
 pnpm dev          # Chrome: launches a browser with the extension, hot-reloads
 pnpm dev:edge     # Edge
+pnpm dev:firefox  # Firefox
 
 pnpm build        # production build → .output/chrome-mv3/
 pnpm build:edge   # → .output/edge-mv3/
 
 pnpm zip          # store upload package → .output/llm-translate-<version>-chrome.zip
 pnpm zip:edge     # → .output/llm-translate-<version>-edge.zip
+pnpm zip:firefox  # → .output/llm-translate-<version>-firefox.zip
 
 pnpm test         # vitest unit suite
 pnpm e2e          # Playwright end-to-end (loads the built extension)
+pnpm e2e:firefox  # Selenium smoke suite against a real Firefox
 pnpm typecheck    # tsc --noEmit
 pnpm lint         # biome (lint + format check)
 pnpm format       # biome autofix
@@ -117,6 +122,10 @@ pnpm screenshots  # regenerate the store screenshots in store-assets/
 > The `.zip` is only for uploading to the store dashboards — you don't drag it into the
 > browser. For local install use "Load unpacked" above. Chromium browsers (Edge/Brave/Arc)
 > can also install the published Chrome Web Store listing directly.
+
+> Firefox commands require Firefox ≥128 and build Manifest V3, same as Chrome/Edge — see
+> [ADR-0005](docs/adr/0005-firefox-mv3-with-permission-onboarding.md). `pnpm e2e:firefox`
+> downloads a matching Firefox + geckodriver on first run via Selenium Manager (needs network).
 
 ## 📁 Project layout
 
