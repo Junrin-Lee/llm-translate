@@ -1,0 +1,24 @@
+.perm-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fdecea;
+  color: #b3261e;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.perm-banner__btn {
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 6px;
+  padding: 4px 10px;
+  background: #b3261e;
+  color: #fff;
+  font-size: 12.5px;
+  cursor: pointer;
+}

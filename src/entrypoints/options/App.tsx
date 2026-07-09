@@ -5,6 +5,7 @@ import type { MessageKey } from '@/i18n/messages';
 import { useT } from '@/i18n/useI18n';
 import type { ProviderProfile } from '@/llm/types';
 import type { GeneralSettings, ProfileDefaults, PromptOverrides } from '@/storage/schema';
+import { PermissionBanner } from '@/ui/PermissionBanner';
 import { BackupPanel } from './BackupPanel';
 import { CachePanel } from './CachePanel';
 import { DefaultsPanel } from './DefaultsPanel';
@@ -113,6 +114,7 @@ export function App() {
 
   return (
     <main className="page">
+      <PermissionBanner />
       <header className="masthead">
         <h1 className="masthead__title">{BRAND.name}</h1>
         <p className="masthead__tagline">{t('optionsTagline')}</p>

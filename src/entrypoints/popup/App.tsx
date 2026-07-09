@@ -4,6 +4,7 @@ import { setUiLanguage } from '@/i18n';
 import { useT } from '@/i18n/useI18n';
 import type { ContentMessage, PageStatusReply } from '@/messaging/protocol';
 import { getSettings, updateSettings } from '@/storage';
+import { PermissionBanner } from '@/ui/PermissionBanner';
 
 async function getActiveTab() {
   const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
@@ -70,6 +71,7 @@ export function App() {
 
   return (
     <main className="popup">
+      <PermissionBanner />
       <h1 className="popup__title">{BRAND.name}</h1>
       <p className="popup__hint">{translated ? t('popupHintTranslated') : t('popupHintDefault')}</p>
       <div className="popup__actions">
