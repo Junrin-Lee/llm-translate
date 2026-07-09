@@ -1,5 +1,7 @@
 # Firefox (Gecko) 支持实施计划
 
+> **状态:✅ 已完成并合入 `feat/firefox-support`(2026-07-09)。** 本计划全部 9 个 Task 均已实现并提交;下方未勾选的复选框为原始计划,保留作历史参考,不代表未开工。已交付:`build:firefox`/`zip:firefox`/`dev:firefox`/`verify:firefox`/`e2e:firefox` 脚本、`scripts/verify-firefox-manifest.mjs`、`src/permissions.ts`、`src/entrypoints/onboarding/`、`src/ui/PermissionBanner.tsx`、`e2e-firefox/` Selenium 套件,以及双语 firefox-smoke 清单与 AMO 发布材料。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 让扩展以 MV3 形态构建、验证并准备上架 Firefox Add-ons (AMO),配套全渠道权限引导(Permission Onboarding)。
