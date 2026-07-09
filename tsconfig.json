@@ -6,5 +6,5 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "exclude": ["e2e", "playwright.config.ts"]
+  "exclude": ["e2e", "playwright.config.ts", "e2e-firefox", "vitest.e2e-firefox.config.ts"]
 }
