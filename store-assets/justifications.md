@@ -20,7 +20,7 @@ and a translation cache. Nothing is stored remotely.
 Add two right-click entries — "Translate this page" and "Translate selection" —
 as an alternative to the toolbar button and keyboard shortcuts.
 
-### `commands`
+### `commands` (manifest key, not a permission)
 Keyboard shortcuts for "translate selection" and "translate page". The user can
 rebind or disable them at `chrome://extensions/shortcuts`.
 
