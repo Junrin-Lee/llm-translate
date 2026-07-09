@@ -29,11 +29,8 @@ export function watchHostAccess(onChange: (granted: boolean) => void): () => voi
 
 /** Open the onboarding page, or focus it if a tab is already showing it. */
 export async function focusOrOpenOnboarding(): Promise<void> {
-  // WXT's generated PublicPath union doesn't include onboarding.html yet (its
-  // entrypoint lands in Task 4, which regenerates the union and turns this
-  // directive into an unused-directive error — forcing cleanup). getURL is a
-  // pure string op at runtime.
-  // @ts-expect-error -- /onboarding.html joins PublicPath in Task 4
+  // Task 4 added the onboarding entrypoint, so WXT's generated PublicPath
+  // union now includes '/onboarding.html' and this resolves without a cast.
   const url = browser.runtime.getURL(ONBOARDING_PATH);
   const tabs = await browser.tabs.query({});
   const existing = tabs.find((t) => t.url === url);

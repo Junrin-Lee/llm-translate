@@ -1,5 +1,5 @@
 // Asserts the Firefox build artifact matches ADR-0005. Run after `wxt build -b firefox --mv3`.
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 const OUT = new URL('../.output/firefox-mv3/', import.meta.url);
 const manifest = JSON.parse(readFileSync(new URL('manifest.json', OUT), 'utf8'));
@@ -32,6 +32,10 @@ for (const c of ['translate-selection', 'translate-page'])
   expect(c in (manifest.commands ?? {}), `commands must include ${c}`);
 expect(manifest.action?.default_popup === 'popup.html', 'action.default_popup must be popup.html');
 expect(manifest.options_ui?.open_in_tab === true, 'options_ui.open_in_tab must be true');
+expect(
+  existsSync(new URL('onboarding.html', OUT)),
+  'onboarding.html must be emitted (permission onboarding entrypoint)',
+);
 
 if (failures.length) {
   console.error('✗ firefox manifest verification failed:');
