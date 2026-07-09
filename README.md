@@ -22,35 +22,26 @@ manual submission to the Chrome Web Store / Edge Add-ons / Firefox Add-ons (AMO)
   - **Bilingual** (default): translations inserted under each original block, original kept
   - **Translation-only**: replaces the original in place, restorable in one click
   - viewport-first lazy loading, follows SPA route changes and dynamic content, retry failed blocks (per-block or all at once), draggable in-page toolbar (progress / cancel / restore / mode toggle)
+
+<details>
+<summary><b>More, for power users</b> — providers, routing, dual protocol, triggers, customization, cache (click to expand)</summary>
+
 - **Multiple providers + routing** — save several provider profiles (protocol / Base URL / key / model / optional params), set a global default, and optionally override the provider per feature (selection, page)
 - **Dual protocol** — OpenAI-compatible (`/chat/completions`) and Anthropic-compatible (`/v1/messages`), hand-rolled lightweight client, no vendor SDK
 - **Flexible triggers** — selection icon / instant / shortcut-only; page translation via the popup, keyboard shortcut, right-click menu, or an auto-translate site list
 - **Customizable** — override the three prompt templates and reset to default; UI language (Automatic / English / 中文); per-site disable list; JSON settings import/export (keys stripped by default)
 - **Local cache** — content-keyed, LRU-evicted; re-translating a page after refresh is instant. View usage and clear it from settings.
 
+</details>
+
 ## 🚀 Quick start
 
-> New to browser extensions? Follow the step-by-step [install guide](docs/INSTALL.md) —
-> it covers the prebuilt-zip route, first-run setup, updating, and troubleshooting.
+### 1. Install the extension
 
-### 1. Get the extension
+- **Chrome / Edge** (and Chromium browsers like Brave, Arc) — grab the latest `…-chrome.zip` or `…-edge.zip` from [Releases](https://github.com/Junrin-Lee/llm-translate/releases), unzip it into a folder you'll keep, then open `chrome://extensions`, turn on **Developer mode**, and click **Load unpacked** to select that folder.
+- **Firefox** — coming to Firefox Add-ons (AMO) soon for one-click install; to try it now, load it temporarily per [Install on Firefox](docs/INSTALL.md#install-on-firefox).
 
-Before publication, build from source and load it in developer mode:
-
-```sh
-pnpm install
-pnpm build          # outputs to .output/chrome-mv3/
-```
-
-1. Open `chrome://extensions` (or `edge://extensions`)
-2. Toggle **Developer mode** on (top-right)
-3. Click **Load unpacked** and select the **`.output/chrome-mv3/`** folder (the folder itself, not a zip)
-
-- **Firefox**: *(link available after the first AMO review)* — for now, run `pnpm zip:firefox`, open `about:debugging#/runtime/this-firefox` in Firefox, click **Load Temporary Add-on…**, and select the generated `.output/llm-translate-<version>-firefox.zip` directly (no need to unzip it). Firefox may ask you to grant site access — the extension guides you through it on first run. See the [install guide](docs/INSTALL.md#install-on-firefox) for the full walkthrough.
-
-> **Loaded it but no toolbar icon, or can't find settings?** The extension doesn't run on the `chrome://extensions` page itself — open any normal web page first, then click its toolbar icon → **Open settings**. See [the install guide](docs/INSTALL.md#open-a-normal-page) for the full walkthrough.
-
-> For development, prefer `pnpm dev` — WXT launches a browser with the extension loaded and hot-reloads on save (see [Development](#-development)).
+For screenshots, updating, and troubleshooting (e.g. "loaded it but there's no toolbar icon"), see the full [install guide](docs/INSTALL.md).
 
 ### 2. Configure a provider
 
@@ -75,6 +66,10 @@ The settings page uses a sidebar: **Providers**, **Routing**, **Translation**, *
 **Backup**, **Cache**. The Translation section covers target language, interface language,
 selection trigger, and the per-site disable list.
 
+![Providers settings: protocol / Base URL / key / model](store-assets/screenshots/03-providers.png)
+
+![Routing: assign a provider per feature (selection, page)](store-assets/screenshots/04-routing.png)
+
 ## 🔒 Privacy & security
 
 - All configuration and API keys live in `storage.local` and are **never synced or uploaded** — the only network request goes to the API endpoint **you** configure, carrying the text to translate. See [ADR-0002](docs/adr/0002-local-only-storage.md).
@@ -85,6 +80,8 @@ selection trigger, and the per-site disable list.
 Full policy: [docs/privacy-policy.md](docs/privacy-policy.md).
 
 ## 🛠️ Development
+
+> This section is for contributors and anyone building from source. If you just want to use the extension, the [Quick start](#-quick-start) above is all you need.
 
 ### Requirements
 
@@ -130,29 +127,30 @@ pnpm screenshots  # regenerate the store screenshots in store-assets/
 ## 📁 Project layout
 
 ```
-src/
-  brand.ts            product naming (single source of truth — import BRAND, never hardcode)
-  languages.ts        target-language list
-  permissions.ts      <all_urls> host-access helpers behind Permission Onboarding (Firefox, ADR-0005)
-  i18n/               in-app en/zh catalogs + t() / useT() (not browser.i18n)
-  llm/                dual-protocol client: types, sse, base-url, openai, anthropic, http, client
-  storage/            local-only settings, resolve/fallback, import/export: schema, index, import-export
-  prompts/            three default templates + interpolation: templates, index
-  segmenter/          full-page DOM segmenter (block-level units)
-  selection/          selection classification + dictionary parsing: classify, dict-result
-  translator/         orchestrate / batch / cache / DOM inject: orchestrator, batch, cache, inject
-  messaging/          background message protocol + request handler + port client: protocol, handler, port-client
-  ui/
-    selection/        selection icon, popup (dictionary / translation cards)
-    page/             in-page toolbar, page-translation store / controller
-    PermissionBanner  site-access warning banner (popup + settings) for Permission Onboarding
-  entrypoints/        background, content, popup/, options/, onboarding/ (WXT entrypoints)
-tests/                vitest suites mirroring src/
-e2e/                  Playwright specs + mock LLM server + fixtures
-e2e-firefox/          Selenium (vitest) smoke + permission-onboarding suite against a real Firefox
-scripts/              tooling: store screenshot capture, Firefox manifest verification
-store-assets/         listing copy (Chrome + AMO), permission justifications, screenshots
-docs/                 install guide, CONTEXT glossary, ADRs, privacy policy, roadmap
+.
+├── src/
+│   ├── brand.ts              product naming (single source of truth — import BRAND, never hardcode)
+│   ├── languages.ts          target-language list
+│   ├── permissions.ts        <all_urls> host-access helpers behind Permission Onboarding (Firefox, ADR-0005)
+│   ├── i18n/                 in-app en/zh catalogs + t() / useT() (not browser.i18n)
+│   ├── llm/                  dual-protocol client: types, sse, base-url, openai, anthropic, http, client
+│   ├── storage/              local-only settings, resolve/fallback, import/export: schema, index, import-export
+│   ├── prompts/              three default templates + interpolation: templates, index
+│   ├── segmenter/            full-page DOM segmenter (block-level units)
+│   ├── selection/            selection classification + dictionary parsing: classify, dict-result
+│   ├── translator/           orchestrate / batch / cache / DOM inject: orchestrator, batch, cache, inject
+│   ├── messaging/            background message protocol + request handler + port client: protocol, handler, port-client
+│   ├── ui/
+│   │   ├── selection/        selection icon, popup (dictionary / translation cards)
+│   │   ├── page/             in-page toolbar, page-translation store / controller
+│   │   └── PermissionBanner  site-access warning banner (popup + settings) for Permission Onboarding
+│   └── entrypoints/          background, content, popup/, options/, onboarding/ (WXT entrypoints)
+├── tests/                    vitest suites mirroring src/
+├── e2e/                      Playwright specs + mock LLM server + fixtures
+├── e2e-firefox/              Selenium (vitest) smoke + permission-onboarding suite against a real Firefox
+├── scripts/                  tooling: store screenshot capture, Firefox manifest verification
+├── store-assets/             listing copy (Chrome + AMO), permission justifications, screenshots
+└── docs/                     install guide, CONTEXT glossary, ADRs, privacy policy, roadmap
 ```
 
 ## 🗺️ Roadmap

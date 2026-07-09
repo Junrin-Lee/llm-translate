@@ -20,37 +20,26 @@ Store / Edge Add-ons / Firefox Add-ons(AMO)首次人工提交,见
   - **双语对照**(默认):译文插在原文块下方,原文保留
   - **仅译文**:原地替换原文,可一键还原
   - 视口优先懒加载(先翻首屏)、跟随 SPA 路由与动态内容、失败块可重试(单块或一键全部)、可拖动的页内浮动工具条(进度/取消/还原/模式切换)
-- **多 Provider + 路由** —— 保存多条服务接入配置(协议 / Base URL / Key / 模型 / 可选参数),
-  设「全局默认」,并可为划词、全文分别指定功能级覆盖
+
+<details>
+<summary><b>更多进阶能力</b> —— 多 Provider、双协议、触发方式、自定义、本地缓存(点击展开)</summary>
+
+- **多 Provider + 路由** —— 保存多条服务接入配置(协议 / Base URL / Key / 模型 / 可选参数),设「全局默认」,并可为划词、全文分别指定功能级覆盖
 - **双协议** —— OpenAI 兼容(`/chat/completions`)与 Anthropic 兼容(`/v1/messages`),自研轻量客户端,无需官方 SDK
 - **多触发方式** —— 划词图标 / 选中即翻 / 仅快捷键;全文支持扩展弹窗、快捷键、右键菜单、自动翻译站点清单
-- **可定制** —— 三套 Prompt 模板可覆盖并一键恢复默认;界面语言(自动 / English / 中文);
-  站点禁用清单;设置 JSON 导入导出(默认**不含** API Key)
+- **可定制** —— 三套 Prompt 模板可覆盖并一键恢复默认;界面语言(自动 / English / 中文);站点禁用清单;设置 JSON 导入导出(默认**不含** API Key)
 - **本地缓存** —— 按内容做 key、按容量淘汰(LRU),刷新页面重译秒回;设置页可查看用量并一键清空
+
+</details>
 
 ## 🚀 快速开始
 
-> 第一次装浏览器扩展?按[安装指南](docs/INSTALL.zh-CN.md)一步步来——含预打包 zip 路径、
-> 首次配置、更新与常见问题。
+### 1. 安装扩展
 
-### 1. 获取扩展
+- **Chrome / Edge**(以及 Brave、Arc 等 Chromium 浏览器)——到 [Releases](https://github.com/Junrin-Lee/llm-translate/releases) 下载最新版的 `…-chrome.zip` 或 `…-edge.zip`,解压到一个长期保留的文件夹,再到 `chrome://extensions` 打开「开发者模式」,点「加载已解压的扩展」选中该文件夹。
+- **Firefox**——即将上架 Firefox Add-ons(AMO),届时可一键安装;想现在就试,按[在 Firefox 上安装](docs/INSTALL.zh-CN.md#install-on-firefox)临时载入。
 
-发布前请从源码构建并以「开发者模式」加载:
-
-```sh
-pnpm install
-pnpm build          # 产物输出到 .output/chrome-mv3/
-```
-
-1. 打开 `chrome://extensions`(或 `edge://extensions`)
-2. 右上角开启 **开发者模式 / Developer mode**
-3. 点 **加载已解压的扩展程序 / Load unpacked**,选择 **`.output/chrome-mv3/`** 文件夹(选文件夹本身,不是 zip)
-
-- **Firefox**:*(链接将在首次 AMO 审核通过后补充)*——目前请运行 `pnpm zip:firefox`,在 Firefox 中打开 `about:debugging#/runtime/this-firefox`,点击**"临时载入附加组件…"**(Load Temporary Add-on…),直接选中生成的 `.output/llm-translate-<version>-firefox.zip`(不需要先解压)。Firefox 可能会请你授予站点访问权限——扩展会在首次运行时引导你完成。完整步骤见[安装指南](docs/INSTALL.zh-CN.md#install-on-firefox)。
-
-> **加载后却没有工具栏图标、或找不到设置入口?** 扩展在 `chrome://extensions` 页面本身不会运行——先打开任意一个普通网页,再点它的工具栏图标 → **打开设置**。完整说明见[安装指南](docs/INSTALL.zh-CN.md#open-a-normal-page)。
-
-> 开发时更推荐 `pnpm dev`,WXT 会启动带扩展的浏览器并在保存时热重载(见下方「开发」)。
+需要图文详解、更新方法与常见问题(比如「装好却没有工具栏图标」),见完整[安装指南](docs/INSTALL.zh-CN.md)。
 
 ### 2. 配置一个 Provider
 
@@ -75,6 +64,10 @@ pnpm build          # 产物输出到 .output/chrome-mv3/
 **提示词 (Prompts)**、**备份 (Backup)**、**缓存 (Cache)**。翻译区可切换目标语言、界面语言、
 划词触发方式与站点禁用清单。
 
+![服务商设置:协议 / Base URL / Key / 模型](store-assets/screenshots/03-providers.png)
+
+![路由:为划词、全文分别指定 Provider](store-assets/screenshots/04-routing.png)
+
 ## 🔒 隐私与安全
 
 - 所有配置与 API Key 仅存于 `storage.local`,**从不同步、从不上传**——唯一的网络请求是发往**你自己配置的** API 端点,内容为待翻译文本。见 [ADR-0002](docs/adr/0002-local-only-storage.zh-CN.md)。
@@ -85,6 +78,8 @@ pnpm build          # 产物输出到 .output/chrome-mv3/
 完整政策:[docs/privacy-policy.zh-CN.md](docs/privacy-policy.zh-CN.md)。
 
 ## 🛠️ 开发
+
+> 本节面向贡献者与想从源码构建的人。只想使用扩展的话,上面的[快速开始](#-快速开始)就够了。
 
 ### 环境要求
 
@@ -129,29 +124,30 @@ pnpm screenshots  # 重新生成 store-assets/ 里的商店截图
 ## 📁 项目结构
 
 ```
-src/
-  brand.ts            产品命名唯一来源(勿在别处硬编码,import BRAND)
-  languages.ts        目标语言清单
-  permissions.ts      <all_urls> host 访问辅助,服务于权限引导(Firefox,ADR-0005)
-  i18n/               应用内 en/zh 文案 + t() / useT()(不走 browser.i18n)
-  llm/                双协议客户端:types, sse, base-url, openai, anthropic, http, client
-  storage/            仅本地设置、解析回退、导入导出:schema, index, import-export
-  prompts/            三套默认模板 + 变量插值:templates, index
-  segmenter/          全文 DOM 分块器(块级语义单元)
-  selection/          划词判定 + 词典结果解析:classify, dict-result
-  translator/         编排 / 分批 / 缓存 / DOM 注入:orchestrator, batch, cache, inject
-  messaging/          background 消息协议 + 请求处理 + 端口客户端:protocol, handler, port-client
-  ui/
-    selection/        划词图标、浮层(词典卡 / 译文卡)
-    page/             页内工具条、全文翻译状态 store / controller
-    PermissionBanner  站点访问警示条(popup + 设置页),服务于权限引导
-  entrypoints/        background、content、popup/、options/、onboarding/(WXT 入口)
-tests/                与 src/ 镜像的 vitest 套件
-e2e/                  Playwright 用例 + mock LLM server + fixtures
-e2e-firefox/          针对真实 Firefox 的 Selenium(vitest)冒烟 + 权限引导套件
-scripts/              工具脚本:商店截图生成、Firefox manifest 校验
-store-assets/         商店文案(Chrome + AMO)、权限 justification、截图
-docs/                 安装指南、CONTEXT 术语表、ADR、隐私政策、路线图
+.
+├── src/
+│   ├── brand.ts              产品命名唯一来源(勿在别处硬编码,import BRAND)
+│   ├── languages.ts          目标语言清单
+│   ├── permissions.ts        <all_urls> host 访问辅助,服务于权限引导(Firefox,ADR-0005)
+│   ├── i18n/                 应用内 en/zh 文案 + t() / useT()(不走 browser.i18n)
+│   ├── llm/                  双协议客户端:types, sse, base-url, openai, anthropic, http, client
+│   ├── storage/              仅本地设置、解析回退、导入导出:schema, index, import-export
+│   ├── prompts/              三套默认模板 + 变量插值:templates, index
+│   ├── segmenter/            全文 DOM 分块器(块级语义单元)
+│   ├── selection/            划词判定 + 词典结果解析:classify, dict-result
+│   ├── translator/           编排 / 分批 / 缓存 / DOM 注入:orchestrator, batch, cache, inject
+│   ├── messaging/            background 消息协议 + 请求处理 + 端口客户端:protocol, handler, port-client
+│   ├── ui/
+│   │   ├── selection/        划词图标、浮层(词典卡 / 译文卡)
+│   │   ├── page/             页内工具条、全文翻译状态 store / controller
+│   │   └── PermissionBanner  站点访问警示条(popup + 设置页),服务于权限引导
+│   └── entrypoints/          background、content、popup/、options/、onboarding/(WXT 入口)
+├── tests/                    与 src/ 镜像的 vitest 套件
+├── e2e/                      Playwright 用例 + mock LLM server + fixtures
+├── e2e-firefox/              针对真实 Firefox 的 Selenium(vitest)冒烟 + 权限引导套件
+├── scripts/                  工具脚本:商店截图生成、Firefox manifest 校验
+├── store-assets/             商店文案(Chrome + AMO)、权限 justification、截图
+└── docs/                     安装指南、CONTEXT 术语表、ADR、隐私政策、路线图
 ```
 
 ## 🗺️ 路线图
