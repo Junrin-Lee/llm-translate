@@ -7,7 +7,7 @@
 
 **当前状态:** 划词翻译与全文翻译已完整可用,端到端测试、图标素材、隐私政策均已就位。
 目前通过浏览器开发者模式「加载已解压的扩展」运行;唯一的发布前收尾项是向 Chrome Web
-Store / Edge Add-ons 首次人工提交,见
+Store / Edge Add-ons / Firefox Add-ons(AMO)首次人工提交,见
 [路线图](docs/superpowers/plans/2026-07-06-llm-translate-roadmap.zh-CN.md)。
 
 ## ✨ 功能特性
@@ -132,6 +132,7 @@ pnpm screenshots  # 重新生成 store-assets/ 里的商店截图
 src/
   brand.ts            产品命名唯一来源(勿在别处硬编码,import BRAND)
   languages.ts        目标语言清单
+  permissions.ts      <all_urls> host 访问辅助,服务于权限引导(Firefox,ADR-0005)
   i18n/               应用内 en/zh 文案 + t() / useT()(不走 browser.i18n)
   llm/                双协议客户端:types, sse, base-url, openai, anthropic, http, client
   storage/            仅本地设置、解析回退、导入导出:schema, index, import-export
@@ -143,12 +144,14 @@ src/
   ui/
     selection/        划词图标、浮层(词典卡 / 译文卡)
     page/             页内工具条、全文翻译状态 store / controller
-  entrypoints/        background、content、popup/、options/(WXT 入口)
+    PermissionBanner  站点访问警示条(popup + 设置页),服务于权限引导
+  entrypoints/        background、content、popup/、options/、onboarding/(WXT 入口)
 tests/                与 src/ 镜像的 vitest 套件
 e2e/                  Playwright 用例 + mock LLM server + fixtures
-scripts/              工具脚本(商店截图生成)
-store-assets/         商店文案、权限 justification、截图
-docs/                 CONTEXT 术语表、ADR、隐私政策、开发路线图
+e2e-firefox/          针对真实 Firefox 的 Selenium(vitest)冒烟 + 权限引导套件
+scripts/              工具脚本:商店截图生成、Firefox manifest 校验
+store-assets/         商店文案(Chrome + AMO)、权限 justification、截图
+docs/                 安装指南、CONTEXT 术语表、ADR、隐私政策、路线图
 ```
 
 ## 🗺️ 路线图
@@ -161,6 +164,8 @@ docs/                 CONTEXT 术语表、ADR、隐私政策、开发路线图
 | M3 | 全文翻译(分块 / 批量 / 懒加载 / 双语与仅译文 / SPA / 缓存) | ✅ |
 | M4 | 设置完善(Prompt 编辑器、导入导出、缓存清理、界面 i18n) | ✅ |
 | M5 | 上架(E2E、图标素材、隐私政策、品牌定稿) | 🚧 仅剩商店提交 |
+| M6 | Firefox / AMO 支持(MV3 + 权限引导、Selenium 冒烟) | 🚧 已构建,仅剩 AMO 提交 |
 
-完整任务拆分见 [开发路线图](docs/superpowers/plans/2026-07-06-llm-translate-roadmap.zh-CN.md)。
+完整任务拆分见路线图([核心](docs/superpowers/plans/2026-07-06-llm-translate-roadmap.zh-CN.md)、
+[Firefox](docs/superpowers/plans/2026-07-09-firefox-support.md))。
 架构取舍见 [docs/adr/](docs/adr/);术语见 [CONTEXT.zh-CN.md](CONTEXT.zh-CN.md)。

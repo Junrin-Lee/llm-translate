@@ -33,10 +33,11 @@
 
 ```
 entrypoints/
-├── background.ts          # Service worker:唯一的 LLM 请求出口、菜单/快捷键注册
+├── background.ts          # Service worker:唯一的 LLM 请求出口、菜单/快捷键注册、角标 + 引导同步
 ├── content.tsx            # 常驻 content script:划词监听 + 浮层 UI + 全文翻译 DOM 引擎
 ├── popup/                 # 扩展图标弹窗:翻译此页按钮、模式切换、自动翻译站点开关
-└── options/               # 设置页:Provider CRUD、触发方式、Prompt 模板、导入导出
+├── options/               # 设置页:Provider CRUD、触发方式、Prompt 模板、导入导出
+└── onboarding/            # 安装后的站点访问授权页(权限引导,Firefox —— ADR-0005)
 ```
 
 ### 3.2 关键数据流
@@ -62,11 +63,13 @@ src/
 │   ├── anthropic.ts       # Anthropic 兼容 adapter
 │   └── sse.ts             # 通用 SSE 解析器(fetch + ReadableStream)
 ├── translator/            # 翻译编排:prompt 组装、分批、并发、重试、缓存
+├── messaging/             # background 消息协议 + 请求处理 + 端口客户端(content ⇄ background)
 ├── segmenter/             # ★ 全文 DOM 分块器(纯逻辑,重点单测)
 ├── selection/             # 划词判定:单词/短语 vs 句子(纯逻辑,重点单测)
 ├── storage/               # storage.local schema、迁移、导入导出
 ├── prompts/               # 三套默认模板 + 变量插值
-└── ui/                    # 浮层、工具条、popup/options 共享组件
+├── permissions.ts         # <all_urls> host 访问辅助,服务于权限引导(Firefox —— ADR-0005)
+└── ui/                    # 浮层、工具条、popup/options 共享组件 + PermissionBanner
 ```
 
 ## 4. Provider 协议层
@@ -109,7 +112,7 @@ interface TranslationClient {
 
 - **分块**(`segmenter/`):收集叶子 block 级语义单元(`p/li/h1-h6/td/blockquote/dd/figcaption` 等)并规范化文本,每块与一个 DOM 元素 1:1 对应;跳过 `code/pre/script/style/textarea/contenteditable`、隐藏元素、过短(至少含一个字母)/纯链接块。_(短块合并、超长拆分、以及用 `chrome.i18n.detectLanguage` 跳过同目标语言块,当初在此规划过,但未实现。)_
 - **视口优先懒翻译**:先翻可视区域及附近,IntersectionObserver 驱动滚动加载;省 token、首屏快。
-- **批量请求**:多块合并为一次 LLM 调用(带编号标记协议,响应按编号回填),单请求 ≤ 约 1500 输出 token 预估,并发默认 3(代码常量,不可由用户配置)。
+- **批量请求**:多块合并为一次 LLM 调用(带编号标记协议,响应按编号回填),单请求按约 1500 字符的输入预算打包,并发默认 3(代码常量,不可由用户配置)。
 - **注入**:双语对照 = 在原文块后插入带扩展标记 class 的译文节点;仅译文 = 隐藏原文节点(不销毁)。**译文一律以 `textContent` 写入,绝不 `innerHTML`**(LLM 输出视为不可信输入,防 XSS)。一键还原 = 移除所有扩展节点 + 恢复隐藏节点。
 - **动态内容**:MutationObserver 监听新增块,页面处于已翻译状态时增量翻译(SPA 路由切换按 URL 变化重置状态)。
 - **进度与控制**:可拖拽的页内浮动工具条(进度、取消、模式切换、还原、重试失败块)。
@@ -146,6 +149,9 @@ interface TranslationClient {
 | `permissions: storage` | 本机保存配置与翻译缓存 |
 | `permissions: contextMenus` | 右键「翻译此页/翻译所选」 |
 | `commands` | 快捷键 |
+| `browser_specific_settings.gecko`(仅 Firefox) | 固定 AMO 扩展 id + `strict_min_version: 128.0`(上架后不可变 —— ADR-0005) |
+
+> **Firefox 说明:** 在 Firefox 上 `<all_urls>` host 权限是**可选且可撤销**的,因此两个功能可能处于「已安装但未授权即失效」的状态。这由**权限引导**处理 —— 安装后引导页、popup/设置页警示条、工具栏「!」角标以及运行时兜底,详见 ADR-0005 与 `src/permissions.ts`。
 
 隐私政策要点:所有配置与 Key 仅存本机;唯一网络请求是发往**用户自己配置的** API 端点,内容为待翻译文本;开发者不运营任何服务器、不收集任何数据。界面 i18n:zh-CN + en(商店 listing 双语)。
 
@@ -164,7 +170,8 @@ interface TranslationClient {
 | M2 划词 | 图标/浮层/快捷键、判定、词典+译文卡片流式 | 任意站点划词可用 |
 | M3 全文 | 分块、批量、懒翻译、双语/仅译文、还原、动态内容、工具条、缓存 | 新闻站/文档站/SPA 三类站点可用 |
 | M4 设置完善 | 站点清单、Prompt 覆盖、导入导出、i18n、快捷键设置 | 全量设置可用 |
-| M5 上架 | E2E 补齐、图标素材、隐私政策、双商店提交(品牌名定稿) | 双商店过审 |
+| M5 上架 | E2E 补齐、图标素材、隐私政策、商店提交(品牌名定稿) | 商店过审 |
+| M6 Firefox / AMO | Firefox MV3 产物 + 权限引导 + Selenium 冒烟(ADR-0005;计划 `2026-07-09-firefox-support.md`) | 已构建并校验,待 AMO 提交 |
 
 ## 12. 待定项
 

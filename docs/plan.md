@@ -33,10 +33,11 @@ A streamlined take on Trancy: just two features — **Selection Translation** an
 
 ```
 entrypoints/
-├── background.ts          # Service worker: the only LLM egress; menu/shortcut registration
+├── background.ts          # Service worker: the only LLM egress; menu/shortcut registration; badge + onboarding sync
 ├── content.tsx            # persistent content script: selection listening + panel UI + page-translation DOM engine
 ├── popup/                 # extension-icon popup: translate-page button, mode toggle, auto-translate-site switch
-└── options/               # settings page: Provider CRUD, trigger mode, Prompt templates, import/export
+├── options/               # settings page: Provider CRUD, trigger mode, Prompt templates, import/export
+└── onboarding/            # post-install site-access grant page (Permission Onboarding, Firefox — ADR-0005)
 ```
 
 ### 3.2 Key Data Flows
@@ -62,11 +63,13 @@ src/
 │   ├── anthropic.ts       # Anthropic-compatible adapter
 │   └── sse.ts             # generic SSE parser (fetch + ReadableStream)
 ├── translator/            # translation orchestration: prompt assembly, batching, concurrency, retry, cache
+├── messaging/             # background message protocol + request handler + port client (content ⇄ background)
 ├── segmenter/             # ★ page DOM segmenter (pure logic, heavily unit-tested)
 ├── selection/             # selection classification: word/phrase vs sentence (pure logic, heavily unit-tested)
 ├── storage/               # storage.local schema, migration, import/export
 ├── prompts/               # three default templates + variable interpolation
-└── ui/                    # panel, toolbar, popup/options shared components
+├── permissions.ts         # <all_urls> host-access helpers behind Permission Onboarding (Firefox — ADR-0005)
+└── ui/                    # panel, toolbar, popup/options shared components + PermissionBanner
 ```
 
 ## 4. Provider Protocol Layer
@@ -109,7 +112,7 @@ interface TranslationClient {
 
 - **Segmentation** (`segmenter/`): collect leaf block-level semantic units (`p/li/h1-h6/td/blockquote/dd/figcaption`, etc.) with normalized text, so each maps 1:1 to a DOM element; skip `code/pre/script/style/textarea/contenteditable`, hidden elements, and too-short (needs at least one letter) / link-only blocks. _(Short-block merging, over-long splitting, and same-target-language skipping via `chrome.i18n.detectLanguage` were planned here but are not implemented.)_
 - **Viewport-first lazy translation**: translate the visible area and its vicinity first, with IntersectionObserver driving scroll-based loading; saves tokens and makes the first screen fast.
-- **Batched requests**: multiple blocks are combined into one LLM call (with a numbered-marker protocol, responses backfilled by number), each request estimated at ≤ ~1500 output tokens, concurrency default 3 (a code constant, not user-configurable).
+- **Batched requests**: multiple blocks are combined into one LLM call (with a numbered-marker protocol, responses backfilled by number), each request packed against a ≈1500-character input budget, concurrency default 3 (a code constant, not user-configurable).
 - **Injection**: Bilingual Mode = insert a translation node with an extension-marker class after the source block; Translation-only Mode = hide the source node (without destroying it). **Translations are always written via `textContent`, never `innerHTML`** (LLM output is treated as untrusted input, to prevent XSS). One-click restore = remove all extension nodes + restore hidden nodes.
 - **Dynamic content**: MutationObserver watches for newly added blocks and translates them incrementally while the page is in a translated state (SPA route changes reset state on URL change).
 - **Progress and control**: a draggable in-page floating toolbar (progress, cancel, mode switch, restore, retry failed blocks).
@@ -146,6 +149,9 @@ Three built-in templates: `selectionDict` (Dictionary Card, JSON output), `selec
 | `permissions: storage` | Store config and translation cache on the local device |
 | `permissions: contextMenus` | Right-click "Translate this page / Translate selection" |
 | `commands` | Hotkeys |
+| `browser_specific_settings.gecko` (Firefox only) | Pinned AMO extension id + `strict_min_version: 128.0` (immutable once listed — ADR-0005) |
+
+> **Firefox note:** on Firefox the `<all_urls>` host permission is **optional and revocable**, so both features can be installed-but-inert until the user grants site access. This is handled by **Permission Onboarding** — a post-install onboarding page, popup/settings warning banners, a toolbar "!" badge, and runtime fallbacks — see ADR-0005 and `src/permissions.ts`.
 
 Privacy policy highlights: all config and keys are stored only on the local device; the only network request goes to the API endpoint **configured by the user themselves**, carrying the text to be translated; the developer runs no servers and collects no data. UI i18n: zh-CN + en (bilingual store listing).
 
@@ -164,7 +170,8 @@ Privacy policy highlights: all config and keys are stored only on the local devi
 | M2 Selection | Icon/panel/hotkey, detection, Dictionary + Translation Card streaming | Selection works on any site |
 | M3 Page | Segmentation, batching, lazy translation, bilingual / translation-only, restore, dynamic content, toolbar, cache | Works on three site types: news / docs / SPA |
 | M4 Settings polish | Site lists, Prompt overrides, import/export, i18n, hotkey settings | Full settings available |
-| M5 Release | E2E completion, icon assets, privacy policy, dual-store submission (brand name finalized) | Approved by both stores |
+| M5 Release | E2E completion, icon assets, privacy policy, store submission (brand name finalized) | Approved by the stores |
+| M6 Firefox / AMO | Firefox MV3 build + Permission Onboarding + Selenium smoke (ADR-0005; plan `2026-07-09-firefox-support.md`) | Built and verified; AMO submission pending |
 
 ## 12. Open Items
 

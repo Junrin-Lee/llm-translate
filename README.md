@@ -9,7 +9,7 @@
 **Status:** Selection and full-page translation are fully working, with E2E tests, icon
 assets, and the privacy policy all in place. It currently runs by loading the unpacked
 build in the browser's developer mode; the only remaining release chore is the first
-manual submission to the Chrome Web Store / Edge Add-ons — see the
+manual submission to the Chrome Web Store / Edge Add-ons / Firefox Add-ons (AMO) — see the
 [roadmap](docs/superpowers/plans/2026-07-06-llm-translate-roadmap.md).
 
 ## ✨ Features
@@ -133,6 +133,7 @@ pnpm screenshots  # regenerate the store screenshots in store-assets/
 src/
   brand.ts            product naming (single source of truth — import BRAND, never hardcode)
   languages.ts        target-language list
+  permissions.ts      <all_urls> host-access helpers behind Permission Onboarding (Firefox, ADR-0005)
   i18n/               in-app en/zh catalogs + t() / useT() (not browser.i18n)
   llm/                dual-protocol client: types, sse, base-url, openai, anthropic, http, client
   storage/            local-only settings, resolve/fallback, import/export: schema, index, import-export
@@ -144,12 +145,14 @@ src/
   ui/
     selection/        selection icon, popup (dictionary / translation cards)
     page/             in-page toolbar, page-translation store / controller
-  entrypoints/        background, content, popup/, options/ (WXT entrypoints)
+    PermissionBanner  site-access warning banner (popup + settings) for Permission Onboarding
+  entrypoints/        background, content, popup/, options/, onboarding/ (WXT entrypoints)
 tests/                vitest suites mirroring src/
 e2e/                  Playwright specs + mock LLM server + fixtures
-scripts/              tooling (store screenshot capture)
-store-assets/         listing copy, permission justifications, screenshots
-docs/                 CONTEXT glossary, ADRs, privacy policy, dev roadmap
+e2e-firefox/          Selenium (vitest) smoke + permission-onboarding suite against a real Firefox
+scripts/              tooling: store screenshot capture, Firefox manifest verification
+store-assets/         listing copy (Chrome + AMO), permission justifications, screenshots
+docs/                 install guide, CONTEXT glossary, ADRs, privacy policy, roadmap
 ```
 
 ## 🗺️ Roadmap
@@ -162,6 +165,8 @@ docs/                 CONTEXT glossary, ADRs, privacy policy, dev roadmap
 | M3 | Full-page translation (segment / batch / lazy / bilingual & replace / SPA / cache) | ✅ |
 | M4 | Settings polish (prompt editor, import/export, cache clearing, in-app i18n) | ✅ |
 | M5 | Release (E2E, icons, privacy policy, brand finalized) | 🚧 only store submission left |
+| M6 | Firefox / AMO support (MV3 + Permission Onboarding, Selenium smoke) | 🚧 built; AMO submission left |
 
-Full task breakdown in the [roadmap](docs/superpowers/plans/2026-07-06-llm-translate-roadmap.md).
+Full task breakdown in the roadmap ([core](docs/superpowers/plans/2026-07-06-llm-translate-roadmap.md),
+[Firefox](docs/superpowers/plans/2026-07-09-firefox-support.md)).
 Architectural decisions in [docs/adr/](docs/adr/); glossary in [CONTEXT.md](CONTEXT.md).
