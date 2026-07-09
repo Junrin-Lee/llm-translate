@@ -8,6 +8,9 @@ Reproduce the submitted xpi from the sources zip:
     pnpm zip:firefox
     # output: .output/llm-translate-<version>-firefox.zip
 
+This repo is pnpm-only. `pnpm-lock.yaml` is the single authoritative lockfile;
+please ignore any stray `package-lock.json` and do not run `npm install`.
+
 The extension has no backend and no bundled remote code. All translation traffic
 goes directly from the extension to the LLM endpoint the user configures
 (OpenAI- or Anthropic-compatible). `<all_urls>` host permission: the content

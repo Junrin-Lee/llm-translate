@@ -57,5 +57,6 @@ The same extension, now on Firefox (Manifest V3, Firefox 128+).
 During install, Firefox asks you to confirm site access for LLM Translate —
 please leave it checked so selection and page translation work on every site.
 If you skip it, or turn it off later from Firefox's extension permissions
-panel, the extension opens a short onboarding page on first run with a single
-**Grant site access** button to turn it back on; nothing breaks silently.
+panel, the extension opens a short onboarding page the next time it starts,
+with a single **Grant site access** button to turn it back on; nothing breaks
+silently.

@@ -1,4 +1,8 @@
 node_modules
+# npm lockfile — this repo is pnpm-only (packageManager: pnpm). Keep any stray
+# package-lock.json out of git and out of the AMO sources zip so a reviewer
+# can't accidentally `npm install` a divergent tree; pnpm-lock.yaml is canonical.
+package-lock.json
 .output
 .wxt
 dist
