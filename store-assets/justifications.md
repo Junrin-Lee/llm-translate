@@ -38,6 +38,9 @@ Two independent reasons, both intrinsic to the product:
    so the background needs host access to it. Since it is user-defined and not
    known in advance, it cannot be narrowed to a fixed host list.
 
+On Firefox (MV3) this is user-revocable; the extension degrades to an explicit
+Permission Onboarding flow instead of breaking silently.
+
 The content script and page context **never** make network requests and never
 receive the API key — all egress is from the background service worker only.
 

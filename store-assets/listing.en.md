@@ -46,3 +46,16 @@ toolbar for progress, cancel, and restore.
 2. Full-page bilingual translation with the in-page toolbar.
 3. Settings — providers, with connection test.
 4. Settings — routing, prompts, and cache.
+
+## AMO (Firefox Add-ons)
+
+> Selection & full-page translation with your own OpenAI- or Anthropic-compatible API key. No account, no backend, no telemetry.
+
+The same extension, now on Firefox (Manifest V3, Firefox 128+).
+
+**Keep "site access" on**
+During install, Firefox asks you to confirm site access for LLM Translate —
+please leave it checked so selection and page translation work on every site.
+If you skip it, or turn it off later from Firefox's extension permissions
+panel, the extension opens a short onboarding page on first run with a single
+**Grant site access** button to turn it back on; nothing breaks silently.
