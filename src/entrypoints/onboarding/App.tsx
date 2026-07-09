@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { BRAND } from '@/brand';
 import { setUiLanguage } from '@/i18n';
 import { useT } from '@/i18n/useI18n';
-import { hasHostAccess, requestHostAccess } from '@/permissions';
+import { hasHostAccess, requestHostAccess, watchHostAccess } from '@/permissions';
 import { getSettings } from '@/storage';
 
 export function App() {
@@ -15,6 +15,10 @@ export function App() {
     document.title = BRAND.name;
     void getSettings().then((s) => setUiLanguage(s.general.uiLang));
     void hasHostAccess().then(setGranted);
+    // Also reflect a grant made elsewhere — the manual fallback copy points
+    // users to about:addons, so this page must flip to the success state when
+    // access is granted there, exactly like PermissionBanner does.
+    return watchHostAccess(setGranted);
   }, []);
 
   async function grant() {
