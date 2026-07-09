@@ -25,6 +25,7 @@ listings, and sets it up for first use. It takes about two minutes.
 2. Under the latest release, download the zip for your browser:
    - Chrome → `llm-translate-<version>-chrome.zip`
    - Edge → `llm-translate-<version>-edge.zip`
+   - Firefox → loaded differently; see [Install on Firefox](#install-on-firefox) (nothing to download here)
 3. **Unzip it to a folder you'll keep** — e.g. `Documents/llm-translate`. Don't
    delete or move this folder afterward: the browser loads the extension straight
    from that location.
@@ -33,6 +34,10 @@ listings, and sets it up for first use. It takes about two minutes.
 > guide) or ask the maintainer to publish one.
 
 ## 2. Load it into your browser
+
+The steps below are for **Chrome** and **Edge** (both Chromium-based, same method).
+**Firefox is supported too, but loads differently — jump straight to
+[Install on Firefox](#install-on-firefox) instead of following the steps below.**
 
 ### Chrome
 
@@ -54,6 +59,11 @@ pin it so it's always visible.
 > Chrome may show a **"Disable developer mode extensions"** popup on startup. This
 > is normal for any extension installed this way — dismiss it; the extension keeps
 > working.
+
+### Firefox
+
+Firefox loads differently from Chromium (temporary load, or a signed `.xpi`). Head to
+its dedicated section: [Install on Firefox](#install-on-firefox).
 
 <a id="open-a-normal-page"></a>
 

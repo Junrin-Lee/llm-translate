@@ -22,12 +22,17 @@ Firefox**,并完成首次配置。大约两分钟。
 2. 在最新一个 release 下,下载对应你浏览器的 zip:
    - Chrome → `llm-translate-<版本>-chrome.zip`
    - Edge → `llm-translate-<版本>-edge.zip`
+   - Firefox → 加载方式不同,请直接看[在 Firefox 上安装](#install-on-firefox)(不用在这里下载)
 3. **解压到一个你会长期保留的文件夹**——比如 `文档/llm-translate`。解压后**别删、别移**
    这个文件夹:浏览器是直接从这个位置加载扩展的。
 
 > **还没有 release?** 要么从源码自行构建(见文末),要么请维护者发布一个。
 
 ## 2. 加载到浏览器
+
+本节步骤适用于 **Chrome** 与 **Edge**(同为 Chromium 内核,方式一致)。**Firefox 也受
+支持,但加载方式不同——请直接跳到[在 Firefox 上安装](#install-on-firefox),不要套用下面
+的步骤。**
 
 ### Chrome
 
@@ -47,6 +52,11 @@ Firefox**,并完成首次配置。大约两分钟。
 
 > Chrome 启动时可能弹出**"停用开发者模式扩展程序"**的提示。用这种方式安装的扩展都会有,
 > 属于正常现象——关掉即可,扩展照常工作。
+
+### Firefox
+
+Firefox 的加载方式和 Chromium 不同(临时载入,或安装签名后的 `.xpi`)。请移步专门的章节:
+[在 Firefox 上安装](#install-on-firefox)。
 
 <a id="open-a-normal-page"></a>
 
