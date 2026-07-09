@@ -56,6 +56,7 @@ Store / Edge Add-ons / Firefox Add-ons(AMO)首次人工提交,见
 
 - **划词**:在任意页面选中文本 → 点浮出的图标(或按 `Ctrl/⌘ + Shift + S`)
 - **全文**:点扩展图标 → 「翻译此页」,或按 `Ctrl/⌘ + Shift + P`,或右键菜单
+- **自动翻译某站点**:打开扩展弹窗,勾选当前站点的「始终翻译」——该域名下的页面此后打开即自动翻译
 - 快捷键可在 `chrome://extensions/shortcuts` 重新绑定
 
 | ![划词翻译:流式浮窗,词典卡 / 翻译卡](store-assets/screenshots/01-selection.png) | ![全文翻译:双语模式,将译文插入到每段原文下方](store-assets/screenshots/02-page-bilingual.png) |

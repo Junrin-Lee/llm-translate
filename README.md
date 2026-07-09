@@ -58,6 +58,7 @@ For screenshots, updating, and troubleshooting (e.g. "loaded it but there's no t
 
 - **Selection**: select text on any page → click the icon (or press `Ctrl/⌘ + Shift + S`)
 - **Page**: click the extension icon → "Translate this page", or press `Ctrl/⌘ + Shift + P`, or use the right-click menu
+- **Auto-translate a site**: open the popup and tick **Always translate** for the current site — its pages then translate automatically on load
 - Shortcuts can be rebound at `chrome://extensions/shortcuts`
 
 | ![Selection translation: streaming popup with a dictionary / translation card](store-assets/screenshots/01-selection.png) | ![Full-page translation: bilingual mode inserts the translation under each original block](store-assets/screenshots/02-page-bilingual.png) |

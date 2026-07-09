@@ -23,7 +23,7 @@ A streamlined take on Trancy: just two features — **Selection Translation** an
 | 7 | Page trigger | Extension icon + hotkey + context menu + Auto-translate Site list |
 | 8 | Permission model | content script always present on `<all_urls>` (see ADR-0001) |
 | 9 | Data storage | Everything in `storage.local` only; config supports JSON import/export (see ADR-0002) |
-| 10 | Prompt | Three built-in default templates, overridable in the settings Advanced area (variable interpolation), one-click restore to defaults |
+| 10 | Prompt | Three built-in default templates, overridable in the settings Prompts section (variable interpolation), one-click restore to defaults |
 | 11 | Naming | Working name `llm-translate`; brand name centrally managed as a constant, finalized before release |
 | 12 | Engineering practices | vitest unit tests for core logic + Playwright E2E smoke + Biome + GitHub Actions |
 
@@ -35,7 +35,7 @@ A streamlined take on Trancy: just two features — **Selection Translation** an
 entrypoints/
 ├── background.ts          # Service worker: the only LLM egress; menu/shortcut registration; badge + onboarding sync
 ├── content.tsx            # persistent content script: selection listening + panel UI + page-translation DOM engine
-├── popup/                 # extension-icon popup: translate-page button, mode toggle, auto-translate-site switch
+├── popup/                 # extension-icon popup: translate/restore-page button, open-settings, auto-translate-site switch
 ├── options/               # settings page: Provider CRUD, trigger mode, Prompt templates, import/export
 └── onboarding/            # post-install site-access grant page (Permission Onboarding, Firefox — ADR-0005)
 ```
@@ -138,7 +138,7 @@ Import/export: JSON files; export **excludes** the API Key by default — only w
 
 ## 8. Prompt Layer
 
-Three built-in templates: `selectionDict` (Dictionary Card, JSON output), `selectionText` (Selection Translation), `pageBatch` (Page Translation, numbered-marker protocol). Variables actually used: `{{text}}` and `{{targetLang}}`. The template layer also defines `{{sourceLang}}` / `{{siteTitle}}`, but callers don't populate them yet, so they currently render empty. Each can be overridden and restored to default in the settings Advanced area; the template version number is part of the cache key.
+Three built-in templates: `selectionDict` (Dictionary Card, JSON output), `selectionText` (Selection Translation), `pageBatch` (Page Translation, numbered-marker protocol). Variables actually used: `{{text}}` and `{{targetLang}}`. The template layer also defines `{{sourceLang}}` / `{{siteTitle}}`, but callers don't populate them yet, so they currently render empty. Each can be overridden and restored to default in the settings Prompts section; the template version number is part of the cache key.
 
 ## 9. Permissions and Store Compliance
 

@@ -8,7 +8,7 @@ export type UiLang = 'auto' | 'en' | 'zh';
 export interface GeneralSettings {
   /** BCP-47 target language, e.g. 'zh-CN'. */
   targetLang: string;
-  /** Optional secondary target offered in the selection panel. */
+  /** Reserved: an optional secondary target language; not yet wired to any UI. */
   secondaryTargetLang?: string;
   selectionTrigger: SelectionTrigger;
   pageMode: PageMode;

@@ -23,7 +23,7 @@
 | 7 | 全文触发 | 扩展图标 + 快捷键 + 右键菜单 + 自动翻译站点清单 |
 | 8 | 权限模型 | content script 常驻 `<all_urls>`(见 ADR-0001) |
 | 9 | 数据存储 | 全部仅 `storage.local`,配置支持 JSON 导入/导出(见 ADR-0002) |
-| 10 | Prompt | 内置三套默认模板,设置页高级区可覆盖(变量插值),一键恢复默认 |
+| 10 | Prompt | 内置三套默认模板,设置页「提示词」区可覆盖(变量插值),一键恢复默认 |
 | 11 | 命名 | 工作名 `llm-translate`,品牌名做常量集中管理,上架前定稿 |
 | 12 | 工程实践 | vitest 单测核心逻辑 + Playwright E2E 冒烟 + Biome + GitHub Actions |
 
@@ -35,7 +35,7 @@
 entrypoints/
 ├── background.ts          # Service worker:唯一的 LLM 请求出口、菜单/快捷键注册、角标 + 引导同步
 ├── content.tsx            # 常驻 content script:划词监听 + 浮层 UI + 全文翻译 DOM 引擎
-├── popup/                 # 扩展图标弹窗:翻译此页按钮、模式切换、自动翻译站点开关
+├── popup/                 # 扩展图标弹窗:翻译/还原此页按钮、打开设置、自动翻译站点开关
 ├── options/               # 设置页:Provider CRUD、触发方式、Prompt 模板、导入导出
 └── onboarding/            # 安装后的站点访问授权页(权限引导,Firefox —— ADR-0005)
 ```
@@ -138,7 +138,7 @@ interface TranslationClient {
 
 ## 8. Prompt 层
 
-三套内置模板:`划词-词典`(JSON 输出)、`划词-译文`、`全文-批量`(编号标记协议)。实际使用的变量:`{{text}}` 与 `{{targetLang}}`。模板层还定义了 `{{sourceLang}}` / `{{siteTitle}}`,但调用方尚未赋值,当前恒为空。设置页高级区每套可覆盖、可恢复默认;模板版本号参与缓存 key。
+三套内置模板:`划词-词典`(JSON 输出)、`划词-译文`、`全文-批量`(编号标记协议)。实际使用的变量:`{{text}}` 与 `{{targetLang}}`。模板层还定义了 `{{sourceLang}}` / `{{siteTitle}}`,但调用方尚未赋值,当前恒为空。设置页「提示词」区每套可覆盖、可恢复默认;模板版本号参与缓存 key。
 
 ## 9. 权限与商店合规
 
