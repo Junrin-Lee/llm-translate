@@ -9,6 +9,12 @@ import {
   type TabMessage,
   TRANSLATE_PORT,
 } from '@/messaging/protocol';
+import {
+  focusOrOpenOnboarding,
+  hasHostAccess,
+  syncActionBadge,
+  watchHostAccess,
+} from '@/permissions';
 import { getSettings, resolveProfile, watchSettings } from '@/storage';
 import { createCache, type StorageAreaLike } from '@/translator/cache';
 
@@ -29,7 +35,10 @@ async function sendToActiveTab(message: ContentMessage): Promise<void> {
     try {
       await browser.tabs.sendMessage(tab.id, message);
     } catch {
-      // No content script on this tab (e.g. chrome:// page) — ignore.
+      // No content script on this tab. If that's because site access was never
+      // granted (Firefox MV3), route the user to onboarding; on privileged
+      // pages (about:/chrome:) with access granted, stay silent as before.
+      if (!(await hasHostAccess())) await focusOrOpenOnboarding();
     }
   }
 }
@@ -68,6 +77,10 @@ async function refreshMenusForActiveTab(): Promise<void> {
 }
 
 export default defineBackground(() => {
+  // Toolbar "!" badge while site access is missing; live-updates on grant/revoke.
+  void syncActionBadge();
+  watchHostAccess(() => void syncActionBadge());
+
   // Apply the stored UI language on startup, then keep menus localized as it changes.
   void getSettings().then((s) => {
     setUiLanguage(s.general.uiLang);
@@ -84,7 +97,11 @@ export default defineBackground(() => {
   });
 
   // Right-click entries: whole page, or the current selection.
-  browser.runtime.onInstalled.addListener(async () => {
+  browser.runtime.onInstalled.addListener(async (details) => {
+    // First install without site access (Firefox MV3 opt-out) → onboarding page.
+    if (details.reason === 'install' && !(await hasHostAccess())) {
+      await focusOrOpenOnboarding();
+    }
     const s = await getSettings();
     setUiLanguage(s.general.uiLang);
     await browser.contextMenus.removeAll();
@@ -104,7 +121,10 @@ export default defineBackground(() => {
         : info.menuItemId === MENU_SELECTION
           ? { type: 'open-selection-panel' }
           : null;
-    if (message) void browser.tabs.sendMessage(tab.id, message).catch(() => {});
+    if (message)
+      void browser.tabs.sendMessage(tab.id, message).catch(async () => {
+        if (!(await hasHostAccess())) await focusOrOpenOnboarding();
+      });
   });
 
   // Keep the page menu label in sync with the active tab's translation state.
