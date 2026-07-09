@@ -60,15 +60,19 @@ For screenshots, updating, and troubleshooting (e.g. "loaded it but there's no t
 - **Page**: click the extension icon → "Translate this page", or press `Ctrl/⌘ + Shift + P`, or use the right-click menu
 - Shortcuts can be rebound at `chrome://extensions/shortcuts`
 
+| ![Selection translation: streaming popup with a dictionary / translation card](store-assets/screenshots/01-selection.png) | ![Full-page translation: bilingual mode inserts the translation under each original block](store-assets/screenshots/02-page-bilingual.png) |
+| :--: | :--: |
+
 ## ⚙️ Settings
 
 The settings page uses a sidebar: **Providers**, **Routing**, **Translation**, **Prompts**,
 **Backup**, **Cache**. The Translation section covers target language, interface language,
 selection trigger, and the per-site disable list.
 
-![Providers settings: protocol / Base URL / key / model](store-assets/screenshots/03-providers.png)
-
-![Routing: assign a provider per feature (selection, page)](store-assets/screenshots/04-routing.png)
+| ![Providers settings: protocol / Base URL / key / model](store-assets/screenshots/03-providers.png) | ![Routing: assign a provider per feature (selection, page)](store-assets/screenshots/04-routing.png) |
+| :--: | :--: |
+| ![Translation: target language, interface language, selection trigger, per-site disable list](store-assets/screenshots/05-translation.png) | ![Prompts: override the dictionary / selection / full-page templates, reset to default](store-assets/screenshots/06-prompts.png) |
+| ![Backup: export settings as JSON (keys stripped by default) and import](store-assets/screenshots/07-backup.png) | ![Cache: view selection / page entry counts and clear](store-assets/screenshots/08-cache.png) |
 
 ## 🔒 Privacy & security
 

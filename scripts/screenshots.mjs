@@ -163,15 +163,31 @@ async function run() {
     if (!sw) sw = await context.waitForEvent('serviceworker');
     const extensionId = new URL(sw.url()).host;
 
-    // Options screenshots — populated with two providers.
+    // Options screenshots — one per settings section, populated with two providers.
     await seed(context, extensionId, settings());
     const options = await context.newPage();
-    await options.goto(`chrome-extension://${extensionId}/options.html#providers`);
-    await options.locator('.card').first().waitFor();
-    await options.screenshot({ path: `${OUT_DIR}/03-providers.png` });
-    await options.goto(`chrome-extension://${extensionId}/options.html#routing`);
-    await options.waitForTimeout(400);
-    await options.screenshot({ path: `${OUT_DIR}/04-routing.png` });
+    const shoot = async (hash, file) => {
+      await options.goto(`chrome-extension://${extensionId}/options.html#${hash}`);
+      // Every panel renders `.content .field`; Providers renders `.card`.
+      await options.locator('.content .field, .card').first().waitFor();
+      await options.waitForTimeout(300);
+      await options.screenshot({ path: `${OUT_DIR}/${file}` });
+    };
+    await shoot('providers', '03-providers.png');
+    await shoot('routing', '04-routing.png');
+    await shoot('translation', '05-translation.png');
+    await shoot('prompts', '06-prompts.png');
+    await shoot('backup', '07-backup.png');
+    // Seed cache counters so the Cache panel shows real numbers, not zeros.
+    await options.evaluate(() => {
+      const entries = (n) =>
+        Object.fromEntries(Array.from({ length: n }, (_, i) => [`k${i}`, { v: i }]));
+      return Promise.all([
+        chrome.storage.local.set({ 'cache:page': entries(12) }),
+        chrome.storage.session.set({ 'cache:selection': entries(37) }),
+      ]);
+    });
+    await shoot('cache', '08-cache.png');
     await options.close();
 
     // Selection popup.
@@ -207,7 +223,7 @@ async function run() {
     await pageShot.screenshot({ path: `${OUT_DIR}/02-page-bilingual.png` });
     await pageShot.close();
 
-    console.log(`Saved 4 screenshots to ${OUT_DIR}`);
+    console.log(`Saved 8 screenshots to ${OUT_DIR}`);
   } finally {
     await context.close();
     server.close();

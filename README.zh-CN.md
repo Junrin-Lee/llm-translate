@@ -58,15 +58,19 @@ Store / Edge Add-ons / Firefox Add-ons(AMO)首次人工提交,见
 - **全文**:点扩展图标 → 「翻译此页」,或按 `Ctrl/⌘ + Shift + P`,或右键菜单
 - 快捷键可在 `chrome://extensions/shortcuts` 重新绑定
 
+| ![划词翻译:流式浮窗,词典卡 / 翻译卡](store-assets/screenshots/01-selection.png) | ![全文翻译:双语模式,将译文插入到每段原文下方](store-assets/screenshots/02-page-bilingual.png) |
+| :--: | :--: |
+
 ## ⚙️ 设置项
 
 设置页采用侧边导航,分为:**服务商 (Providers)**、**路由 (Routing)**、**翻译 (Translation)**、
 **提示词 (Prompts)**、**备份 (Backup)**、**缓存 (Cache)**。翻译区可切换目标语言、界面语言、
 划词触发方式与站点禁用清单。
 
-![服务商设置:协议 / Base URL / Key / 模型](store-assets/screenshots/03-providers.png)
-
-![路由:为划词、全文分别指定 Provider](store-assets/screenshots/04-routing.png)
+| ![服务商设置:协议 / Base URL / Key / 模型](store-assets/screenshots/03-providers.png) | ![路由:为划词、全文分别指定 Provider](store-assets/screenshots/04-routing.png) |
+| :--: | :--: |
+| ![翻译:目标语言、界面语言、划词触发方式、站点禁用清单](store-assets/screenshots/05-translation.png) | ![提示词:覆盖词典 / 划词 / 全文三个模板,可重置为默认](store-assets/screenshots/06-prompts.png) |
+| ![备份:导出为 JSON(默认剥离 Key)与导入](store-assets/screenshots/07-backup.png) | ![缓存:查看划词 / 全文缓存条目数并清空](store-assets/screenshots/08-cache.png) |
 
 ## 🔒 隐私与安全
 
