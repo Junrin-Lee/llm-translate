@@ -42,6 +42,33 @@ export async function queryHostAccess(driver: WebDriver): Promise<boolean> {
 }
 
 /**
+ * Revoke <all_urls> from an extension page context, simulating a user
+ * revoking site access via about:addons — without needing real UI automation.
+ * `permissions.remove` (unlike `.request`) needs no user gesture, so this is
+ * safe to call from `executeAsyncScript`. Resolves to whether it was removed.
+ */
+export async function revokeHostAccess(driver: WebDriver): Promise<boolean> {
+  await driver.get(extUrl('options.html'));
+  return driver.executeAsyncScript(
+    `const done = arguments[0];
+     browser.permissions.remove({ origins: ['<all_urls>'] }).then(done);`,
+  );
+}
+
+/**
+ * Toolbar badge text, read from whichever extension page `driver` is
+ * currently on (any moz-extension:// page has access to browser.action).
+ * The background sets this async (permissions.onRemoved → syncActionBadge),
+ * so callers should poll via `driver.wait(...)` rather than read once.
+ */
+export async function getBadgeText(driver: WebDriver): Promise<string> {
+  return driver.executeAsyncScript(
+    `const done = arguments[0];
+     browser.action.getBadgeText({}).then(done);`,
+  );
+}
+
+/**
  * Seed settings pointing at the mock LLM. Mirrors `seedSettings` in
  * e2e/support.ts: same `settings` shape (version/providers/defaults/general/
  * siteRules/prompts) written under the same `settings` storage key — just
