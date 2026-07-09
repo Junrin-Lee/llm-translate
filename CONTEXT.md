@@ -2,7 +2,7 @@
 
 **English** · [简体中文](./CONTEXT.zh-CN.md)
 
-A browser extension built for release to the Chrome Web Store / Edge Add-ons: it provides two features, Selection Translation and Page Translation. Its translation capability comes entirely from the user's own LLM API (an OpenAI-compatible or Anthropic-compatible protocol) — no self-hosted backend, no account system.
+A browser extension built for release to the Chrome Web Store / Edge Add-ons / Firefox Add-ons (AMO): it provides two features, Selection Translation and Page Translation. Its translation capability comes entirely from the user's own LLM API (an OpenAI-compatible or Anthropic-compatible protocol) — no self-hosted backend, no account system.
 
 ## Language
 
@@ -53,6 +53,12 @@ _Avoid_: current engine, active profile
 **Feature Override (功能级覆盖)**:
 A Provider Profile specified separately for Selection Translation or Page Translation; once set, it takes precedence over the Global Default Provider, and when unset it follows the global one.
 _Avoid_: standalone config, per-channel
+
+### Permissions
+
+**Permission Onboarding (权限引导)**:
+The flow that gets a user to grant the extension site access when the browser has not granted it — Firefox treats site access as optional and revocable, so the extension can find itself installed but unable to act. It spans a lightweight onboarding page opened right after install, warning banners in the popup and the settings page, and hints at every other entry point. Without site access, neither Selection Translation nor Page Translation can run.
+_Avoid_: permission warning, authorization flow
 
 ## Example dialogue
 

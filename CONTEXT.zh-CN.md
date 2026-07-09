@@ -2,7 +2,7 @@
 
 [English](./CONTEXT.md) · **简体中文**
 
-一个面向 Chrome Web Store / Edge Add-ons 发布的浏览器扩展:提供划词翻译与全文翻译两个功能,翻译能力完全由用户自带的 LLM API(OpenAI 兼容协议或 Anthropic 兼容协议)提供,无自建后端、无账号体系。
+一个面向 Chrome Web Store / Edge Add-ons / Firefox Add-ons (AMO) 发布的浏览器扩展:提供划词翻译与全文翻译两个功能,翻译能力完全由用户自带的 LLM API(OpenAI 兼容协议或 Anthropic 兼容协议)提供,无自建后端、无账号体系。
 
 ## Language
 
@@ -53,6 +53,12 @@ _Avoid_: 当前引擎、激活配置
 **功能级覆盖 (Feature Override)**:
 划词翻译或全文翻译各自单独指定的 Provider 配置;设置后优先于全局默认 Provider,不设置则跟随全局。
 _Avoid_: 独立配置、分渠道
+
+### 权限
+
+**权限引导 (Permission Onboarding)**:
+当浏览器尚未授予扩展站点访问权限时,引导用户完成授权的流程 —— Firefox 将站点访问视为可选、可随时撤销的权限,扩展可能处于"已安装但无法工作"的状态。它涵盖:安装后立即打开的轻量引导页、popup 与设置页中的警示条,以及其余各入口的提示。缺少站点访问权限,划词翻译与全文翻译都无法运行。
+_Avoid_: 权限警告、授权流程
 
 ## Example dialogue
 
