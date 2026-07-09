@@ -23,7 +23,7 @@ export default defineConfig({
       if (manifest.options_ui) manifest.options_ui.open_in_tab = true;
     },
   },
-  manifest: {
+  manifest: ({ browser }) => ({
     name: BRAND.name,
     description:
       'Selection & full-page translation powered by your own OpenAI-compatible or Anthropic-compatible LLM API.',
@@ -47,5 +47,14 @@ export default defineConfig({
         description: 'Translate the whole page',
       },
     },
-  },
+    // AMO identity — immutable once listed (ADR-0005). Chrome/Edge ignore the key,
+    // so only emit it for Firefox to keep their store validators quiet.
+    ...(browser === 'firefox'
+      ? {
+          browser_specific_settings: {
+            gecko: { id: 'llm-translate@junrin-lee.github.io', strict_min_version: '128.0' },
+          },
+        }
+      : {}),
+  }),
 });
