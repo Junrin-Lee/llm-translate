@@ -12,6 +12,8 @@ stats.html
 test-results
 playwright-report
 .playwright
+# web-ext sign output — signed .xpi for Firefox self-distribution (unlisted)
+web-ext-artifacts
 .DS_Store
 *.log
 .env

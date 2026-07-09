@@ -127,6 +127,51 @@ installing from AMO is a single click, like any other Firefox extension.
 > **Temporary add-ons are removed when Firefox closes.** Until the AMO listing is
 > live, you'll need to repeat steps 2–3 after every restart.
 
+### Option C: Self-distribution — a signed `.xpi`, permanent and off-store
+
+Option B disappears on restart, and release/beta Firefox refuse unsigned add-ons.
+To install **permanently without listing on the store**, have Mozilla sign your
+package through the **unlisted (self-distribution)** channel, then install the
+returned `.xpi` yourself. It never shows up in AMO search — only whoever you hand
+the file to can install it. Good for personal use or small internal sharing.
+
+You'll need a free [Firefox account](https://accounts.firefox.com/) and AMO API
+credentials (a **JWT issuer** and **secret**) from
+[AMO → Manage API Keys](https://addons.mozilla.org/developers/addon/api/key/).
+
+1. Create your `.env` from the tracked template, then fill in the two values
+   (`.env` itself is git-ignored):
+   ```sh
+   cp .env.example .env
+   ```
+   Then edit `.env`:
+   ```
+   WEB_EXT_API_KEY=<your JWT issuer>
+   WEB_EXT_API_SECRET=<your JWT secret>
+   ```
+2. Build and sign (needs Node.js 20 + pnpm 9):
+   ```sh
+   pnpm zip:firefox
+   set -a && source .env && set +a
+   npx web-ext sign --channel=unlisted \
+     --source-dir=.output/firefox-mv3 \
+     --artifacts-dir=web-ext-artifacts
+   ```
+   Mozilla auto-reviews unlisted submissions (usually a minute or two); the signed
+   package lands at `web-ext-artifacts/<id>-<version>.xpi`.
+3. Install it: `about:addons` → gear icon ⚙️ → **Install Add-on From File…** → pick
+   the `.xpi` (or drag the file into a Firefox window) → **Add**. This install
+   **survives restarts.**
+
+> **Bump the version for every update.** AMO accepts each `(extension id, version)`
+> pair only once. To ship a code change, bump `version` in `wxt.config.ts` /
+> `package.json`, re-run `pnpm zip:firefox` and the `web-ext sign` command, then
+> reinstall the new `.xpi`.
+
+> **Source code may be requested.** Because the bundle is minified, AMO occasionally
+> asks for readable sources — pass `--upload-source-code=<sources.zip>` to the sign
+> command if it does.
+
 ### Grant site access
 
 Unlike Chrome/Edge, Firefox treats the "read and change data on all websites"

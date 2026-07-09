@@ -93,7 +93,7 @@ Firefox**,并完成首次配置。大约两分钟。
 
 Firefox 不在 Chrome Web Store 里,有自己的商店与独立构建(仍是 Manifest V3,与
 Chrome/Edge 一致——见 [ADR-0005](./adr/0005-firefox-mv3-with-permission-onboarding.zh-CN.md))。
-可选以下两种方式:
+可选以下三种方式:
 
 ### 方式一:Firefox Add-ons(AMO)
 
@@ -111,6 +111,46 @@ Chrome/Edge 一致——见 [ADR-0005](./adr/0005-firefox-mv3-with-permission-on
 
 > **临时装载的扩展会在 Firefox 关闭后被移除。** 在 AMO 正式上架前,每次重启
 > Firefox 都需要重复第 2–3 步。
+
+### 方式三:自签名分发——签名后的 `.xpi`,常驻且不进商店
+
+方式二重启即失,而正式版 / Beta 版 Firefox 又拒绝未签名的扩展。想**不上架商店、
+又能永久安装**,就通过 **unlisted(自行分发)** 渠道让 Mozilla 给你的包签名,再自己
+安装拿回的 `.xpi`。它不会出现在 AMO 搜索里——只有拿到该文件的人才能安装,适合自己
+用或小范围内部分发。
+
+需要一个免费的 [Firefox 账号](https://accounts.firefox.com/),以及在
+[AMO → Manage API Keys](https://addons.mozilla.org/developers/addon/api/key/) 生成的
+API 凭据(**JWT issuer** 与 **secret**)。
+
+1. 从可提交的模板创建 `.env`,再填入两个值(`.env` 本身已被 git 忽略):
+   ```sh
+   cp .env.example .env
+   ```
+   然后编辑 `.env`:
+   ```
+   WEB_EXT_API_KEY=<你的 JWT issuer>
+   WEB_EXT_API_SECRET=<你的 JWT secret>
+   ```
+2. 构建并签名(需 Node.js 20 + pnpm 9):
+   ```sh
+   pnpm zip:firefox
+   set -a && source .env && set +a
+   npx web-ext sign --channel=unlisted \
+     --source-dir=.output/firefox-mv3 \
+     --artifacts-dir=web-ext-artifacts
+   ```
+   Mozilla 会自动审核 unlisted 提交(通常一两分钟),签名好的包落在
+   `web-ext-artifacts/<id>-<version>.xpi`。
+3. 安装:`about:addons` → 齿轮图标 ⚙️ → **从文件安装附加组件…** → 选中该 `.xpi`
+   (或把文件拖进 Firefox 窗口)→ **添加**。这样安装**重启不消失**。
+
+> **每次更新都要 bump 版本号。** AMO 对每个 `(扩展 ID, 版本)` 只接受一次。要发布代码
+> 改动,先在 `wxt.config.ts` / `package.json` 里提升 `version`,重新执行
+> `pnpm zip:firefox` 与 `web-ext sign`,再安装新的 `.xpi`。
+
+> **可能被要求提交源码。** 由于产物是压缩过的,AMO 偶尔会要一份可读源码——遇到时给
+> 签名命令加上 `--upload-source-code=<sources.zip>`。
 
 ### 授予站点访问权限
 
