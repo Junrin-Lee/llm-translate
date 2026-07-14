@@ -131,7 +131,7 @@ export function App() {
             }}
             onOpenSettings={() =>
               void browser.tabs.create({
-                url: browser.runtime.getURL('/options.html') + '#routing',
+                url: `${browser.runtime.getURL('/options.html')}#routing`,
               })
             }
             onClose={() => setStage({ kind: 'select', imageDataUrl: stage.imageDataUrl })}
