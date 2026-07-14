@@ -2,11 +2,11 @@
 
 **English** · [简体中文](./README.zh-CN.md)
 
-> Selection & full-page translation for the browser, powered entirely by **your own**
+> Selection, full-page & image translation for the browser, powered entirely by **your own**
 > OpenAI-compatible or Anthropic-compatible API key (BYOK). No account, no backend, no
 > telemetry — all settings stay on your machine.
 
-**Status:** Selection and full-page translation are fully working, with E2E tests, icon
+**Status:** Selection, full-page, and image translation are fully working, with E2E tests, icon
 assets, and the privacy policy all in place. It currently runs by loading the unpacked
 build in the browser's developer mode; the only remaining release chore is the first
 manual submission to the Chrome Web Store / Edge Add-ons / Firefox Add-ons (AMO) — see the
@@ -22,11 +22,15 @@ manual submission to the Chrome Web Store / Edge Add-ons / Firefox Add-ons (AMO)
   - **Bilingual** (default): translations inserted under each original block, original kept
   - **Translation-only**: replaces the original in place, restorable in one click
   - viewport-first lazy loading, follows SPA route changes and dynamic content, retry failed blocks (per-block or all at once), draggable in-page toolbar (progress / cancel / restore / mode toggle)
+- **Image translation** — translate the text inside an image via a streaming **translation card**:
+  - from the popup or the right-click menu, drag-select a region over a frozen capture of the page; the translation streams in place
+  - on restricted pages (the built-in PDF viewer, browser-internal pages) it falls back automatically to an extension page, which also accepts pasted / dropped / chosen images
+  - requires the routed model to accept image input (errors link to Routing settings); a one-time privacy notice appears on first use
 
 <details>
 <summary><b>More, for power users</b> — providers, routing, dual protocol, triggers, customization, cache (click to expand)</summary>
 
-- **Multiple providers + routing** — save several provider profiles (protocol / Base URL / key / model / optional params), set a global default, and optionally override the provider per feature (selection, page)
+- **Multiple providers + routing** — save several provider profiles (protocol / Base URL / key / model / optional params), set a global default, and optionally override the provider per feature (selection, page, image)
 - **Dual protocol** — OpenAI-compatible (`/chat/completions`) and Anthropic-compatible (`/v1/messages`), hand-rolled lightweight client, no vendor SDK
 - **Flexible triggers** — selection icon / instant / shortcut-only; page translation via the popup, keyboard shortcut, right-click menu, or an auto-translate site list
 - **Customizable** — override the three prompt templates and reset to default; UI language (Automatic / English / 中文); per-site disable list; JSON settings import/export (keys stripped by default)
@@ -70,7 +74,7 @@ The settings page uses a sidebar: **Providers**, **Routing**, **Translation**, *
 **Backup**, **Cache**. The Translation section covers target language, interface language,
 selection trigger, and the per-site disable list.
 
-| ![Providers settings: protocol / Base URL / key / model](store-assets/screenshots/03-providers.png) | ![Routing: assign a provider per feature (selection, page)](store-assets/screenshots/04-routing.png) |
+| ![Providers settings: protocol / Base URL / key / model](store-assets/screenshots/03-providers.png) | ![Routing: assign a provider per feature (selection, page, image)](store-assets/screenshots/04-routing.png) |
 | :--: | :--: |
 | ![Translation: target language, interface language, selection trigger, per-site disable list](store-assets/screenshots/05-translation.png) | ![Prompts: override the dictionary / selection / full-page templates, reset to default](store-assets/screenshots/06-prompts.png) |
 | ![Backup: export settings as JSON (keys stripped by default) and import](store-assets/screenshots/07-backup.png) | ![Cache: view selection / page entry counts and clear](store-assets/screenshots/08-cache.png) |

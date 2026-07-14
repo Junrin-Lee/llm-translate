@@ -2,9 +2,9 @@
 
 **English** · [简体中文](./privacy-policy.zh-CN.md)
 
-_Last updated: 2026-07-07_
+_Last updated: 2026-07-14_
 
-LLM Translate is a browser extension for selection and full-page translation.
+LLM Translate is a browser extension for selection, full-page, and image translation.
 It is **bring-your-own-key (BYOK)**: you supply your own OpenAI-compatible or
 Anthropic-compatible API key, and the extension talks directly to the endpoint
 **you** configure. There is no account, no backend operated by us, and no
@@ -50,6 +50,19 @@ reports, or any identifying information to us or to any third party.
 Because you choose the endpoint, the text you translate is subject to the privacy
 policy of **your chosen provider** (for example OpenAI or Anthropic). Please
 review that provider's policy to understand how they handle the content you send.
+
+## Image Translation
+
+- The capture region you select is sent **only** to the API endpoint configured
+  for Image Translation (its Feature Override, or the Global Default Provider) —
+  the same kind of destination used by Selection and Page translation.
+- Nothing about the capture is persisted: it is never written to disk and never
+  cached. The in-memory hand-off used when the feature falls back to an
+  extension page (`storage.session`) is cleared automatically when the browser
+  closes.
+- The first time you use Image Translation, a one-time notice tells you the
+  capture will be sent to your configured endpoint; once acknowledged, it does
+  not appear again.
 
 ## What we collect
 
