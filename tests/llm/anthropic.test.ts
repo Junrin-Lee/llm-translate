@@ -76,6 +76,29 @@ describe('createAnthropicClient.stream', () => {
     await client.stream({ ...req, maxTokens: 128 }, () => {});
     expect(bodyOf(fetchImpl.calls[0]).max_tokens).toBe(128);
   });
+
+  it('sends image source blocks when the request carries images', async () => {
+    const fetchImpl = recordingFetch(() => sseResponse(['data: {"type":"message_stop"}\n\n']));
+    const client = createAnthropicClient(profile, { fetchImpl });
+    await client.stream(
+      { ...req, images: [{ mediaType: 'image/jpeg', dataBase64: 'AAAA' }] },
+      () => {},
+    );
+
+    const body = bodyOf(fetchImpl.calls[0]);
+    expect(body.messages).toEqual([
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'image',
+            source: { type: 'base64', media_type: 'image/jpeg', data: 'AAAA' },
+          },
+          { type: 'text', text: 'hi' },
+        ],
+      },
+    ]);
+  });
 });
 
 describe('createAnthropicClient.complete', () => {
