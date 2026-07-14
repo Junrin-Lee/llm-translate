@@ -63,6 +63,22 @@ export function DefaultsPanel({ providers, defaults, onChange }: Props) {
             ))}
           </select>
         </label>
+
+        <label className="field">
+          <span className="field__label">{t('routingImage')}</span>
+          <select
+            className="field__input"
+            value={defaults.image ?? ''}
+            onChange={(e) => onChange({ ...defaults, image: e.target.value || undefined })}
+          >
+            <option value="">{t('routingUseGlobal')}</option>
+            {providers.map((p) => (
+              <option key={p.id} value={p.id}>
+                {name(p)}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
     </div>
   );

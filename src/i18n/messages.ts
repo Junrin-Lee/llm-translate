@@ -46,6 +46,7 @@ const EN = {
   routingNone: '— none —',
   routingSelection: 'Selection translation',
   routingPage: 'Page translation',
+  routingImage: 'Image translation',
   routingUseGlobal: 'Use global default',
 
   // Translation (general settings)
@@ -70,6 +71,9 @@ const EN = {
   promptTextHint: 'Selection popup, for sentences and longer text.',
   promptBatchLabel: 'Full-page translation',
   promptBatchHint: 'Batched page segments — the prompt must keep every @@n@@ marker.',
+  promptImageLabel: 'Image translation',
+  promptImageHint:
+    'Vision prompt — the image is attached to the message; only {{targetLang}} is interpolated.',
   promptCustom: 'Custom',
   promptVars: 'Variables: {{text}}, {{targetLang}}',
   promptReset: 'Reset to default',
@@ -194,6 +198,7 @@ const ZH: Record<MessageKey, string> = {
   routingNone: '— 无 —',
   routingSelection: '划词翻译',
   routingPage: '全文翻译',
+  routingImage: '图片翻译',
   routingUseGlobal: '使用全局默认',
 
   targetLanguage: '目标语言',
@@ -216,6 +221,8 @@ const ZH: Record<MessageKey, string> = {
   promptTextHint: '划词浮层,用于句子和长文本。',
   promptBatchLabel: '全文翻译',
   promptBatchHint: '整页分批翻译——提示词必须保留每个 @@n@@ 标记。',
+  promptImageLabel: '图片翻译',
+  promptImageHint: '视觉提示词 —— 图片随消息附带,仅支持 {{targetLang}} 变量。',
   promptCustom: '自定义',
   promptVars: '变量:{{text}}、{{targetLang}}',
   promptReset: '恢复默认',
