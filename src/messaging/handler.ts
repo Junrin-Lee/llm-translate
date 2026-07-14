@@ -1,12 +1,12 @@
 import { LlmError, type ProviderProfile, type TranslationClient } from '@/llm/types';
 import { renderPrompt } from '@/prompts';
-import type { AppSettings } from '@/storage/schema';
+import type { AppSettings, TranslateFeature } from '@/storage/schema';
 import { cacheKey, type TranslationCache } from '@/translator/cache';
 import type { BgEvent, BgRequest } from './protocol';
 
 export interface HandlerDeps {
   getSettings: () => Promise<AppSettings>;
-  resolveProfile: (feature: 'selection' | 'page') => Promise<ProviderProfile | null>;
+  resolveProfile: (feature: TranslateFeature) => Promise<ProviderProfile | null>;
   createClient: (profile: ProviderProfile) => TranslationClient;
   /** Optional caches; omitted in tests to exercise the live path. */
   selectionCache?: TranslationCache;

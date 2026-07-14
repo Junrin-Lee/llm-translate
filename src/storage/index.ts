@@ -1,6 +1,11 @@
 import { storage } from '#imports';
 import type { ProviderProfile } from '@/llm/types';
-import { type AppSettings, DEFAULT_SETTINGS } from './schema';
+import {
+  type AppSettings,
+  DEFAULT_SETTINGS,
+  resolveProfileFrom,
+  type TranslateFeature,
+} from './schema';
 
 // All settings live in a single local-only item (ADR-0002). Keys are never synced.
 const settingsItem = storage.defineItem<AppSettings>('local:settings', {
@@ -30,15 +35,6 @@ export function watchSettings(cb: (settings: AppSettings) => void): () => void {
  * Resolve the profile a feature should use: its feature override if present and
  * still valid, otherwise the global default. Returns null when neither resolves.
  */
-export async function resolveProfile(
-  feature: 'selection' | 'page',
-): Promise<ProviderProfile | null> {
-  const settings = await getSettings();
-  const override = feature === 'selection' ? settings.defaults.selection : settings.defaults.page;
-  for (const id of [override, settings.defaults.global]) {
-    if (!id) continue;
-    const found = settings.providers.find((profile) => profile.id === id);
-    if (found) return found;
-  }
-  return null;
+export async function resolveProfile(feature: TranslateFeature): Promise<ProviderProfile | null> {
+  return resolveProfileFrom(await getSettings(), feature);
 }

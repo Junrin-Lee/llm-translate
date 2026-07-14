@@ -5,6 +5,9 @@ export type PageMode = 'bilingual' | 'replace';
 /** UI language: auto follows the browser, or force English / Chinese. */
 export type UiLang = 'auto' | 'en' | 'zh';
 
+/** Features that route to a Provider Profile. */
+export type TranslateFeature = 'selection' | 'page' | 'image';
+
 export interface GeneralSettings {
   /** BCP-47 target language, e.g. 'zh-CN'. */
   targetLang: string;
@@ -35,6 +38,7 @@ export interface ProfileDefaults {
   global: string | null;
   selection?: string;
   page?: string;
+  image?: string;
 }
 
 export interface AppSettings {
@@ -59,3 +63,20 @@ export const DEFAULT_SETTINGS: AppSettings = {
   siteRules: { autoTranslate: [], disableSelection: [] },
   prompts: {},
 };
+
+/**
+ * Pure resolution: the feature override if present and still valid, otherwise
+ * the global default. storage/index.ts wraps this with live settings.
+ */
+export function resolveProfileFrom(
+  settings: AppSettings,
+  feature: TranslateFeature,
+): ProviderProfile | null {
+  const override = settings.defaults[feature];
+  for (const id of [override, settings.defaults.global]) {
+    if (!id) continue;
+    const found = settings.providers.find((profile) => profile.id === id);
+    if (found) return found;
+  }
+  return null;
+}
