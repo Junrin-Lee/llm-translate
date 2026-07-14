@@ -128,6 +128,9 @@ const EN = {
   imagePrivacyNotice: 'The selected area is sent only to the API endpoint you configured.',
   imagePrivacyGotIt: 'Got it',
   imageTranslate: 'Image translation',
+  imageWorkbenchEmpty: 'Paste, drop, or choose an image to translate.',
+  imageUpload: 'Choose image',
+  imageReselect: 'Select another area',
   imageNoVisionHint:
     'If this keeps failing, the model may not accept images — set a vision-capable model for Image Translation in Routing.',
   imageOpenSettings: 'Open settings',
@@ -264,6 +267,9 @@ const ZH: Record<MessageKey, string> = {
   imagePrivacyNotice: '框选区域仅会发送至你配置的 API 端点。',
   imagePrivacyGotIt: '知道了',
   imageTranslate: '图片翻译',
+  imageWorkbenchEmpty: '粘贴、拖入或选择一张图片进行翻译。',
+  imageUpload: '选择图片',
+  imageReselect: '重新框选',
   imageNoVisionHint:
     '若持续失败,可能是当前模型不支持图片输入 —— 请在「路由」中为图片翻译指定支持视觉的模型。',
   imageOpenSettings: '打开设置',
