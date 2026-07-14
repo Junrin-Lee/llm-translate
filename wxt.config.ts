@@ -26,11 +26,13 @@ export default defineConfig({
   manifest: ({ browser }) => ({
     name: BRAND.name,
     description:
-      'Selection & full-page translation powered by your own OpenAI-compatible or Anthropic-compatible LLM API.',
+      'Selection, full-page & image translation powered by your own OpenAI-compatible or Anthropic-compatible LLM API.',
     // Minimal permission set — justifications live in docs/adr/0001 and store-assets (T5.4).
     // storage:      local persistence of settings & translation cache (ADR-0002)
-    // contextMenus: right-click "Translate page / Translate selection" (T3.10)
-    permissions: ['storage', 'contextMenus'],
+    // contextMenus: right-click "Translate page / selection / Image Translation" (T3.10, ADR-0006)
+    // activeTab:    captureVisibleTab for Image Translation keeps working on Firefox
+    //               after optional host access is revoked (ADR-0006)
+    permissions: ['storage', 'contextMenus', 'activeTab'],
     // The content script runs on every page (selection + full-page DOM), and the
     // background must reach any user-configured LLM Base URL. See ADR-0001.
     host_permissions: ['<all_urls>'],

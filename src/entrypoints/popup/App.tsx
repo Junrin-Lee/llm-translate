@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BRAND } from '@/brand';
+import { launchImageCapture } from '@/capture/launch';
 import { setUiLanguage } from '@/i18n';
 import { useT } from '@/i18n/useI18n';
 import type { ContentMessage, PageStatusReply } from '@/messaging/protocol';
@@ -84,6 +85,17 @@ export function App() {
           }}
         >
           {translated ? t('restoreOriginal') : t('translatePage')}
+        </button>
+        <button
+          type="button"
+          className="popup__btn"
+          onClick={async () => {
+            const tab = await getActiveTab();
+            await launchImageCapture(tab?.id);
+            window.close();
+          }}
+        >
+          {t('imageTranslate')}
         </button>
         <button
           type="button"
