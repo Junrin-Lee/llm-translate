@@ -38,3 +38,17 @@ export function watchSettings(cb: (settings: AppSettings) => void): () => void {
 export async function resolveProfile(feature: TranslateFeature): Promise<ProviderProfile | null> {
   return resolveProfileFrom(await getSettings(), feature);
 }
+
+// One-time privacy notice for Image Translation (ADR-0006). Not part of
+// AppSettings: it's a UI acknowledgement, not a user preference.
+const imageNoticeItem = storage.defineItem<boolean>('local:imageNoticeSeen', {
+  fallback: false,
+});
+
+export function getImageNoticeSeen(): Promise<boolean> {
+  return imageNoticeItem.getValue();
+}
+
+export function setImageNoticeSeen(): Promise<void> {
+  return imageNoticeItem.setValue(true);
+}
