@@ -42,9 +42,11 @@ export function ImageCaptureApp() {
           }}
           onCancel={() => setStage({ kind: 'idle' })}
           onConfirm={(region: Rect, container) => {
-            void cropToAttachment(stage.imageDataUrl, region, container).then((attachment) =>
-              setStage({ kind: 'result', attachment }),
-            );
+            void cropToAttachment(stage.imageDataUrl, region, container)
+              .then((attachment) => setStage({ kind: 'result', attachment }))
+              // Crop can only fail on undecodable data / missing 2d context —
+              // close the overlay like a cancel rather than leaving it stuck.
+              .catch(() => setStage({ kind: 'idle' }));
           }}
         />
       </div>
