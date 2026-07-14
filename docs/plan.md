@@ -177,3 +177,10 @@ Privacy policy highlights: all config and keys are stored only on the local devi
 
 - Brand name and store title (finalized before M5; referenced in code via the `BRAND` constant).
 - Debounce and cost-warning copy for the Selection "translate-on-select" mode (decided during M2 implementation).
+
+## 13. Image Translation
+
+Phase 1 shipped after this plan was aligned; full rationale and trade-offs in ADR-0006.
+
+- **Phase 1 — shipped**: drag-select a capture region over a frozen tab snapshot on injectable pages, streaming the result as a Translation Card in place; automatic fallback to an extension page on restricted pages (built-in PDF viewer, browser-internal pages), which also accepts pasted / dropped / chosen images; entries in the popup and the right-click context menu; resolved through the existing Feature Override chain (Selection / Page / Image), falling back to the Global Default Provider, and requiring a vision-capable model (a non-vision model error deep-links to Routing settings); `ChatRequest` and both protocol adapters are multimodal; a one-time first-use privacy notice; no translation cache for images.
+- **Phase 2 — not implemented**: right-clicking an image element to translate it directly (`srcUrl` route — cross-origin fetch, lazy-load placeholders); a dedicated keyboard shortcut.
