@@ -127,6 +127,10 @@ const EN = {
   imageCaptureHint: 'Drag to select the area to translate · Esc to cancel',
   imagePrivacyNotice: 'The selected area is sent only to the API endpoint you configured.',
   imagePrivacyGotIt: 'Got it',
+  imageTranslate: 'Image translation',
+  imageNoVisionHint:
+    'If this keeps failing, the model may not accept images — set a vision-capable model for Image Translation in Routing.',
+  imageOpenSettings: 'Open settings',
 
   // Permission onboarding (Firefox treats site access as optional — ADR-0005)
   permBannerText: 'Site access is off — translation cannot run on any page.',
@@ -259,6 +263,10 @@ const ZH: Record<MessageKey, string> = {
   imageCaptureHint: '拖拽框选要翻译的区域 · Esc 取消',
   imagePrivacyNotice: '框选区域仅会发送至你配置的 API 端点。',
   imagePrivacyGotIt: '知道了',
+  imageTranslate: '图片翻译',
+  imageNoVisionHint:
+    '若持续失败,可能是当前模型不支持图片输入 —— 请在「路由」中为图片翻译指定支持视觉的模型。',
+  imageOpenSettings: '打开设置',
 
   // Permission onboarding(Firefox 将站点访问视为可选权限 — ADR-0005)
   permBannerText: '站点访问权限未开启——翻译功能无法在任何页面工作。',
