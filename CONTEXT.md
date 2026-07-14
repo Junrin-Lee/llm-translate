@@ -2,7 +2,7 @@
 
 **English** · [简体中文](./CONTEXT.zh-CN.md)
 
-A browser extension built for release to the Chrome Web Store / Edge Add-ons / Firefox Add-ons (AMO): it provides two features, Selection Translation and Page Translation. Its translation capability comes entirely from the user's own LLM API (an OpenAI-compatible or Anthropic-compatible protocol) — no self-hosted backend, no account system.
+A browser extension built for release to the Chrome Web Store / Edge Add-ons / Firefox Add-ons (AMO): it provides three features — Selection Translation, Page Translation, and Image Translation. Its translation capability comes entirely from the user's own LLM API (an OpenAI-compatible or Anthropic-compatible protocol) — no self-hosted backend, no account system.
 
 ## Language
 
@@ -17,7 +17,7 @@ The dictionary-style result that Selection Translation outputs when the selectio
 _Avoid_: lookup result, word card
 
 **Translation Card (译文卡片)**:
-The plain-translation result that Selection Translation outputs when the selection is a sentence or paragraph.
+The plain-translation result that Selection Translation outputs when the selection is a sentence or paragraph; Image Translation streams its result in the same form.
 _Avoid_: translation result box
 
 **Page Translation (全文翻译)**:
@@ -36,6 +36,10 @@ _Avoid_: replace mode
 A domain the user has marked as "always translate"; visiting its pages automatically triggers Page Translation.
 _Avoid_: whitelist, auto site
 
+**Image Translation (图片翻译)**:
+Translation of the text inside a single image the user supplies — primarily by dragging a capture region on the current tab (on pages where the content script cannot run, e.g. the built-in PDF viewer, it automatically falls back to capturing the visible area and cropping inside an extension page), or by pasting / uploading an image. The result streams as a Translation Card. Requires the resolved Provider Profile's model to accept image input.
+_Avoid_: screenshot translation, OCR translation, picture translation
+
 ### Provider
 
 **Provider Profile (Provider 配置)**:
@@ -51,7 +55,7 @@ The Provider Profile that every translation feature actually uses when it is not
 _Avoid_: current engine, active profile
 
 **Feature Override (功能级覆盖)**:
-A Provider Profile specified separately for Selection Translation or Page Translation; once set, it takes precedence over the Global Default Provider, and when unset it follows the global one.
+A Provider Profile specified separately for Selection Translation, Page Translation, or Image Translation; once set, it takes precedence over the Global Default Provider, and when unset it follows the global one.
 _Avoid_: standalone config, per-channel
 
 ### Permissions
@@ -66,3 +70,5 @@ _Avoid_: permission warning, authorization flow
 > **Expert**: First check whether Selection Translation has a Feature Override — if so, use the Provider Profile that override specifies; if not, use the Global Default Provider.
 > **Dev**: So does a "Provider Profile" store a vendor? Like DeepSeek?
 > **Expert**: Not a vendor — it's a connection configuration. DeepSeek's official endpoint and a DeepSeek proxied through the company gateway can be two different Provider Profiles, and both have the Protocol OpenAI-compatible.
+> **Dev**: Image Translation says "the model does not support image input" — now what?
+> **Expert**: The Provider Profile it resolved to (its Feature Override, or the Global Default Provider) uses a model without vision. Set a Feature Override for Image Translation that points at a model that accepts images.
