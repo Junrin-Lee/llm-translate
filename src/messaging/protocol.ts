@@ -5,8 +5,8 @@ import type { PromptVars } from '@/prompts';
 export const TRANSLATE_PORT = 'llm-translate';
 
 /**
- * Requests the background accepts (first message on a connected port).
- * `translate-batch` (page translation) is added in M3 with the orchestrator.
+ * Requests the background accepts (first message on a connected port):
+ * selection streaming, page batches, image translation, model listing, connection tests.
  */
 export type BgRequest =
   | {

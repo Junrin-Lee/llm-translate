@@ -46,7 +46,10 @@ export function ImageCaptureApp() {
               .then((attachment) => setStage({ kind: 'result', attachment }))
               // Crop can only fail on undecodable data / missing 2d context —
               // close the overlay like a cancel rather than leaving it stuck.
-              .catch(() => setStage({ kind: 'idle' }));
+              .catch((error) => {
+                console.warn('Image Translation: crop failed', error);
+                setStage({ kind: 'idle' });
+              });
           }}
         />
       </div>

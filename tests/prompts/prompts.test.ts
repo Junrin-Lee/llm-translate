@@ -83,5 +83,7 @@ describe('renderPrompt imageText', () => {
     expect(rendered.system).toContain('zh-CN');
     expect(rendered.user).toContain('zh-CN');
     expect(rendered.version).toBe('v1');
+    // ADR-0006: the model must translate what it sees, not transcribe the source text.
+    expect(rendered.system).toContain('do not transcribe');
   });
 });

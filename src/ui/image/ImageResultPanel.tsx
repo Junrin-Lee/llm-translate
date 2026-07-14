@@ -28,6 +28,7 @@ export function ImageResultPanel({
   const [status, setStatus] = useState<Status>('streaming');
   const [error, setError] = useState('');
 
+  // Retry needs no bypassCache: translate-image is never cached (ADR-0006), so a new stream is always a real request.
   // biome-ignore lint/correctness/useExhaustiveDependencies: attempt triggers retries
   useEffect(() => {
     setOutput('');
