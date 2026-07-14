@@ -33,6 +33,7 @@ export function App() {
     })();
   }, []);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: acceptFile only calls setStage — no stale-closure risk.
   useEffect(() => {
     const onPaste = (e: ClipboardEvent) => {
       const file = Array.from(e.clipboardData?.files ?? []).find((f) =>
@@ -42,7 +43,7 @@ export function App() {
     };
     window.addEventListener('paste', onPaste);
     return () => window.removeEventListener('paste', onPaste);
-  });
+  }, []);
 
   async function acceptFile(file: Blob) {
     try {

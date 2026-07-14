@@ -50,18 +50,3 @@ export async function cropToAttachment(
   );
   return toAttachment(drawRegion(img, region));
 }
-
-/** Pasted / uploaded file → attachment, downscaled to MAX_IMAGE_EDGE when needed. */
-export async function imageFileToAttachment(file: Blob): Promise<ImageAttachment> {
-  if (!file.type.startsWith('image/')) throw new Error('Not an image file');
-  const dataUrl = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error('Failed to read file'));
-    reader.readAsDataURL(file);
-  });
-  const img = await loadImage(dataUrl);
-  return toAttachment(
-    drawRegion(img, { x: 0, y: 0, width: img.naturalWidth, height: img.naturalHeight }),
-  );
-}

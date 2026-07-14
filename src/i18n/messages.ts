@@ -76,6 +76,7 @@ const EN = {
     'Vision prompt — the image is attached to the message; only {{targetLang}} is interpolated.',
   promptCustom: 'Custom',
   promptVars: 'Variables: {{text}}, {{targetLang}}',
+  promptVarsImage: 'Variables: {{targetLang}}',
   promptReset: 'Reset to default',
 
   // Backup
@@ -225,6 +226,7 @@ const ZH: Record<MessageKey, string> = {
   promptImageHint: '视觉提示词 —— 图片随消息附带,仅支持 {{targetLang}} 变量。',
   promptCustom: '自定义',
   promptVars: '变量:{{text}}、{{targetLang}}',
+  promptVarsImage: '变量:{{targetLang}}',
   promptReset: '恢复默认',
 
   backupExport: '导出',

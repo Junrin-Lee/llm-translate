@@ -45,7 +45,9 @@ export function PromptsPanel({ prompts, onChange }: Props) {
               onChange={(e) => update(key, e.target.value)}
             />
             <div className="prompt__foot">
-              <span className="field__hint">{t('promptVars')}</span>
+              <span className="field__hint">
+                {t(key === 'imageText' ? 'promptVarsImage' : 'promptVars')}
+              </span>
               <button
                 type="button"
                 className="btn btn--ghost"
