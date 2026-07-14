@@ -1,3 +1,4 @@
+import { launchImageCapture } from '@/capture/launch';
 import { setUiLanguage, t } from '@/i18n';
 import { createClient } from '@/llm/client';
 import { handleRequest } from '@/messaging/handler';
@@ -45,6 +46,7 @@ async function sendToActiveTab(message: ContentMessage): Promise<void> {
 
 const MENU_PAGE = 'llmt-translate-page';
 const MENU_SELECTION = 'llmt-translate-selection';
+const MENU_IMAGE = 'llmt-translate-image';
 
 async function syncPageMenu(status: PageStatusReply): Promise<void> {
   const title = status === 'idle' ? t('translatePage') : t('restoreOriginal');
@@ -59,6 +61,11 @@ async function syncPageMenu(status: PageStatusReply): Promise<void> {
 async function refreshMenusForActiveTab(): Promise<void> {
   try {
     await browser.contextMenus.update(MENU_SELECTION, { title: t('translateSelection') });
+  } catch {
+    // ignore
+  }
+  try {
+    await browser.contextMenus.update(MENU_IMAGE, { title: t('imageTranslate') });
   } catch {
     // ignore
   }
@@ -111,10 +118,19 @@ export default defineBackground(() => {
       title: t('translateSelection'),
       contexts: ['selection'],
     });
+    browser.contextMenus.create({
+      id: MENU_IMAGE,
+      title: t('imageTranslate'),
+      contexts: ['page'],
+    });
   });
 
   browser.contextMenus.onClicked.addListener((info, tab) => {
     if (tab?.id == null) return;
+    if (info.menuItemId === MENU_IMAGE) {
+      void launchImageCapture(tab.id);
+      return;
+    }
     const message: ContentMessage | null =
       info.menuItemId === MENU_PAGE
         ? { type: 'translate-page' }
@@ -131,6 +147,8 @@ export default defineBackground(() => {
   browser.runtime.onMessage.addListener((message: TabMessage, sender) => {
     if (message?.type === 'page-status-changed' && sender.tab?.active) {
       void syncPageMenu(message.status);
+    } else if (message?.type === 'open-options') {
+      void browser.runtime.openOptionsPage();
     }
   });
 
