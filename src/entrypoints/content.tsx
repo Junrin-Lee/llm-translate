@@ -1,5 +1,7 @@
 import './selection.css';
+import '@/ui/image/image.css';
 import ReactDOM from 'react-dom/client';
+import { ImageCaptureApp } from '@/ui/image/ImageCaptureApp';
 import { setupPageTranslation } from '@/ui/page/controller';
 import { PageToolbar } from '@/ui/page/PageToolbar';
 import { maybeAutoTranslate } from '@/ui/page/store';
@@ -25,6 +27,7 @@ export default defineContentScript({
           <>
             <SelectionApp />
             <PageToolbar />
+            <ImageCaptureApp />
           </>,
         );
         return root;
