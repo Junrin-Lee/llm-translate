@@ -76,3 +76,12 @@ describe('renderPrompt overrides & versioning', () => {
     expect(v1).not.toBe(v2);
   });
 });
+
+describe('renderPrompt imageText', () => {
+  it('interpolates targetLang into both system and user templates', () => {
+    const rendered = renderPrompt('imageText', { text: '', targetLang: 'zh-CN' });
+    expect(rendered.system).toContain('zh-CN');
+    expect(rendered.user).toContain('zh-CN');
+    expect(rendered.version).toBe('v1');
+  });
+});
