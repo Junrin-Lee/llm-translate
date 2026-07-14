@@ -1,4 +1,4 @@
-import type { LlmErrorCode, TokenUsage } from '@/llm/types';
+import type { ImageAttachment, LlmErrorCode, TokenUsage } from '@/llm/types';
 import type { PromptVars } from '@/prompts';
 
 /** Long-lived port name used by content/options to reach the background. */
@@ -24,6 +24,13 @@ export type BgRequest =
       payload: string;
       vars: Omit<PromptVars, 'text'>;
     }
+  | {
+      kind: 'translate-image';
+      feature: 'image';
+      /** Cropped & downscaled by the UI before it reaches the background. */
+      image: ImageAttachment;
+      vars: Omit<PromptVars, 'text'>;
+    }
   | { kind: 'list-models'; profileId: string }
   | { kind: 'test-connection'; profileId: string };
 
@@ -31,13 +38,20 @@ export type BgRequest =
 export type ContentMessage =
   | { type: 'open-selection-panel' }
   | { type: 'translate-page' }
-  | { type: 'get-page-status' };
+  | { type: 'get-page-status' }
+  | {
+      /** Start in-place Image Translation over a frozen capture of this tab. */
+      type: 'open-image-capture';
+      imageDataUrl: string;
+    };
 
 /** Reply to a get-page-status query. */
 export type PageStatusReply = 'idle' | 'translating' | 'done';
 
-/** Content → background notification when the page translation status changes. */
-export type TabMessage = { type: 'page-status-changed'; status: PageStatusReply };
+/** Content → background notifications. */
+export type TabMessage =
+  | { type: 'page-status-changed'; status: PageStatusReply }
+  | { type: 'open-options' };
 
 /** Events the background emits back over the port. */
 export type BgEvent =
