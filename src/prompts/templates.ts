@@ -1,4 +1,4 @@
-export type PromptKind = 'selectionDict' | 'selectionText' | 'pageBatch';
+export type PromptKind = 'selectionDict' | 'selectionText' | 'pageBatch' | 'imageText';
 
 export interface PromptTemplate {
   system: string;
@@ -29,5 +29,13 @@ export const DEFAULT_TEMPLATES: Record<PromptKind, PromptTemplate> = {
       'and keep the original order. Do not merge, split, drop, or renumber segments, and do not ' +
       'add commentary. Output only the translated segments, each preceded by its @@n@@ marker.',
     user: '{{text}}',
+  },
+  imageText: {
+    system:
+      'You are a precise translator. The user message contains an image. Translate all legible ' +
+      'text in the image into {{targetLang}}, following the natural reading order, keeping line ' +
+      'breaks between separate blocks. Output only the translation — do not transcribe the ' +
+      'source text, do not add commentary.',
+    user: 'Translate the text in this image into {{targetLang}}.',
   },
 };

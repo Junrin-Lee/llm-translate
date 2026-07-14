@@ -27,6 +27,7 @@ export interface PromptOverrides {
   selectionDict?: string;
   selectionText?: string;
   pageBatch?: string;
+  imageText?: string;
 }
 
 /** Which saved profile each feature resolves to; features fall back to global. */
