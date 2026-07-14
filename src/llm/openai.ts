@@ -10,9 +10,13 @@ import {
   type TranslationClient,
 } from './types';
 
+type OpenAiUserContent =
+  | string
+  | Array<{ type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string } }>;
+
 interface OpenAiBody {
   model: string;
-  messages: Array<{ role: 'system' | 'user'; content: string }>;
+  messages: Array<{ role: 'system' | 'user'; content: OpenAiUserContent }>;
   stream: boolean;
   temperature?: number;
   max_tokens?: number;
@@ -34,7 +38,18 @@ export function createOpenAiClient(
   function buildBody(req: ChatRequest, stream: boolean): OpenAiBody {
     const messages: OpenAiBody['messages'] = [];
     if (req.system) messages.push({ role: 'system', content: req.system });
-    messages.push({ role: 'user', content: req.user });
+
+    const userContent: OpenAiUserContent =
+      req.images && req.images.length > 0
+        ? [
+            ...req.images.map((img) => ({
+              type: 'image_url' as const,
+              image_url: { url: `data:${img.mediaType};base64,${img.dataBase64}` },
+            })),
+            { type: 'text' as const, text: req.user },
+          ]
+        : req.user;
+    messages.push({ role: 'user', content: userContent });
 
     const body: OpenAiBody = { model: req.model, messages, stream };
     const temperature = req.temperature ?? profile.params?.temperature;

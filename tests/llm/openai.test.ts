@@ -65,6 +65,38 @@ describe('createOpenAiClient.stream', () => {
     await client.stream(req, () => {});
     expect(fetchImpl.calls[0].url).toBe('https://api.openai.com/v1/chat/completions');
   });
+
+  it('sends image content parts when the request carries images', async () => {
+    const fetchImpl = recordingFetch(() => sseResponse(['data: [DONE]\n\n']));
+    const client = createOpenAiClient(profile, { fetchImpl });
+    await client.stream(
+      { ...req, images: [{ mediaType: 'image/jpeg', dataBase64: 'AAAA' }] },
+      () => {},
+    );
+
+    const body = bodyOf(fetchImpl.calls[0]);
+    expect(body.messages).toEqual([
+      { role: 'system', content: 'SYS' },
+      {
+        role: 'user',
+        content: [
+          { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,AAAA' } },
+          { type: 'text', text: 'hi' },
+        ],
+      },
+    ]);
+  });
+
+  it('keeps user content a plain string when there are no images', async () => {
+    const fetchImpl = recordingFetch(() => sseResponse(['data: [DONE]\n\n']));
+    const client = createOpenAiClient(profile, { fetchImpl });
+    await client.stream({ ...req, images: [] }, () => {});
+    const body = bodyOf(fetchImpl.calls[0]);
+    expect((body.messages as Array<{ role: string; content: unknown }>)[1]).toEqual({
+      role: 'user',
+      content: 'hi',
+    });
+  });
 });
 
 describe('createOpenAiClient.complete', () => {

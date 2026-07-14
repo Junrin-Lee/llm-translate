@@ -17,6 +17,14 @@ export interface ProviderProfile {
   };
 }
 
+/** One inline image sent with a chat request (already cropped & downscaled). */
+export interface ImageAttachment {
+  /** e.g. 'image/jpeg' | 'image/png' | 'image/webp' */
+  mediaType: string;
+  /** Raw base64 payload WITHOUT the data-URL prefix. */
+  dataBase64: string;
+}
+
 /** A protocol-agnostic chat request assembled from a rendered prompt. */
 export interface ChatRequest {
   system: string;
@@ -24,6 +32,8 @@ export interface ChatRequest {
   model: string;
   maxTokens?: number;
   temperature?: number;
+  /** Images the user message carries; both adapters render them as content parts. */
+  images?: ImageAttachment[];
 }
 
 export interface TokenUsage {
