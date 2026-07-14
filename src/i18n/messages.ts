@@ -123,6 +123,11 @@ const EN = {
   translateSelection: 'Translate selection',
   restoreOriginal: 'Restore original',
 
+  // Image Translation
+  imageCaptureHint: 'Drag to select the area to translate · Esc to cancel',
+  imagePrivacyNotice: 'The selected area is sent only to the API endpoint you configured.',
+  imagePrivacyGotIt: 'Got it',
+
   // Permission onboarding (Firefox treats site access as optional — ADR-0005)
   permBannerText: 'Site access is off — translation cannot run on any page.',
   permBannerAction: 'Grant access',
@@ -249,6 +254,11 @@ const ZH: Record<MessageKey, string> = {
   translatePage: '翻译此页',
   translateSelection: '翻译所选',
   restoreOriginal: '还原原文',
+
+  // 图片翻译
+  imageCaptureHint: '拖拽框选要翻译的区域 · Esc 取消',
+  imagePrivacyNotice: '框选区域仅会发送至你配置的 API 端点。',
+  imagePrivacyGotIt: '知道了',
 
   // Permission onboarding(Firefox 将站点访问视为可选权限 — ADR-0005)
   permBannerText: '站点访问权限未开启——翻译功能无法在任何页面工作。',

@@ -1,0 +1,65 @@
+.llmt-crop {
+  position: absolute;
+  inset: 0;
+  cursor: crosshair;
+  user-select: none;
+  overflow: hidden;
+  touch-action: none;
+}
+.llmt-crop__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.llmt-crop__mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+.llmt-crop__region {
+  position: absolute;
+  outline: 2px solid #4c8dff;
+  box-shadow: 0 0 0 100000px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+.llmt-crop__hint,
+.llmt-crop__notice {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(20, 20, 20, 0.85);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.4;
+  padding: 6px 12px;
+  border-radius: 6px;
+  pointer-events: none;
+  max-width: min(90%, 560px);
+}
+.llmt-crop__hint {
+  top: 16px;
+}
+.llmt-crop__notice {
+  bottom: 16px;
+  pointer-events: auto;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+/* Fixed full-viewport host used by the content script. */
+.llmt-capture-host {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483646;
+}
+/* Centered streaming panel host for the image result. */
+.llmt-image-panel {
+  position: fixed;
+  left: 50%;
+  top: 20%;
+  transform: translateX(-50%);
+  z-index: 2147483646;
+}
