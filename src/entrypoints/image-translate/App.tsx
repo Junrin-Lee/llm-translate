@@ -128,7 +128,11 @@ export function App() {
                 updateSettings({ general: { ...s.general, targetLang: code } }),
               );
             }}
-            onOpenSettings={() => void browser.runtime.openOptionsPage()}
+            onOpenSettings={() =>
+              void browser.tabs.create({
+                url: browser.runtime.getURL('/options.html') + '#routing',
+              })
+            }
             onClose={() => setStage({ kind: 'select', imageDataUrl: stage.imageDataUrl })}
           />
         </>

@@ -128,7 +128,8 @@ export default defineBackground(() => {
   browser.contextMenus.onClicked.addListener((info, tab) => {
     if (tab?.id == null) return;
     if (info.menuItemId === MENU_IMAGE) {
-      void launchImageCapture(tab.id);
+      // Launch failures are surfaced by the flows themselves (onboarding/workbench).
+      void launchImageCapture(tab.id).catch(() => {});
       return;
     }
     const message: ContentMessage | null =
@@ -148,7 +149,7 @@ export default defineBackground(() => {
     if (message?.type === 'page-status-changed' && sender.tab?.active) {
       void syncPageMenu(message.status);
     } else if (message?.type === 'open-options') {
-      void browser.runtime.openOptionsPage();
+      void browser.tabs.create({ url: browser.runtime.getURL('/options.html') + '#routing' });
     }
   });
 

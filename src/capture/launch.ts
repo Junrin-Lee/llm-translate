@@ -31,6 +31,12 @@ export async function launchImageCapture(tabId: number | undefined): Promise<voi
   }
 
   // Workbench fallback; with no capture it opens on the paste/upload empty state.
-  if (dataUrl != null) await stashPendingCapture(dataUrl);
+  if (dataUrl != null) {
+    try {
+      await stashPendingCapture(dataUrl);
+    } catch {
+      // Oversized capture (session-storage quota) — open the workbench empty; the user can paste instead.
+    }
+  }
   await browser.tabs.create({ url: browser.runtime.getURL('/image-translate.html'), active: true });
 }
