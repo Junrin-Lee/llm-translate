@@ -13,9 +13,16 @@ import {
 const ANTHROPIC_VERSION = '2023-06-01';
 const DEFAULT_MAX_TOKENS = 4096;
 
+type AnthropicUserContent =
+  | string
+  | Array<
+      | { type: 'image'; source: { type: 'base64'; media_type: string; data: string } }
+      | { type: 'text'; text: string }
+    >;
+
 interface AnthropicBody {
   model: string;
-  messages: Array<{ role: 'user'; content: string }>;
+  messages: Array<{ role: 'user'; content: AnthropicUserContent }>;
   max_tokens: number;
   stream: boolean;
   system?: string;
@@ -40,9 +47,23 @@ export function createAnthropicClient(
   };
 
   function buildBody(req: ChatRequest, stream: boolean): AnthropicBody {
+    const userContent: AnthropicUserContent =
+      req.images && req.images.length > 0
+        ? [
+            ...req.images.map((img) => ({
+              type: 'image' as const,
+              source: {
+                type: 'base64' as const,
+                media_type: img.mediaType,
+                data: img.dataBase64,
+              },
+            })),
+            { type: 'text' as const, text: req.user },
+          ]
+        : req.user;
     const body: AnthropicBody = {
       model: req.model,
-      messages: [{ role: 'user', content: req.user }],
+      messages: [{ role: 'user', content: userContent }],
       max_tokens: req.maxTokens ?? profile.params?.maxTokens ?? DEFAULT_MAX_TOKENS,
       stream,
     };
