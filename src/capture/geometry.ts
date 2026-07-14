@@ -40,13 +40,13 @@ export function toImageRect(
 ): Rect {
   const scaleX = imageWidth / containerWidth;
   const scaleY = imageHeight / containerHeight;
-  const x = Math.max(0, Math.round(regionCss.x * scaleX));
-  const y = Math.max(0, Math.round(regionCss.y * scaleY));
+  const x = Math.min(imageWidth, Math.max(0, Math.round(regionCss.x * scaleX)));
+  const y = Math.min(imageHeight, Math.max(0, Math.round(regionCss.y * scaleY)));
   return {
     x,
     y,
-    width: Math.min(imageWidth - x, Math.round(regionCss.width * scaleX)),
-    height: Math.min(imageHeight - y, Math.round(regionCss.height * scaleY)),
+    width: Math.max(0, Math.min(imageWidth - x, Math.round(regionCss.width * scaleX))),
+    height: Math.max(0, Math.min(imageHeight - y, Math.round(regionCss.height * scaleY))),
   };
 }
 

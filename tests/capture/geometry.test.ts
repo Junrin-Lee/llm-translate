@@ -25,8 +25,12 @@ describe('toImageRect', () => {
 
   it('clamps the region to the image bounds', () => {
     const rect = toImageRect({ x: 1200, y: 700, width: 200, height: 200 }, 2560, 1600, 1280, 800);
-    expect(rect.x + rect.width).toBeLessThanOrEqual(2560);
-    expect(rect.y + rect.height).toBeLessThanOrEqual(1600);
+    expect(rect).toEqual({ x: 2400, y: 1400, width: 160, height: 200 });
+  });
+
+  it('never returns negative dimensions for an out-of-container region', () => {
+    const rect = toImageRect({ x: 1281, y: 810, width: 100, height: 50 }, 2560, 1600, 1280, 800);
+    expect(rect).toEqual({ x: 2560, y: 1600, width: 0, height: 0 });
   });
 });
 
