@@ -1,5 +1,5 @@
 import { type PointerEvent as ReactPointerEvent, useEffect, useState } from 'react';
-import { MIN_REGION_CSS_PX, normalizeDrag, type Rect } from '@/capture/geometry';
+import { isRegionTooSmall, normalizeDrag, type Rect } from '@/capture/geometry';
 import { useT } from '@/i18n/useI18n';
 
 interface Props {
@@ -48,7 +48,7 @@ export function CropOverlay({ imageUrl, onConfirm, onCancel, showNotice, onNotic
     const box = e.currentTarget.getBoundingClientRect();
     const region = normalizeDrag(drag.start, drag.end);
     setDrag(null);
-    if (region.width < MIN_REGION_CSS_PX || region.height < MIN_REGION_CSS_PX) return;
+    if (isRegionTooSmall(region)) return;
     onConfirm(region, { width: box.width, height: box.height });
   };
 
@@ -74,7 +74,12 @@ export function CropOverlay({ imageUrl, onConfirm, onCancel, showNotice, onNotic
       {showNotice && (
         <div className="llmt-crop__notice">
           <span>{t('imagePrivacyNotice')}</span>
-          <button type="button" className="llmt-link" onClick={onNoticeDismiss}>
+          <button
+            type="button"
+            className="llmt-link"
+            onClick={onNoticeDismiss}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
             {t('imagePrivacyGotIt')}
           </button>
         </div>

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { fitWithin, normalizeDrag, parseDataUrl, toImageRect } from '@/capture/geometry';
+import {
+  fitWithin,
+  isRegionTooSmall,
+  normalizeDrag,
+  parseDataUrl,
+  toImageRect,
+} from '@/capture/geometry';
 
 describe('normalizeDrag', () => {
   it('produces a positive rect regardless of drag direction', () => {
@@ -54,5 +60,19 @@ describe('parseDataUrl', () => {
 
   it('returns null for a non-data URL', () => {
     expect(parseDataUrl('https://example.com/x.png')).toBeNull();
+  });
+});
+
+describe('isRegionTooSmall', () => {
+  it('rejects a drag whose width is under the minimum', () => {
+    expect(isRegionTooSmall({ x: 0, y: 0, width: 7, height: 100 })).toBe(true);
+  });
+
+  it('rejects a drag whose height is under the minimum', () => {
+    expect(isRegionTooSmall({ x: 0, y: 0, width: 100, height: 7 })).toBe(true);
+  });
+
+  it('accepts a drag meeting the minimum on both edges', () => {
+    expect(isRegionTooSmall({ x: 0, y: 0, width: 8, height: 8 })).toBe(false);
   });
 });

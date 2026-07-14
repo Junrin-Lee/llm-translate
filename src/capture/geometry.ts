@@ -26,6 +26,11 @@ export function normalizeDrag(
   };
 }
 
+/** True when either edge of a drag region is below MIN_REGION_CSS_PX. */
+export function isRegionTooSmall(region: Rect): boolean {
+  return region.width < MIN_REGION_CSS_PX || region.height < MIN_REGION_CSS_PX;
+}
+
 /**
  * Map a region expressed in container CSS pixels onto the captured image's
  * pixel grid. captureVisibleTab renders at devicePixelRatio, so the scale is
