@@ -12,6 +12,7 @@ const ENTRIES: Array<{ key: PromptKind; labelKey: MessageKey; hintKey: MessageKe
   { key: 'selectionDict', labelKey: 'promptDictLabel', hintKey: 'promptDictHint' },
   { key: 'selectionText', labelKey: 'promptTextLabel', hintKey: 'promptTextHint' },
   { key: 'pageBatch', labelKey: 'promptBatchLabel', hintKey: 'promptBatchHint' },
+  { key: 'imageText', labelKey: 'promptImageLabel', hintKey: 'promptImageHint' },
 ];
 
 export function PromptsPanel({ prompts, onChange }: Props) {
