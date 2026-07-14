@@ -91,7 +91,11 @@ export function App() {
           className="popup__btn"
           onClick={async () => {
             const tab = await getActiveTab();
-            await launchImageCapture(tab?.id);
+            try {
+              await launchImageCapture(tab?.id);
+            } catch {
+              // Even if launch fails, close the popup — the workbench/onboarding path owns the UX.
+            }
             window.close();
           }}
         >
