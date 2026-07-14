@@ -149,7 +149,7 @@ export default defineBackground(() => {
     if (message?.type === 'page-status-changed' && sender.tab?.active) {
       void syncPageMenu(message.status);
     } else if (message?.type === 'open-options') {
-      void browser.tabs.create({ url: browser.runtime.getURL('/options.html') + '#routing' });
+      void browser.tabs.create({ url: `${browser.runtime.getURL('/options.html')}#routing` });
     }
   });
 
