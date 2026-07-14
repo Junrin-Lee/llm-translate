@@ -260,3 +260,67 @@ describe('handleRequest caching', () => {
     expect(streamSpy).toHaveBeenCalledTimes(2);
   });
 });
+
+describe('handleRequest translate-image', () => {
+  const imageReq: BgRequest = {
+    kind: 'translate-image',
+    feature: 'image',
+    image: { mediaType: 'image/jpeg', dataBase64: 'AAAA' },
+    vars: { targetLang: 'zh-CN' },
+  };
+
+  it('resolves the image feature and streams with the image attached', async () => {
+    const seen: Array<Parameters<TranslationClient['stream']>[0]> = [];
+    const client = fakeClient({
+      stream: async (req, onDelta) => {
+        seen.push(req);
+        onDelta('你好');
+        return { text: '你好' };
+      },
+    });
+    const features: string[] = [];
+    const { emit, events } = collector();
+    await handleRequest(imageReq, emit, {
+      getSettings: async () => settingsWith([profile]),
+      resolveProfile: async (feature) => {
+        features.push(feature);
+        return profile;
+      },
+      createClient: () => client,
+    });
+
+    expect(features).toEqual(['image']);
+    expect(seen[0].images).toEqual([{ mediaType: 'image/jpeg', dataBase64: 'AAAA' }]);
+    expect(seen[0].system).toContain('zh-CN');
+    expect(events).toEqual([
+      { type: 'delta', text: '你好' },
+      { type: 'done', usage: undefined },
+    ]);
+  });
+
+  it('never touches the caches (images are uncached by design)', async () => {
+    const cache = { get: vi.fn(), set: vi.fn() } as unknown as TranslationCache;
+    const { emit } = collector();
+    await handleRequest(imageReq, emit, {
+      getSettings: async () => settingsWith([profile]),
+      resolveProfile: async () => profile,
+      createClient: () => fakeClient({ stream: async () => ({ text: 'x' }) }),
+      selectionCache: cache,
+      pageCache: cache,
+    });
+    expect(cache.get).not.toHaveBeenCalled();
+    expect(cache.set).not.toHaveBeenCalled();
+  });
+
+  it('emits not_found when no provider resolves', async () => {
+    const { emit, events } = collector();
+    await handleRequest(imageReq, emit, {
+      getSettings: async () => DEFAULT_SETTINGS,
+      resolveProfile: async () => null,
+      createClient: () => fakeClient({}),
+    });
+    expect(events).toEqual([
+      { type: 'error', code: 'not_found', message: 'No provider configured' },
+    ]);
+  });
+});

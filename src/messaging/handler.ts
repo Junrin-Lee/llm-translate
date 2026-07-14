@@ -107,6 +107,29 @@ export async function handleRequest(
         emit({ type: 'batch-result', text: result.text });
         return;
       }
+      case 'translate-image': {
+        const settings = await deps.getSettings();
+        const profile = await deps.resolveProfile('image');
+        if (!profile) {
+          emit({ type: 'error', code: 'not_found', message: 'No provider configured' });
+          return;
+        }
+        // No cache on purpose: captures rarely repeat (ADR-0006).
+        const rendered = renderPrompt('imageText', { ...req.vars, text: '' }, settings.prompts);
+        const client = deps.createClient(profile);
+        const result = await client.stream(
+          {
+            system: rendered.system,
+            user: rendered.user,
+            model: profile.model,
+            images: [req.image],
+          },
+          (text) => emit({ type: 'delta', text }),
+          signal,
+        );
+        emit({ type: 'done', usage: result.usage });
+        return;
+      }
       case 'list-models': {
         const settings = await deps.getSettings();
         const profile = settings.providers.find((p) => p.id === req.profileId);
