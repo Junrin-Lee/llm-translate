@@ -5,8 +5,8 @@
 > 浏览器划词翻译 + 全文翻译 + 图片翻译扩展,翻译能力完全由**你自己的** OpenAI 兼容或 Anthropic
 > 兼容 API Key 驱动(BYOK)。无账号、无自建后端、无遥测——所有配置只存在你本机。
 
-**当前状态:** 划词翻译、全文翻译与图片翻译均已完整可用,端到端测试、图标素材、隐私政策均已就位。
-目前通过浏览器开发者模式「加载已解压的扩展」运行;唯一的发布前收尾项是向 Chrome Web
+**当前状态:** 划词翻译、全文翻译与图片翻译均已完整可用——划词与全文翻译有端到端测试,图片翻译为
+单元测试覆盖;图标素材、隐私政策均已就位。目前通过浏览器开发者模式「加载已解压的扩展」运行;唯一的发布前收尾项是向 Chrome Web
 Store / Edge Add-ons / Firefox Add-ons(AMO)首次人工提交,见
 [路线图](docs/superpowers/plans/2026-07-06-llm-translate-roadmap.zh-CN.md)。
 
@@ -31,7 +31,7 @@ Store / Edge Add-ons / Firefox Add-ons(AMO)首次人工提交,见
 - **多 Provider + 路由** —— 保存多条服务接入配置(协议 / Base URL / Key / 模型 / 可选参数),设「全局默认」,并可为划词、全文、图片分别指定功能级覆盖
 - **双协议** —— OpenAI 兼容(`/chat/completions`)与 Anthropic 兼容(`/v1/messages`),自研轻量客户端,无需官方 SDK
 - **多触发方式** —— 划词图标 / 选中即翻 / 仅快捷键;全文支持扩展弹窗、快捷键、右键菜单、自动翻译站点清单
-- **可定制** —— 三套 Prompt 模板可覆盖并一键恢复默认;界面语言(自动 / English / 中文);站点禁用清单;设置 JSON 导入导出(默认**不含** API Key)
+- **可定制** —— 四套 Prompt 模板可覆盖并一键恢复默认;界面语言(自动 / English / 中文);站点禁用清单;设置 JSON 导入导出(默认**不含** API Key)
 - **本地缓存** —— 按内容做 key、按容量淘汰(LRU),刷新页面重译秒回;设置页可查看用量并一键清空
 
 </details>
@@ -74,7 +74,7 @@ Store / Edge Add-ons / Firefox Add-ons(AMO)首次人工提交,见
 
 | ![服务商设置:协议 / Base URL / Key / 模型](store-assets/screenshots/03-providers.png) | ![路由:为划词、全文、图片分别指定 Provider](store-assets/screenshots/04-routing.png) |
 | :--: | :--: |
-| ![翻译:目标语言、界面语言、划词触发方式、站点禁用清单](store-assets/screenshots/05-translation.png) | ![提示词:覆盖词典 / 划词 / 全文三个模板,可重置为默认](store-assets/screenshots/06-prompts.png) |
+| ![翻译:目标语言、界面语言、划词触发方式、站点禁用清单](store-assets/screenshots/05-translation.png) | ![提示词:覆盖词典 / 划词 / 全文 / 图片四个模板,可重置为默认](store-assets/screenshots/06-prompts.png) |
 | ![备份:导出为 JSON(默认剥离 Key)与导入](store-assets/screenshots/07-backup.png) | ![缓存:查看划词 / 全文缓存条目数并清空](store-assets/screenshots/08-cache.png) |
 
 ## 🔒 隐私与安全

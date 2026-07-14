@@ -6,8 +6,9 @@
 > OpenAI-compatible or Anthropic-compatible API key (BYOK). No account, no backend, no
 > telemetry — all settings stay on your machine.
 
-**Status:** Selection, full-page, and image translation are fully working, with E2E tests, icon
-assets, and the privacy policy all in place. It currently runs by loading the unpacked
+**Status:** Selection, full-page, and image translation are fully working — selection and
+full-page translation are covered by E2E tests, image translation by unit tests — with icon
+assets and the privacy policy in place. It currently runs by loading the unpacked
 build in the browser's developer mode; the only remaining release chore is the first
 manual submission to the Chrome Web Store / Edge Add-ons / Firefox Add-ons (AMO) — see the
 [roadmap](docs/superpowers/plans/2026-07-06-llm-translate-roadmap.md).
@@ -33,7 +34,7 @@ manual submission to the Chrome Web Store / Edge Add-ons / Firefox Add-ons (AMO)
 - **Multiple providers + routing** — save several provider profiles (protocol / Base URL / key / model / optional params), set a global default, and optionally override the provider per feature (selection, page, image)
 - **Dual protocol** — OpenAI-compatible (`/chat/completions`) and Anthropic-compatible (`/v1/messages`), hand-rolled lightweight client, no vendor SDK
 - **Flexible triggers** — selection icon / instant / shortcut-only; page translation via the popup, keyboard shortcut, right-click menu, or an auto-translate site list
-- **Customizable** — override the three prompt templates and reset to default; UI language (Automatic / English / 中文); per-site disable list; JSON settings import/export (keys stripped by default)
+- **Customizable** — override the four prompt templates and reset to default; UI language (Automatic / English / 中文); per-site disable list; JSON settings import/export (keys stripped by default)
 - **Local cache** — content-keyed, LRU-evicted; re-translating a page after refresh is instant. View usage and clear it from settings.
 
 </details>
@@ -76,7 +77,7 @@ selection trigger, and the per-site disable list.
 
 | ![Providers settings: protocol / Base URL / key / model](store-assets/screenshots/03-providers.png) | ![Routing: assign a provider per feature (selection, page, image)](store-assets/screenshots/04-routing.png) |
 | :--: | :--: |
-| ![Translation: target language, interface language, selection trigger, per-site disable list](store-assets/screenshots/05-translation.png) | ![Prompts: override the dictionary / selection / full-page templates, reset to default](store-assets/screenshots/06-prompts.png) |
+| ![Translation: target language, interface language, selection trigger, per-site disable list](store-assets/screenshots/05-translation.png) | ![Prompts: override the dictionary / selection / full-page / image templates, reset to default](store-assets/screenshots/06-prompts.png) |
 | ![Backup: export settings as JSON (keys stripped by default) and import](store-assets/screenshots/07-backup.png) | ![Cache: view selection / page entry counts and clear](store-assets/screenshots/08-cache.png) |
 
 ## 🔒 Privacy & security
