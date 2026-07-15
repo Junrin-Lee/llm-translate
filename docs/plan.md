@@ -23,7 +23,7 @@ A streamlined take on Trancy: just two features — **Selection Translation** an
 | 7 | Page trigger | Extension icon + hotkey + context menu + Auto-translate Site list |
 | 8 | Permission model | content script always present on `<all_urls>` (see ADR-0001) |
 | 9 | Data storage | Everything in `storage.local` only; config supports JSON import/export (see ADR-0002) |
-| 10 | Prompt | Three built-in default templates, overridable in the settings Prompts section (variable interpolation), one-click restore to defaults |
+| 10 | Prompt | Four built-in default templates (selection dictionary / selection text / page batch / screenshot), overridable in the settings Prompts section (variable interpolation), one-click restore to defaults |
 | 11 | Naming | Working name `llm-translate`; brand name centrally managed as a constant, finalized before release |
 | 12 | Engineering practices | vitest unit tests for core logic + Playwright E2E smoke + Biome + GitHub Actions |
 
@@ -67,7 +67,7 @@ src/
 ├── segmenter/             # ★ page DOM segmenter (pure logic, heavily unit-tested)
 ├── selection/             # selection classification: word/phrase vs sentence (pure logic, heavily unit-tested)
 ├── storage/               # storage.local schema, migration, import/export
-├── prompts/               # three default templates + variable interpolation
+├── prompts/               # four default templates (incl. screenshot) + variable interpolation
 ├── permissions.ts         # <all_urls> host-access helpers behind Permission Onboarding (Firefox — ADR-0005)
 └── ui/                    # panel, toolbar, popup/options shared components + PermissionBanner
 ```
@@ -125,10 +125,10 @@ interface TranslationClient {
 {
   version: 1,
   providers: ProviderProfile[],            // {id, name, protocol, baseUrl, apiKey, model, params?}
-  defaults: { global: id, selection?: id, page?: id },   // feature-level overrides
+  defaults: { global: id, selection?: id, page?: id, image?: id },   // feature-level overrides (image = Screenshot Translation)
   general: { targetLang, secondaryTargetLang?, selectionTrigger, pageMode, uiLang },  // secondaryTargetLang: reserved, not yet wired to any UI; uiLang: UI language auto/en/zh
   siteRules: { autoTranslate: string[], disableSelection: string[] },
-  prompts: { selectionDict?, selectionText?, pageBatch? },  // unset = use built-in default
+  prompts: { selectionDict?, selectionText?, pageBatch?, imageText? },  // unset = use built-in default
 }
 ```
 
@@ -138,7 +138,7 @@ Import/export: JSON files; export **excludes** the API Key by default — only w
 
 ## 8. Prompt Layer
 
-Three built-in templates: `selectionDict` (Dictionary Card, JSON output), `selectionText` (Selection Translation), `pageBatch` (Page Translation, numbered-marker protocol). Variables actually used: `{{text}}` and `{{targetLang}}`. The template layer also defines `{{sourceLang}}` / `{{siteTitle}}`, but callers don't populate them yet, so they currently render empty. Each can be overridden and restored to default in the settings Prompts section; the template version number is part of the cache key.
+Four built-in templates: `selectionDict` (Dictionary Card, JSON output), `selectionText` (Selection Translation), `pageBatch` (Page Translation, numbered-marker protocol), `imageText` (Screenshot Translation, added after this plan was aligned — see §13). Variables actually used: `{{text}}` and `{{targetLang}}`. The template layer also defines `{{sourceLang}}` / `{{siteTitle}}`, but callers don't populate them yet, so they currently render empty. Each can be overridden and restored to default in the settings Prompts section; the template version number is part of the cache key.
 
 ## 9. Permissions and Store Compliance
 

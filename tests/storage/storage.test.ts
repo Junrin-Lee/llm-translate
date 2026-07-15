@@ -84,6 +84,18 @@ describe('import/export', () => {
     expect(restored.defaults.global).toBe('a');
   });
 
+  it('keeps custom prompt overrides on import, including imageText', async () => {
+    const settings = {
+      ...DEFAULT_SETTINGS,
+      providers: [p('a')],
+      defaults: { global: 'a' },
+      prompts: { selectionText: 'custom sel', imageText: 'custom img' },
+    };
+    await importSettings(exportSettings(settings, true));
+    const restored = await getSettings();
+    expect(restored.prompts).toEqual({ selectionText: 'custom sel', imageText: 'custom img' });
+  });
+
   it('imports a provider whose name is empty (name is an optional label)', async () => {
     const settings = {
       ...DEFAULT_SETTINGS,

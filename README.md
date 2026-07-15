@@ -66,8 +66,8 @@ For screenshots, updating, and troubleshooting (e.g. "loaded it but there's no t
 - **Auto-translate a site**: open the popup and tick **Always translate** for the current site — its pages then translate automatically on load
 - Shortcuts can be rebound at `chrome://extensions/shortcuts`
 
-| ![Selection translation: streaming popup with a dictionary / translation card](store-assets/screenshots/01-selection.png) | ![Full-page translation: bilingual mode inserts the translation under each original block](store-assets/screenshots/02-page-bilingual.png) |
-| :--: | :--: |
+| ![Selection translation: streaming popup with a dictionary / translation card](store-assets/screenshots/01-selection.png) | ![Full-page translation: bilingual mode inserts the translation under each original block](store-assets/screenshots/02-page-bilingual.png) | ![Screenshot translation: drag-select a region over a frozen page capture; the translation streams in a card](store-assets/screenshots/09-screenshot.png) |
+| :--: | :--: | :--: |
 
 ## ⚙️ Settings
 
@@ -145,7 +145,7 @@ pnpm screenshots  # regenerate the store screenshots in store-assets/
 │   ├── i18n/                 in-app en/zh catalogs + t() / useT() (not browser.i18n)
 │   ├── llm/                  dual-protocol client: types, sse, base-url, openai, anthropic, http, client
 │   ├── storage/              local-only settings, resolve/fallback, import/export: schema, index, import-export
-│   ├── prompts/              three default templates + interpolation: templates, index
+│   ├── prompts/              four default templates (+ screenshot) + interpolation: templates, index
 │   ├── segmenter/            full-page DOM segmenter (block-level units)
 │   ├── selection/            selection classification + dictionary parsing: classify, dict-result
 │   ├── translator/           orchestrate / batch / cache / DOM inject: orchestrator, batch, cache, inject
