@@ -78,7 +78,13 @@ export function ImageResultPanel({
           </>
         ) : (
           <p className="llmt-text">
-            {output || <span className="llmt-muted">{t('panelTranslating')}</span>}
+            {output || (
+              // "Translating…" only while genuinely streaming; a done-but-empty
+              // stream is a failure state, not progress (docs/issues/0001).
+              <span className="llmt-muted">
+                {t(status === 'streaming' ? 'panelTranslating' : 'panelEmptyResult')}
+              </span>
+            )}
           </p>
         )}
       </div>
