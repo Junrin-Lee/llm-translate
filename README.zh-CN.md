@@ -65,6 +65,25 @@ Store / Edge Add-ons / Firefox Add-ons(AMO)首次人工提交,见
 | ![划词翻译:流式浮窗,词典卡 / 翻译卡](store-assets/screenshots/01-selection.png) | ![全文翻译:双语模式,将译文插入到每段原文下方](store-assets/screenshots/02-page-bilingual.png) | ![截屏翻译:在冻结的页面截图上拖拽框选,译文以卡片形式流式呈现](store-assets/screenshots/09-screenshot.png) |
 | :--: | :--: | :--: |
 
+<details>
+<summary>🎬 <b>观看演示</b>(点击展开)—— 划词 · 全文 · 截屏</summary>
+
+<br>
+
+**划词翻译**
+
+<video src="https://github.com/Junrin-Lee/llm-translate/raw/master/assets/videos/%E5%88%92%E8%AF%8D%E7%BF%BB%E8%AF%91.mp4" controls muted width="100%"></video>
+
+**全文翻译**
+
+<video src="https://github.com/Junrin-Lee/llm-translate/raw/master/assets/videos/%E5%85%A8%E6%96%87%E7%BF%BB%E8%AF%91.mp4" controls muted width="100%"></video>
+
+**截屏翻译**
+
+<video src="https://github.com/Junrin-Lee/llm-translate/raw/master/assets/videos/%E6%88%AA%E5%9B%BE%E7%BF%BB%E8%AF%91.mp4" controls muted width="100%"></video>
+
+</details>
+
 ## ⚙️ 设置项
 
 设置页采用侧边导航,分为:**服务商 (Providers)**、**路由 (Routing)**、**翻译 (Translation)**、

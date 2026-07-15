@@ -68,6 +68,25 @@ For screenshots, updating, and troubleshooting (e.g. "loaded it but there's no t
 | ![Selection translation: streaming popup with a dictionary / translation card](store-assets/screenshots/01-selection.png) | ![Full-page translation: bilingual mode inserts the translation under each original block](store-assets/screenshots/02-page-bilingual.png) | ![Screenshot translation: drag-select a region over a frozen page capture; the translation streams in a card](store-assets/screenshots/09-screenshot.png) |
 | :--: | :--: | :--: |
 
+<details>
+<summary>🎬 <b>Watch the demos</b> (click to expand) — selection · full-page · screenshot</summary>
+
+<br>
+
+**Selection translation**
+
+<video src="https://github.com/Junrin-Lee/llm-translate/raw/master/assets/videos/%E5%88%92%E8%AF%8D%E7%BF%BB%E8%AF%91.mp4" controls muted width="100%"></video>
+
+**Full-page translation**
+
+<video src="https://github.com/Junrin-Lee/llm-translate/raw/master/assets/videos/%E5%85%A8%E6%96%87%E7%BF%BB%E8%AF%91.mp4" controls muted width="100%"></video>
+
+**Screenshot translation**
+
+<video src="https://github.com/Junrin-Lee/llm-translate/raw/master/assets/videos/%E6%88%AA%E5%9B%BE%E7%BF%BB%E8%AF%91.mp4" controls muted width="100%"></video>
+
+</details>
+
 ## ⚙️ Settings
 
 The settings page uses a sidebar: **Providers**, **Routing**, **Translation**, **Prompts**,
