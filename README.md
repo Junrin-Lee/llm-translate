@@ -6,9 +6,8 @@
 > OpenAI-compatible or Anthropic-compatible API key (BYOK). No account, no backend, no
 > telemetry — all settings stay on your machine.
 
-**Status:** Selection, full-page, and screenshot translation are fully working — selection and
-full-page translation are covered by E2E tests, screenshot translation by unit tests — with icon
-assets and the privacy policy in place. It currently runs by loading the unpacked
+**Status:** Selection, full-page, and screenshot translation are fully working and covered by
+E2E tests, with icon assets and the privacy policy in place. It currently runs by loading the unpacked
 build in the browser's developer mode; the only remaining release chore is the first
 manual submission to the Chrome Web Store / Edge Add-ons / Firefox Add-ons (AMO) — see the
 [roadmap](docs/superpowers/plans/2026-07-06-llm-translate-roadmap.md).
@@ -24,7 +23,7 @@ manual submission to the Chrome Web Store / Edge Add-ons / Firefox Add-ons (AMO)
   - **Translation-only**: replaces the original in place, restorable in one click
   - viewport-first lazy loading, follows SPA route changes and dynamic content, retry failed blocks (per-block or all at once), draggable in-page toolbar (progress / cancel / restore / mode toggle)
 - **Screenshot translation** — translate the text inside an image via a streaming **translation card**:
-  - from the popup or the right-click menu, drag-select a region over a frozen capture of the page; the translation streams in place
+  - from the popup or the right-click menu, drag-select a region over a frozen capture of the page; the translation streams in place (drag the card aside if it covers the original)
   - on restricted pages (the built-in PDF viewer, browser-internal pages) it falls back automatically to an extension page, which also accepts pasted / dropped / chosen images
   - requires the routed model to accept image input (errors link to Routing settings); a one-time privacy notice appears on first use
 

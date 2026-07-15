@@ -1,8 +1,15 @@
-import { useEffect, useState } from 'react';
+import {
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useT } from '@/i18n/useI18n';
 import { LANGUAGES } from '@/languages';
 import type { ImageAttachment } from '@/llm/types';
 import { openTranslateStream } from '@/messaging/port-client';
+import { useDrag } from '@/ui/useDrag';
 
 interface Props {
   image: ImageAttachment;
@@ -27,6 +34,8 @@ export function ImageResultPanel({
   const [output, setOutput] = useState('');
   const [status, setStatus] = useState<Status>('streaming');
   const [error, setError] = useState('');
+  const panelRef = useRef<HTMLDivElement>(null);
+  const { pos, startDrag } = useDrag(panelRef);
 
   // Retry needs no bypassCache: translate-image is never cached (ADR-0006), so a new stream is always a real request.
   // biome-ignore lint/correctness/useExhaustiveDependencies: attempt triggers retries
@@ -56,10 +65,29 @@ export function ImageResultPanel({
     return () => document.removeEventListener('keydown', onKey, true);
   }, [onClose]);
 
+  // The panel centers itself via left: 50% + translateX(-50%); once dragged,
+  // the concrete coordinates must also clear that transform or the panel
+  // would jump half its own width.
+  const style: CSSProperties | undefined = pos
+    ? { left: pos.x, top: pos.y, transform: 'none' }
+    : undefined;
+
+  // Drag the panel by its header; the close button keeps its own clicks.
+  const onHeadPointerDown = (e: ReactPointerEvent) => {
+    if ((e.target as HTMLElement).closest('button')) return;
+    startDrag(e);
+  };
+
   return (
-    <div className="llmt-panel llmt-image-panel" role="dialog" aria-label={t('imageTranslate')}>
-      <div className="llmt-panel__head">
-        <span className="llmt-panel__grip" aria-hidden="true">
+    <div
+      ref={panelRef}
+      className="llmt-panel llmt-image-panel"
+      style={style}
+      role="dialog"
+      aria-label={t('imageTranslate')}
+    >
+      <div className="llmt-panel__head" onPointerDown={onHeadPointerDown}>
+        <span className="llmt-panel__grip" title={t('toolbarDrag')} aria-hidden="true">
           {t('imageTranslate')}
         </span>
         <button type="button" className="llmt-x" onClick={onClose} aria-label={t('panelClose')}>
