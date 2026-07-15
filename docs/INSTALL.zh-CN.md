@@ -142,22 +142,20 @@ API 凭据(**JWT issuer** 与 **secret**)。
    WEB_EXT_API_KEY=<你的 JWT issuer>
    WEB_EXT_API_SECRET=<你的 JWT secret>
    ```
-2. 构建并签名(需 Node.js 20 + pnpm 9):
+2. 一条命令完成构建并签名(需 Node.js 20 + pnpm 9):
    ```sh
-   pnpm zip:firefox
-   set -a && source .env && set +a
-   npx web-ext sign --channel=unlisted \
-     --source-dir=.output/firefox-mv3 \
-     --artifacts-dir=web-ext-artifacts
+   pnpm sign:firefox
    ```
-   Mozilla 会自动审核 unlisted 提交(通常一两分钟),签名好的包落在
+   它会构建 `.output/firefox-mv3/`,从 `.env` 读取凭据,并调用 **pin 死的
+   `web-ext@7.11.0`**(新版 web-ext 会因我们的压缩产物强制转人工审核)。Mozilla 会
+   自动审核 unlisted 提交(通常一两分钟),签名好的包落在
    `web-ext-artifacts/<id>-<version>.xpi`。
 3. 安装:`about:addons` → 齿轮图标 ⚙️ → **从文件安装附加组件…** → 选中该 `.xpi`
    (或把文件拖进 Firefox 窗口)→ **添加**。这样安装**重启不消失**。
 
 > **每次更新都要 bump 版本号。** AMO 对每个 `(扩展 ID, 版本)` 只接受一次。要发布代码
 > 改动,先在 `wxt.config.ts` / `package.json` 里提升 `version`,重新执行
-> `pnpm zip:firefox` 与 `web-ext sign`,再安装新的 `.xpi`。
+> `pnpm sign:firefox`,再安装新的 `.xpi`。
 
 > **可能被要求提交源码。** 由于产物是压缩过的,AMO 偶尔会要一份可读源码——遇到时给
 > 签名命令加上 `--upload-source-code=<sources.zip>`。

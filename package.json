@@ -19,6 +19,7 @@
     "build:firefox": "wxt build -b firefox --mv3",
     "zip:firefox": "wxt zip -b firefox --mv3",
     "verify:firefox": "pnpm build:firefox && node scripts/verify-firefox-manifest.mjs",
+    "sign:firefox": "pnpm build:firefox && node scripts/sign-firefox.mjs",
     "e2e:firefox": "pnpm zip:firefox && vitest run --config vitest.e2e-firefox.config.ts",
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",

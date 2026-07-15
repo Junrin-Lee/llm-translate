@@ -159,24 +159,22 @@ credentials (a **JWT issuer** and **secret**) from
    WEB_EXT_API_KEY=<your JWT issuer>
    WEB_EXT_API_SECRET=<your JWT secret>
    ```
-2. Build and sign (needs Node.js 20 + pnpm 9):
+2. Build and sign in one step (needs Node.js 20 + pnpm 9):
    ```sh
-   pnpm zip:firefox
-   set -a && source .env && set +a
-   npx web-ext sign --channel=unlisted \
-     --source-dir=.output/firefox-mv3 \
-     --artifacts-dir=web-ext-artifacts
+   pnpm sign:firefox
    ```
-   Mozilla auto-reviews unlisted submissions (usually a minute or two); the signed
-   package lands at `web-ext-artifacts/<id>-<version>.xpi`.
+   This builds `.output/firefox-mv3/`, loads the credentials from `.env`, and runs
+   the **pinned `web-ext@7.11.0`** (newer web-ext rejects our minified production
+   bundle and forces manual review). Mozilla auto-reviews unlisted submissions
+   (usually a minute or two); the signed package lands at
+   `web-ext-artifacts/<id>-<version>.xpi`.
 3. Install it: `about:addons` → gear icon ⚙️ → **Install Add-on From File…** → pick
    the `.xpi` (or drag the file into a Firefox window) → **Add**. This install
    **survives restarts.**
 
 > **Bump the version for every update.** AMO accepts each `(extension id, version)`
 > pair only once. To ship a code change, bump `version` in `wxt.config.ts` /
-> `package.json`, re-run `pnpm zip:firefox` and the `web-ext sign` command, then
-> reinstall the new `.xpi`.
+> `package.json`, re-run `pnpm sign:firefox`, then reinstall the new `.xpi`.
 
 > **Source code may be requested.** Because the bundle is minified, AMO occasionally
 > asks for readable sources — pass `--upload-source-code=<sources.zip>` to the sign
