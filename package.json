@@ -1,6 +1,6 @@
 {
   "name": "llm-translate",
-  "description": "Selection, full-page & image translation powered by your own OpenAI-compatible or Anthropic-compatible LLM API.",
+  "description": "Selection, full-page & screenshot translation powered by your own OpenAI-compatible or Anthropic-compatible LLM API.",
   "private": true,
   "type": "module",
   "version": "0.2.0",

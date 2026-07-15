@@ -39,7 +39,7 @@ export async function resolveProfile(feature: TranslateFeature): Promise<Provide
   return resolveProfileFrom(await getSettings(), feature);
 }
 
-// One-time privacy notice for Image Translation (ADR-0006). Not part of
+// One-time privacy notice for Screenshot Translation (ADR-0006). Not part of
 // AppSettings: it's a UI acknowledgement, not a user preference.
 const imageNoticeItem = storage.defineItem<boolean>('local:imageNoticeSeen', {
   fallback: false,

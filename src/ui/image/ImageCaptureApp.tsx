@@ -47,7 +47,7 @@ export function ImageCaptureApp() {
               // Crop can only fail on undecodable data / missing 2d context —
               // close the overlay like a cancel rather than leaving it stuck.
               .catch((error) => {
-                console.warn('Image Translation: crop failed', error);
+                console.warn('Screenshot Translation: crop failed', error);
                 setStage({ kind: 'idle' });
               });
           }}

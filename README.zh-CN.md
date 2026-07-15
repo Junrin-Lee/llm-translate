@@ -2,10 +2,10 @@
 
 [English](./README.md) · **简体中文**
 
-> 浏览器划词翻译 + 全文翻译 + 图片翻译扩展,翻译能力完全由**你自己的** OpenAI 兼容或 Anthropic
+> 浏览器划词翻译 + 全文翻译 + 截屏翻译扩展,翻译能力完全由**你自己的** OpenAI 兼容或 Anthropic
 > 兼容 API Key 驱动(BYOK)。无账号、无自建后端、无遥测——所有配置只存在你本机。
 
-**当前状态:** 划词翻译、全文翻译与图片翻译均已完整可用——划词与全文翻译有端到端测试,图片翻译为
+**当前状态:** 划词翻译、全文翻译与截屏翻译均已完整可用——划词与全文翻译有端到端测试,截屏翻译为
 单元测试覆盖;图标素材、隐私政策均已就位。目前通过浏览器开发者模式「加载已解压的扩展」运行;唯一的发布前收尾项是向 Chrome Web
 Store / Edge Add-ons / Firefox Add-ons(AMO)首次人工提交,见
 [路线图](docs/superpowers/plans/2026-07-06-llm-translate-roadmap.zh-CN.md)。
@@ -20,7 +20,7 @@ Store / Edge Add-ons / Firefox Add-ons(AMO)首次人工提交,见
   - **双语对照**(默认):译文插在原文块下方,原文保留
   - **仅译文**:原地替换原文,可一键还原
   - 视口优先懒加载(先翻首屏)、跟随 SPA 路由与动态内容、失败块可重试(单块或一键全部)、可拖动的页内浮动工具条(进度/取消/还原/模式切换)
-- **图片翻译** —— 通过流式**译文卡片**翻译图片中的文字:
+- **截屏翻译** —— 通过流式**译文卡片**翻译图片中的文字:
   - 从 popup 或右键菜单发起,在页面的冻结截图上拖拽框选区域,译文原地流式输出
   - 受限页面(内置 PDF 阅读器、浏览器内部页面)自动降级为一个扩展页,该页同时接受粘贴/拖入/选择的图片
   - 要求路由到的模型支持图片输入(报错会引导至路由设置);首次使用会出现一次性隐私提示
@@ -28,7 +28,7 @@ Store / Edge Add-ons / Firefox Add-ons(AMO)首次人工提交,见
 <details>
 <summary><b>更多进阶能力</b> —— 多 Provider、双协议、触发方式、自定义、本地缓存(点击展开)</summary>
 
-- **多 Provider + 路由** —— 保存多条服务接入配置(协议 / Base URL / Key / 模型 / 可选参数),设「全局默认」,并可为划词、全文、图片分别指定功能级覆盖
+- **多 Provider + 路由** —— 保存多条服务接入配置(协议 / Base URL / Key / 模型 / 可选参数),设「全局默认」,并可为划词、全文、截屏分别指定功能级覆盖
 - **双协议** —— OpenAI 兼容(`/chat/completions`)与 Anthropic 兼容(`/v1/messages`),自研轻量客户端,无需官方 SDK
 - **多触发方式** —— 划词图标 / 选中即翻 / 仅快捷键;全文支持扩展弹窗、快捷键、右键菜单、自动翻译站点清单
 - **可定制** —— 四套 Prompt 模板可覆盖并一键恢复默认;界面语言(自动 / English / 中文);站点禁用清单;设置 JSON 导入导出(默认**不含** API Key)
@@ -72,9 +72,9 @@ Store / Edge Add-ons / Firefox Add-ons(AMO)首次人工提交,见
 **提示词 (Prompts)**、**备份 (Backup)**、**缓存 (Cache)**。翻译区可切换目标语言、界面语言、
 划词触发方式与站点禁用清单。
 
-| ![服务商设置:协议 / Base URL / Key / 模型](store-assets/screenshots/03-providers.png) | ![路由:为划词、全文、图片分别指定 Provider](store-assets/screenshots/04-routing.png) |
+| ![服务商设置:协议 / Base URL / Key / 模型](store-assets/screenshots/03-providers.png) | ![路由:为划词、全文、截屏分别指定 Provider](store-assets/screenshots/04-routing.png) |
 | :--: | :--: |
-| ![翻译:目标语言、界面语言、划词触发方式、站点禁用清单](store-assets/screenshots/05-translation.png) | ![提示词:覆盖词典 / 划词 / 全文 / 图片四个模板,可重置为默认](store-assets/screenshots/06-prompts.png) |
+| ![翻译:目标语言、界面语言、划词触发方式、站点禁用清单](store-assets/screenshots/05-translation.png) | ![提示词:覆盖词典 / 划词 / 全文 / 截屏四个模板,可重置为默认](store-assets/screenshots/06-prompts.png) |
 | ![备份:导出为 JSON(默认剥离 Key)与导入](store-assets/screenshots/07-backup.png) | ![缓存:查看划词 / 全文缓存条目数并清空](store-assets/screenshots/08-cache.png) |
 
 ## 🔒 隐私与安全
