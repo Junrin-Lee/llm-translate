@@ -104,10 +104,15 @@ Open **any website in a new tab** (or refresh a page you already had open), then
   press `Ctrl/⌘ + Shift + S`).
 - **Whole page** — click the toolbar icon → **Translate this page** (or press
   `Ctrl/⌘ + Shift + P`, or right-click → Translate this page).
+- **Screenshot** — click the toolbar icon → **Screenshot Translation** (or
+  right-click → Screenshot Translation), then drag-select a region to translate
+  the text inside it. Needs a routed model that accepts image input.
 
 ![Selection translation popup](../store-assets/screenshots/01-selection.png)
 
 ![Full-page bilingual translation](../store-assets/screenshots/02-page-bilingual.png)
+
+![Screenshot translation card](../store-assets/screenshots/09-screenshot.png)
 
 For the full feature list (dictionary cards, bilingual / translation-only modes,
 auto-translate sites, custom prompts, and more), see the [README](../README.md).

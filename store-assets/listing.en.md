@@ -6,7 +6,7 @@
 
 **Summary** (≤132 chars):
 
-> Selection & full-page translation with your own OpenAI- or Anthropic-compatible API key. No account, no backend, no telemetry.
+> Selection, full-page & screenshot translation with your own OpenAI/Anthropic-compatible key. No account, no backend, no telemetry.
 
 ## Detailed description
 
@@ -26,6 +26,13 @@ the original kept) or translation-only mode (restorable in one click). It loads
 lazily as you scroll, follows single-page-app navigation, and shows an in-page
 toolbar for progress, cancel, and restore.
 
+**Screenshot translation**
+Drag-select a region over a frozen capture of the page to translate the text
+inside it — the result streams in a card you can drag aside. On restricted pages
+(the built-in PDF viewer, browser-internal pages) it falls back to an extension
+page that also accepts pasted, dropped, or chosen images. Requires a routed model
+that accepts image input.
+
 **Your keys, your endpoint, your privacy**
 - Bring your own OpenAI-compatible or Anthropic-compatible API key.
 - Everything is stored locally on your device — no account, no sign-in.
@@ -44,12 +51,13 @@ toolbar for progress, cancel, and restore.
 
 1. Selection translation popup on an article.
 2. Full-page bilingual translation with the in-page toolbar.
-3. Settings — providers, with connection test.
-4. Settings — routing, prompts, and cache.
+3. Screenshot translation: drag-select a region over a frozen page capture; the translation streams in a card.
+4. Settings — providers, with connection test.
+5. Settings — routing, prompts, and cache.
 
 ## AMO (Firefox Add-ons)
 
-> Selection & full-page translation with your own OpenAI- or Anthropic-compatible API key. No account, no backend, no telemetry.
+> Selection, full-page & screenshot translation with your own OpenAI/Anthropic-compatible key. No account, no backend, no telemetry.
 
 The same extension, now on Firefox (Manifest V3, Firefox 128+).
 

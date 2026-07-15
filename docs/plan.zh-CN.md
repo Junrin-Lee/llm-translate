@@ -6,7 +6,7 @@
 
 ## 1. 产品定义
 
-对标 Trancy 的精简版:只做**划词翻译**与**全文翻译**两个功能,翻译能力完全由用户自带的 LLM API 提供(BYOK,无自建后端、无账号体系)。
+对标 Trancy 的精简版:对齐时定为**划词翻译**与**全文翻译**两个功能,翻译能力完全由用户自带的 LLM API 提供(BYOK,无自建后端、无账号体系)。**截屏翻译**为本次对齐之后追加,见 §13。
 
 **明确不做**:账号绑定、视频/字幕翻译、生词本、PDF 翻译、划词以外的 AI 动作(润色/总结等)。
 
@@ -16,7 +16,7 @@
 |---|---|---|
 | 1 | 发布目标 | 上架 Chrome Web Store + Edge Add-ons(同一份 MV3 产物)+ Firefox Add-ons/AMO(独立 MV3 产物,ADR-0005) |
 | 2 | 技术栈 | WXT + React + TypeScript,pnpm |
-| 3 | Provider 模型 | 多 Provider 配置;全局默认 + 划词/全文各自可功能级覆盖 |
+| 3 | Provider 模型 | 多 Provider 配置;全局默认 + 划词/全文各自可功能级覆盖(截屏为后续追加,见 §13) |
 | 4 | 划词触发 | 默认「选中出图标、点击翻译」;支持快捷键直翻;设置可切换为选中即翻/仅快捷键 |
 | 5 | 划词内容 | 单词/短语 → 词典卡片(音标/词性/多义/例句);句子/段落 → 译文卡片;均流式输出 |
 | 6 | 全文模式 | 双语对照为默认,可切「仅译文」(可一键还原) |
@@ -147,7 +147,8 @@ interface TranslationClient {
 | `content_scripts` matches `<all_urls>` | 划词需在任意页面监听选区;全文需改写任意页面 DOM |
 | `host_permissions: <all_urls>` | 用户自定义任意 LLM API Base URL,background 需向其发请求 |
 | `permissions: storage` | 本机保存配置与翻译缓存 |
-| `permissions: contextMenus` | 右键「翻译此页/翻译所选」 |
+| `permissions: contextMenus` | 右键「翻译此页/翻译所选/截屏翻译」 |
+| `permissions: activeTab` | 截屏翻译的 `captureVisibleTab` —— 在 Firefox 上即使可选的 `<all_urls>` host 权限被撤销仍可工作(ADR-0006) |
 | `commands` | 快捷键 |
 | `browser_specific_settings.gecko`(仅 Firefox) | 固定 AMO 扩展 id + `strict_min_version: 128.0`(上架后不可变 —— ADR-0005) |
 

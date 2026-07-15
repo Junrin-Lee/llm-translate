@@ -16,3 +16,6 @@ goes directly from the extension to the LLM endpoint the user configures
 (OpenAI- or Anthropic-compatible). `<all_urls>` host permission: the content
 script provides selection/page translation on any site, and the background
 fetches the user-configured endpoint (see docs/adr/0001 in the sources zip).
+`activeTab` permission: Screenshot Translation captures the current tab via
+`captureVisibleTab` only when the user explicitly triggers it, which also keeps
+that feature working after the optional `<all_urls>` access is revoked (ADR-0006).

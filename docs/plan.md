@@ -6,7 +6,7 @@
 
 ## 1. Product Definition
 
-A streamlined take on Trancy: just two features — **Selection Translation** and **Page Translation** — with translation powered entirely by the user's own LLM API (BYOK; no self-hosted backend, no account system).
+A streamlined take on Trancy: at alignment, two features — **Selection Translation** and **Page Translation** — with translation powered entirely by the user's own LLM API (BYOK; no self-hosted backend, no account system). **Screenshot Translation** shipped after this alignment; see §13.
 
 **Explicitly out of scope**: account binding, video/subtitle translation, vocabulary lists, PDF translation, and AI actions beyond selection (polishing/summarizing, etc.).
 
@@ -16,7 +16,7 @@ A streamlined take on Trancy: just two features — **Selection Translation** an
 |---|---|---|
 | 1 | Release target | Publish to Chrome Web Store + Edge Add-ons (shared MV3 build) + Firefox Add-ons/AMO (own MV3 build, ADR-0005) |
 | 2 | Tech stack | WXT + React + TypeScript, pnpm |
-| 3 | Provider model | Multiple Provider Profiles; a Global Default Provider plus a per-feature Feature Override for Selection / Page |
+| 3 | Provider model | Multiple Provider Profiles; a Global Default Provider plus a per-feature Feature Override for Selection / Page (later extended to Screenshot — §13) |
 | 4 | Selection trigger | Default "show icon on selection, click to translate"; supports a hotkey for direct translation; settings can switch to translate-on-select / hotkey-only |
 | 5 | Selection content | Word/phrase → Dictionary Card (phonetics/part of speech/multiple senses/example sentences); sentence/paragraph → Translation Card; both stream their output |
 | 6 | Page mode | Bilingual Mode is the default, switchable to Translation-only Mode (one-click restore) |
@@ -147,7 +147,8 @@ Four built-in templates: `selectionDict` (Dictionary Card, JSON output), `select
 | `content_scripts` matches `<all_urls>` | Selection needs to listen for selections on any page; Page needs to rewrite the DOM of any page |
 | `host_permissions: <all_urls>` | Users set any custom LLM API Base URL, and the background needs to send requests to it |
 | `permissions: storage` | Store config and translation cache on the local device |
-| `permissions: contextMenus` | Right-click "Translate this page / Translate selection" |
+| `permissions: contextMenus` | Right-click "Translate this page / Translate selection / Screenshot Translation" |
+| `permissions: activeTab` | `captureVisibleTab` for Screenshot Translation — keeps working on Firefox after the optional `<all_urls>` host access is revoked (ADR-0006) |
 | `commands` | Hotkeys |
 | `browser_specific_settings.gecko` (Firefox only) | Pinned AMO extension id + `strict_min_version: 128.0` (immutable once listed — ADR-0005) |
 

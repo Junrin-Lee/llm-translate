@@ -5,9 +5,9 @@ relevant fields into the store submission forms.
 
 ## Single purpose
 
-LLM Translate does one thing: **translate text for the user** — either a
-selection or the whole page — using a translation API endpoint the user
-configures with their own key (BYOK). It has no other feature.
+LLM Translate does one thing: **translate text for the user** — a selection,
+the whole page, or the text inside a screenshot region — using a translation API
+endpoint the user configures with their own key (BYOK). It has no other feature.
 
 ## Permissions
 
@@ -17,8 +17,17 @@ model, API key), language/display preferences, per-site rules, custom prompts,
 and a translation cache. Nothing is stored remotely.
 
 ### `contextMenus`
-Add two right-click entries — "Translate this page" and "Translate selection" —
-as an alternative to the toolbar button and keyboard shortcuts.
+Add three right-click entries — "Translate this page", "Translate selection", and
+"Screenshot Translation" — as an alternative to the toolbar button and keyboard
+shortcuts.
+
+### `activeTab`
+Screenshot Translation freezes a snapshot of the current tab with
+`chrome.tabs.captureVisibleTab` so the user can drag-select a region to translate.
+`activeTab` grants that capture only for the tab the user acts on, and is what
+keeps the feature working on Firefox after the optional `<all_urls>` host access
+is revoked. No capture happens unless the user explicitly starts a screenshot
+translation.
 
 ### `commands` (manifest key, not a permission)
 Keyboard shortcuts for "translate selection" and "translate page". The user can
@@ -55,9 +64,11 @@ page using `textContent` only (never parsed as HTML or executed).
 - **Personally identifiable information:** not collected.
 - **Health, financial, authentication, personal communications, location, web
   history, user activity:** not collected.
-- **Website content:** the text the user chooses to translate is sent **only** to
-  the API endpoint the user configured, solely to perform the translation the
-  user requested. It is not sent to the developer and not to any other party.
+- **Website content:** the text the user chooses to translate — or, for
+  Screenshot Translation, the captured image region the user drag-selects — is
+  sent **only** to the API endpoint the user configured, solely to perform the
+  translation the user requested. It is not sent to the developer and not to any
+  other party.
 - **Selling data:** we do not sell or transfer user data.
 - **Use limitation:** data is used only to perform the user-requested
   translation; there is no analytics, tracking, or advertising.

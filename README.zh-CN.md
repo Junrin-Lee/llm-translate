@@ -131,6 +131,9 @@ pnpm zip          # 打包上传商店用 → .output/llm-translate-<version>-ch
 pnpm zip:edge     # → .output/llm-translate-<version>-edge.zip
 pnpm zip:firefox  # → .output/llm-translate-<version>-firefox.zip
 
+pnpm verify:firefox  # 构建 Firefox MV3 并校验生成的 manifest
+pnpm sign:firefox    # 构建并自签一个 unlisted .xpi(需要 .env —— 见 INSTALL 方式 C)
+
 pnpm test         # vitest 单测
 pnpm e2e          # Playwright 端到端(加载构建后的扩展)
 pnpm e2e:firefox  # 针对真实 Firefox 的 Selenium 冒烟套件

@@ -134,6 +134,9 @@ pnpm zip          # store upload package → .output/llm-translate-<version>-chr
 pnpm zip:edge     # → .output/llm-translate-<version>-edge.zip
 pnpm zip:firefox  # → .output/llm-translate-<version>-firefox.zip
 
+pnpm verify:firefox  # build Firefox MV3 & assert the generated manifest
+pnpm sign:firefox    # build & self-sign an unlisted .xpi (needs .env — see INSTALL Option C)
+
 pnpm test         # vitest unit suite
 pnpm e2e          # Playwright end-to-end (loads the built extension)
 pnpm e2e:firefox  # Selenium smoke suite against a real Firefox
