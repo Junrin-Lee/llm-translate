@@ -25,6 +25,9 @@ const ZH = {
     '如今它在许多国家种植,并衍生出数不清的品种。',
 };
 const tr = (s) => ZH[s.trim()] ?? s.trim();
+// What the "vision model" reads out of the cropped article screenshot.
+const IMAGE_ZH =
+  '# 茶的历史\n\n茶是世界上消费最广泛的饮料之一。相传,它在数千年前被偶然发现。如今它在许多国家种植,并衍生出数不清的品种。';
 
 const ARTICLE = `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>The History of Tea</title>
@@ -78,11 +81,15 @@ function startServer() {
     }
     const body = JSON.parse((await readBody(req)) || '{}');
     if (pathname.endsWith('/chat/completions')) {
-      const user = (body.messages ?? [])
+      const messages = body.messages ?? [];
+      const user = messages
         .filter((m) => m.role === 'user')
-        .map((m) => m.content)
+        .map((m) => (typeof m.content === 'string' ? m.content : ''))
         .join('\n');
-      const text = responseText(user);
+      const hasImage = messages.some(
+        (m) => Array.isArray(m.content) && m.content.some((p) => p?.type === 'image_url'),
+      );
+      const text = hasImage ? IMAGE_ZH : responseText(user);
       if (body.stream) {
         res.writeHead(200, { 'content-type': 'text/event-stream' });
         res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}\n\n`);
@@ -223,7 +230,41 @@ async function run() {
     await pageShot.screenshot({ path: `${OUT_DIR}/02-page-bilingual.png` });
     await pageShot.close();
 
-    console.log(`Saved 8 screenshots to ${OUT_DIR}`);
+    // Screenshot translation — the in-place path: freeze the page, drag-select
+    // a region, and the translation streams into a draggable card.
+    await seed(context, extensionId, settings());
+    const notice = await context.newPage();
+    await notice.goto(`chrome-extension://${extensionId}/options.html`);
+    await notice.evaluate(() => chrome.storage.local.set({ imageNoticeSeen: true }));
+    await notice.close();
+
+    const cap = await context.newPage();
+    await cap.goto(`${BASE}/demo/article.html`);
+    const frozen = (await cap.screenshot()).toString('base64');
+    // Deliver the capture the way the background entry point does.
+    await sw.evaluate(async (imageDataUrl) => {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      await chrome.tabs.sendMessage(tab.id, { type: 'open-image-capture', imageDataUrl });
+    }, `data:image/png;base64,${frozen}`);
+    await cap.locator('.llmt-crop').waitFor();
+    await cap.mouse.move(250, 180);
+    await cap.mouse.down();
+    await cap.mouse.move(1030, 430, { steps: 5 });
+    await cap.mouse.up();
+    const card = cap.locator('.llmt-panel .llmt-text');
+    await expect_(async () => {
+      if (!(await card.textContent())?.includes('茶')) throw new Error('not translated yet');
+    });
+    // Drag the card toward the lower right so it no longer covers the text.
+    const grip = await cap.locator('.llmt-panel__grip').boundingBox();
+    await cap.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+    await cap.mouse.down();
+    await cap.mouse.move(grip.x + 420, grip.y + 330, { steps: 6 });
+    await cap.mouse.up();
+    await cap.screenshot({ path: `${OUT_DIR}/09-screenshot.png` });
+    await cap.close();
+
+    console.log(`Saved 9 screenshots to ${OUT_DIR}`);
   } finally {
     await context.close();
     server.close();

@@ -23,7 +23,7 @@
 | 7 | 全文触发 | 扩展图标 + 快捷键 + 右键菜单 + 自动翻译站点清单 |
 | 8 | 权限模型 | content script 常驻 `<all_urls>`(见 ADR-0001) |
 | 9 | 数据存储 | 全部仅 `storage.local`,配置支持 JSON 导入/导出(见 ADR-0002) |
-| 10 | Prompt | 内置三套默认模板,设置页「提示词」区可覆盖(变量插值),一键恢复默认 |
+| 10 | Prompt | 内置四套默认模板(划词词典 / 划词译文 / 全文批量 / 截屏),设置页「提示词」区可覆盖(变量插值),一键恢复默认 |
 | 11 | 命名 | 工作名 `llm-translate`,品牌名做常量集中管理,上架前定稿 |
 | 12 | 工程实践 | vitest 单测核心逻辑 + Playwright E2E 冒烟 + Biome + GitHub Actions |
 
@@ -67,7 +67,7 @@ src/
 ├── segmenter/             # ★ 全文 DOM 分块器(纯逻辑,重点单测)
 ├── selection/             # 划词判定:单词/短语 vs 句子(纯逻辑,重点单测)
 ├── storage/               # storage.local schema、迁移、导入导出
-├── prompts/               # 三套默认模板 + 变量插值
+├── prompts/               # 四套默认模板(含截屏) + 变量插值
 ├── permissions.ts         # <all_urls> host 访问辅助,服务于权限引导(Firefox —— ADR-0005)
 └── ui/                    # 浮层、工具条、popup/options 共享组件 + PermissionBanner
 ```
@@ -125,10 +125,10 @@ interface TranslationClient {
 {
   version: 1,
   providers: ProviderProfile[],            // {id, name, protocol, baseUrl, apiKey, model, params?}
-  defaults: { global: id, selection?: id, page?: id },   // 功能级覆盖
+  defaults: { global: id, selection?: id, page?: id, image?: id },   // 功能级覆盖(image = 截屏翻译)
   general: { targetLang, secondaryTargetLang?, selectionTrigger, pageMode, uiLang },  // secondaryTargetLang:预留,暂未接入任何 UI;uiLang: 界面语言 auto/en/zh
   siteRules: { autoTranslate: string[], disableSelection: string[] },
-  prompts: { selectionDict?, selectionText?, pageBatch? },  // 未设置 = 用内置默认
+  prompts: { selectionDict?, selectionText?, pageBatch?, imageText? },  // 未设置 = 用内置默认
 }
 ```
 
@@ -138,7 +138,7 @@ interface TranslationClient {
 
 ## 8. Prompt 层
 
-三套内置模板:`划词-词典`(JSON 输出)、`划词-译文`、`全文-批量`(编号标记协议)。实际使用的变量:`{{text}}` 与 `{{targetLang}}`。模板层还定义了 `{{sourceLang}}` / `{{siteTitle}}`,但调用方尚未赋值,当前恒为空。设置页「提示词」区每套可覆盖、可恢复默认;模板版本号参与缓存 key。
+四套内置模板:`划词-词典`(JSON 输出)、`划词-译文`、`全文-批量`(编号标记协议)、`截屏-图片`(截屏翻译,计划对齐后新增 —— 见 §13)。实际使用的变量:`{{text}}` 与 `{{targetLang}}`。模板层还定义了 `{{sourceLang}}` / `{{siteTitle}}`,但调用方尚未赋值,当前恒为空。设置页「提示词」区每套可覆盖、可恢复默认;模板版本号参与缓存 key。
 
 ## 9. 权限与商店合规
 

@@ -63,8 +63,8 @@ Store / Edge Add-ons / Firefox Add-ons(AMO)首次人工提交,见
 - **自动翻译某站点**:打开扩展弹窗,勾选当前站点的「始终翻译」——该域名下的页面此后打开即自动翻译
 - 快捷键可在 `chrome://extensions/shortcuts` 重新绑定
 
-| ![划词翻译:流式浮窗,词典卡 / 翻译卡](store-assets/screenshots/01-selection.png) | ![全文翻译:双语模式,将译文插入到每段原文下方](store-assets/screenshots/02-page-bilingual.png) |
-| :--: | :--: |
+| ![划词翻译:流式浮窗,词典卡 / 翻译卡](store-assets/screenshots/01-selection.png) | ![全文翻译:双语模式,将译文插入到每段原文下方](store-assets/screenshots/02-page-bilingual.png) | ![截屏翻译:在冻结的页面截图上拖拽框选,译文以卡片形式流式呈现](store-assets/screenshots/09-screenshot.png) |
+| :--: | :--: | :--: |
 
 ## ⚙️ 设置项
 
@@ -141,7 +141,7 @@ pnpm screenshots  # 重新生成 store-assets/ 里的商店截图
 │   ├── i18n/                 应用内 en/zh 文案 + t() / useT()(不走 browser.i18n)
 │   ├── llm/                  双协议客户端:types, sse, base-url, openai, anthropic, http, client
 │   ├── storage/              仅本地设置、解析回退、导入导出:schema, index, import-export
-│   ├── prompts/              三套默认模板 + 变量插值:templates, index
+│   ├── prompts/              四套默认模板(含截屏) + 变量插值:templates, index
 │   ├── segmenter/            全文 DOM 分块器(块级语义单元)
 │   ├── selection/            划词判定 + 词典结果解析:classify, dict-result
 │   ├── translator/           编排 / 分批 / 缓存 / DOM 注入:orchestrator, batch, cache, inject

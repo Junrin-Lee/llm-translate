@@ -112,7 +112,7 @@ export function normalizeSettings(parsed: unknown): AppSettings {
 
   const promptsRaw = isRecord(parsed.prompts) ? parsed.prompts : {};
   const prompts: AppSettings['prompts'] = {};
-  for (const key of ['selectionDict', 'selectionText', 'pageBatch'] as const) {
+  for (const key of ['selectionDict', 'selectionText', 'pageBatch', 'imageText'] as const) {
     if (typeof promptsRaw[key] === 'string') prompts[key] = promptsRaw[key] as string;
   }
 
