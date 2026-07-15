@@ -49,7 +49,10 @@ describe('createAnthropicClient.stream', () => {
 
   it('POSTs to /v1/messages with x-api-key, version and browser-access headers', async () => {
     const fetchImpl = recordingFetch(() =>
-      sseResponse(['event: message_stop\ndata: {"type":"message_stop"}\n\n']),
+      sseResponse([
+        'data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"ok"}}\n\n',
+        'event: message_stop\ndata: {"type":"message_stop"}\n\n',
+      ]),
     );
     const client = createAnthropicClient(profile, { fetchImpl });
     await client.stream(req, () => {});
@@ -70,15 +73,45 @@ describe('createAnthropicClient.stream', () => {
 
   it('honors an explicit maxTokens override', async () => {
     const fetchImpl = recordingFetch(() =>
-      sseResponse(['event: message_stop\ndata: {"type":"message_stop"}\n\n']),
+      sseResponse([
+        'data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"ok"}}\n\n',
+        'event: message_stop\ndata: {"type":"message_stop"}\n\n',
+      ]),
     );
     const client = createAnthropicClient(profile, { fetchImpl });
     await client.stream({ ...req, maxTokens: 128 }, () => {});
     expect(bodyOf(fetchImpl.calls[0]).max_tokens).toBe(128);
   });
 
+  it('throws when the stream carries an SSE error event instead of deltas', async () => {
+    // Anthropic's documented stream-error shape: event: error + typed payload.
+    const fetchImpl = recordingFetch(() =>
+      sseResponse([
+        'event: error\ndata: {"type":"error","error":{"type":"overloaded_error","message":"Overloaded"}}\n\n',
+      ]),
+    );
+    const client = createAnthropicClient(profile, { fetchImpl });
+    await expect(client.stream(req, () => {})).rejects.toMatchObject({
+      code: 'server',
+      message: expect.stringContaining('Overloaded'),
+    });
+  });
+
+  it('throws bad_response when the stream ends without any content', async () => {
+    const fetchImpl = recordingFetch(() =>
+      sseResponse(['event: message_stop\ndata: {"type":"message_stop"}\n\n']),
+    );
+    const client = createAnthropicClient(profile, { fetchImpl });
+    await expect(client.stream(req, () => {})).rejects.toMatchObject({ code: 'bad_response' });
+  });
+
   it('sends image source blocks when the request carries images', async () => {
-    const fetchImpl = recordingFetch(() => sseResponse(['data: {"type":"message_stop"}\n\n']));
+    const fetchImpl = recordingFetch(() =>
+      sseResponse([
+        'data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"ok"}}\n\n',
+        'data: {"type":"message_stop"}\n\n',
+      ]),
+    );
     const client = createAnthropicClient(profile, { fetchImpl });
     await client.stream(
       { ...req, images: [{ mediaType: 'image/jpeg', dataBase64: 'AAAA' }] },

@@ -94,11 +94,25 @@ export function createAnthropicClient(
 
     let text = '';
     for await (const ev of parseSse(res.body)) {
-      let json: { type?: string; delta?: { type?: string; text?: unknown } };
+      let json: {
+        type?: string;
+        delta?: { type?: string; text?: unknown };
+        error?: { message?: unknown };
+      };
       try {
         json = JSON.parse(ev.data);
       } catch {
+        // A non-JSON error frame still carries the failure signal.
+        if (ev.event === 'error') throw new LlmError('server', ev.data);
         continue;
+      }
+      // Anthropic's documented stream-error shape — surface, don't swallow.
+      if (ev.event === 'error' || json.type === 'error') {
+        const message = json.error?.message;
+        throw new LlmError(
+          'server',
+          typeof message === 'string' ? message : 'Provider reported a stream error',
+        );
       }
       if (json.type === 'message_stop') break;
       if (json.type === 'content_block_delta' && json.delta?.type === 'text_delta') {
@@ -109,6 +123,9 @@ export function createAnthropicClient(
         }
       }
     }
+    // A stream that closes without producing anything is a failure for a
+    // translator, not an empty success (silent-close gateways end up here).
+    if (text === '') throw new LlmError('bad_response', 'The stream ended without any content');
     return { text };
   }
 

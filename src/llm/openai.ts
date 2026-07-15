@@ -85,7 +85,21 @@ export function createOpenAiClient(
       try {
         json = JSON.parse(ev.data);
       } catch {
+        // A non-JSON error frame still carries the failure signal.
+        if (ev.event === 'error') throw new LlmError('server', ev.data);
         continue; // ignore keep-alive / non-JSON frames
+      }
+      // Gateways and providers report failures inside a 200 stream as an
+      // `event: error` frame and/or an `error` payload — surface, don't swallow.
+      const errBlock = (json as { error?: { message?: unknown } | string })?.error;
+      if (ev.event === 'error' || errBlock !== undefined) {
+        const message =
+          typeof errBlock === 'string'
+            ? errBlock
+            : typeof errBlock?.message === 'string'
+              ? errBlock.message
+              : 'Provider reported a stream error';
+        throw new LlmError('server', message);
       }
       const delta = (json as { choices?: Array<{ delta?: { content?: unknown } }> })?.choices?.[0]
         ?.delta?.content;
@@ -94,6 +108,9 @@ export function createOpenAiClient(
         onDelta(delta);
       }
     }
+    // A stream that closes without producing anything is a failure for a
+    // translator, not an empty success (silent-close gateways end up here).
+    if (text === '') throw new LlmError('bad_response', 'The stream ended without any content');
     return { text };
   }
 
