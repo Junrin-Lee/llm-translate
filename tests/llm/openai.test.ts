@@ -39,7 +39,9 @@ describe('createOpenAiClient.stream', () => {
   });
 
   it('POSTs to the chat endpoint with Bearer auth and stream=true', async () => {
-    const fetchImpl = recordingFetch(() => sseResponse(['data: [DONE]\n\n']));
+    const fetchImpl = recordingFetch(() =>
+      sseResponse(['data: {"choices":[{"delta":{"content":"ok"}}]}\n\n', 'data: [DONE]\n\n']),
+    );
     const client = createOpenAiClient(profile, { fetchImpl });
     await client.stream(req, () => {});
 
@@ -57,7 +59,9 @@ describe('createOpenAiClient.stream', () => {
   });
 
   it('normalizes a base URL entered without /v1', async () => {
-    const fetchImpl = recordingFetch(() => sseResponse(['data: [DONE]\n\n']));
+    const fetchImpl = recordingFetch(() =>
+      sseResponse(['data: {"choices":[{"delta":{"content":"ok"}}]}\n\n', 'data: [DONE]\n\n']),
+    );
     const client = createOpenAiClient(
       { ...profile, baseUrl: 'https://api.openai.com' },
       { fetchImpl },
@@ -66,8 +70,43 @@ describe('createOpenAiClient.stream', () => {
     expect(fetchImpl.calls[0].url).toBe('https://api.openai.com/v1/chat/completions');
   });
 
+  it('throws when the stream carries an SSE error event instead of deltas', async () => {
+    // Verbatim shape observed from an OpenAI-compatible gateway (2026-07-15):
+    // keepalive comments, then an error event on an HTTP 200 stream.
+    const fetchImpl = recordingFetch(() =>
+      sseResponse([
+        ': omniroute-keepalive\n\n',
+        'event: error\ndata: {"error":{"message":"[openrouter/deepseek/deepseek-v4-flash] [404]: No endpoints found that support image input (reset after 2m)"}}\n\n',
+      ]),
+    );
+    const client = createOpenAiClient(profile, { fetchImpl });
+    await expect(client.stream(req, () => {})).rejects.toMatchObject({
+      code: 'server',
+      message: expect.stringContaining('No endpoints found that support image input'),
+    });
+  });
+
+  it('throws when an error payload arrives without an event name', async () => {
+    const fetchImpl = recordingFetch(() =>
+      sseResponse(['data: {"error":{"message":"quota exceeded"}}\n\n', 'data: [DONE]\n\n']),
+    );
+    const client = createOpenAiClient(profile, { fetchImpl });
+    await expect(client.stream(req, () => {})).rejects.toMatchObject({
+      code: 'server',
+      message: expect.stringContaining('quota exceeded'),
+    });
+  });
+
+  it('throws bad_response when the stream ends without any content', async () => {
+    const fetchImpl = recordingFetch(() => sseResponse([': keepalive\n\n', 'data: [DONE]\n\n']));
+    const client = createOpenAiClient(profile, { fetchImpl });
+    await expect(client.stream(req, () => {})).rejects.toMatchObject({ code: 'bad_response' });
+  });
+
   it('sends image content parts when the request carries images', async () => {
-    const fetchImpl = recordingFetch(() => sseResponse(['data: [DONE]\n\n']));
+    const fetchImpl = recordingFetch(() =>
+      sseResponse(['data: {"choices":[{"delta":{"content":"ok"}}]}\n\n', 'data: [DONE]\n\n']),
+    );
     const client = createOpenAiClient(profile, { fetchImpl });
     await client.stream(
       { ...req, images: [{ mediaType: 'image/jpeg', dataBase64: 'AAAA' }] },
@@ -88,7 +127,9 @@ describe('createOpenAiClient.stream', () => {
   });
 
   it('keeps user content a plain string when there are no images', async () => {
-    const fetchImpl = recordingFetch(() => sseResponse(['data: [DONE]\n\n']));
+    const fetchImpl = recordingFetch(() =>
+      sseResponse(['data: {"choices":[{"delta":{"content":"ok"}}]}\n\n', 'data: [DONE]\n\n']),
+    );
     const client = createOpenAiClient(profile, { fetchImpl });
     await client.stream({ ...req, images: [] }, () => {});
     const body = bodyOf(fetchImpl.calls[0]);
