@@ -1,4 +1,4 @@
-/** Pure geometry for Image Translation capture & crop. No DOM access here. */
+/** Pure geometry for Screenshot Translation capture & crop. No DOM access here. */
 
 export interface Rect {
   x: number;

@@ -46,7 +46,7 @@ const EN = {
   routingNone: '— none —',
   routingSelection: 'Selection translation',
   routingPage: 'Page translation',
-  routingImage: 'Image translation',
+  routingImage: 'Screenshot translation',
   routingUseGlobal: 'Use global default',
 
   // Translation (general settings)
@@ -71,7 +71,7 @@ const EN = {
   promptTextHint: 'Selection popup, for sentences and longer text.',
   promptBatchLabel: 'Full-page translation',
   promptBatchHint: 'Batched page segments — the prompt must keep every @@n@@ marker.',
-  promptImageLabel: 'Image translation',
+  promptImageLabel: 'Screenshot translation',
   promptImageHint:
     'Vision prompt — the image is attached to the message; only {{targetLang}} is interpolated.',
   promptCustom: 'Custom',
@@ -129,16 +129,16 @@ const EN = {
   translateSelection: 'Translate selection',
   restoreOriginal: 'Restore original',
 
-  // Image Translation
+  // Screenshot Translation
   imageCaptureHint: 'Drag to select the area to translate · Esc to cancel',
   imagePrivacyNotice: 'The selected area is sent only to the API endpoint you configured.',
   imagePrivacyGotIt: 'Got it',
-  imageTranslate: 'Image translation',
+  imageTranslate: 'Screenshot translation',
   imageWorkbenchEmpty: 'Paste, drop, or choose an image to translate.',
   imageUpload: 'Choose image',
   imageReselect: 'Select another area',
   imageNoVisionHint:
-    'If this keeps failing, the model may not accept images — set a vision-capable model for Image Translation in Routing.',
+    'If this keeps failing, the model may not accept images — set a vision-capable model for Screenshot Translation in Routing.',
   imageOpenSettings: 'Open settings',
 
   // Permission onboarding (Firefox treats site access as optional — ADR-0005)
@@ -200,7 +200,7 @@ const ZH: Record<MessageKey, string> = {
   routingNone: '— 无 —',
   routingSelection: '划词翻译',
   routingPage: '全文翻译',
-  routingImage: '图片翻译',
+  routingImage: '截屏翻译',
   routingUseGlobal: '使用全局默认',
 
   targetLanguage: '目标语言',
@@ -223,7 +223,7 @@ const ZH: Record<MessageKey, string> = {
   promptTextHint: '划词浮层,用于句子和长文本。',
   promptBatchLabel: '全文翻译',
   promptBatchHint: '整页分批翻译——提示词必须保留每个 @@n@@ 标记。',
-  promptImageLabel: '图片翻译',
+  promptImageLabel: '截屏翻译',
   promptImageHint: '视觉提示词 —— 图片随消息附带,仅支持 {{targetLang}} 变量。',
   promptCustom: '自定义',
   promptVars: '变量:{{text}}、{{targetLang}}',
@@ -273,16 +273,16 @@ const ZH: Record<MessageKey, string> = {
   translateSelection: '翻译所选',
   restoreOriginal: '还原原文',
 
-  // 图片翻译
+  // 截屏翻译
   imageCaptureHint: '拖拽框选要翻译的区域 · Esc 取消',
   imagePrivacyNotice: '框选区域仅会发送至你配置的 API 端点。',
   imagePrivacyGotIt: '知道了',
-  imageTranslate: '图片翻译',
+  imageTranslate: '截屏翻译',
   imageWorkbenchEmpty: '粘贴、拖入或选择一张图片进行翻译。',
   imageUpload: '选择图片',
   imageReselect: '重新框选',
   imageNoVisionHint:
-    '若持续失败,可能是当前模型不支持图片输入 —— 请在「路由」中为图片翻译指定支持视觉的模型。',
+    '若持续失败,可能是当前模型不支持图片输入 —— 请在「路由」中为截屏翻译指定支持视觉的模型。',
   imageOpenSettings: '打开设置',
 
   // Permission onboarding(Firefox 将站点访问视为可选权限 — ADR-0005)

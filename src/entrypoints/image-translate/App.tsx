@@ -57,7 +57,7 @@ export function App() {
       });
       setStage({ kind: 'select', imageDataUrl: dataUrl });
     } catch (error) {
-      console.warn('Image Translation: could not read file', error);
+      console.warn('Screenshot Translation: could not read file', error);
     }
   }
 
@@ -101,7 +101,7 @@ export function App() {
                   )
                   .catch((error) => {
                     // Keep the select stage: the user can re-drag or cancel.
-                    console.warn('Image Translation: crop failed', error);
+                    console.warn('Screenshot Translation: crop failed', error);
                   });
               }}
             />

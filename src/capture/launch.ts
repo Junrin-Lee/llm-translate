@@ -2,7 +2,7 @@ import { focusOrOpenOnboarding, hasHostAccess } from '@/permissions';
 import { stashPendingCapture } from './session';
 
 /**
- * Shared Image Translation launcher (popup & background): capture the visible
+ * Shared Screenshot Translation launcher (popup & background): capture the visible
  * area first (the overlay must never contaminate it), try the in-place path,
  * fall back to the workbench when the tab has no content script (ADR-0006).
  */

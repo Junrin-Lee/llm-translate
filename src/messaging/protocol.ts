@@ -6,7 +6,7 @@ export const TRANSLATE_PORT = 'llm-translate';
 
 /**
  * Requests the background accepts (first message on a connected port):
- * selection streaming, page batches, image translation, model listing, connection tests.
+ * selection streaming, page batches, screenshot translation, model listing, connection tests.
  */
 export type BgRequest =
   | {
@@ -40,7 +40,7 @@ export type ContentMessage =
   | { type: 'translate-page' }
   | { type: 'get-page-status' }
   | {
-      /** Start in-place Image Translation over a frozen capture of this tab. */
+      /** Start in-place Screenshot Translation over a frozen capture of this tab. */
       type: 'open-image-capture';
       imageDataUrl: string;
     };

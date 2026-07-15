@@ -178,7 +178,7 @@ Privacy policy highlights: all config and keys are stored only on the local devi
 - Brand name and store title (finalized before M5; referenced in code via the `BRAND` constant).
 - Debounce and cost-warning copy for the Selection "translate-on-select" mode (decided during M2 implementation).
 
-## 13. Image Translation
+## 13. Screenshot Translation
 
 Phase 1 shipped after this plan was aligned; full rationale and trade-offs in ADR-0006.
 
