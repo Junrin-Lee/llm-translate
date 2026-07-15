@@ -33,6 +33,15 @@ export function recordingFetch(
   return Object.assign(fn, { calls });
 }
 
+/** A body stream that never emits and never closes — a stalled connection. */
+export function neverClosingBody(): ReadableStream<Uint8Array> {
+  return new ReadableStream({
+    start() {
+      // Never enqueue, never close.
+    },
+  });
+}
+
 /** A fetch stand-in that never resolves until its signal aborts, then rejects. */
 export function hangingFetch(): (url: string, init?: RequestInit) => Promise<Response> {
   return (_url: string, init: RequestInit = {}) =>

@@ -6,6 +6,7 @@ import {
   hangingFetch,
   headerOf,
   jsonResponse,
+  neverClosingBody,
   recordingFetch,
   sseResponse,
 } from '../helpers';
@@ -95,6 +96,18 @@ describe('createAnthropicClient.stream', () => {
       code: 'server',
       message: expect.stringContaining('Overloaded'),
     });
+  });
+
+  it('fails a stalled SSE stream with code=timeout instead of hanging', async () => {
+    const fetchImpl = recordingFetch(
+      () =>
+        new Response(neverClosingBody(), {
+          status: 200,
+          headers: { 'content-type': 'text/event-stream' },
+        }),
+    );
+    const client = createAnthropicClient(profile, { fetchImpl, idleMs: 50 });
+    await expect(client.stream(req, () => {})).rejects.toMatchObject({ code: 'timeout' });
   });
 
   it('throws bad_response when the stream ends without any content', async () => {
