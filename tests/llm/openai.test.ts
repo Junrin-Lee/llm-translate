@@ -6,6 +6,7 @@ import {
   hangingFetch,
   headerOf,
   jsonResponse,
+  neverClosingBody,
   recordingFetch,
   sseResponse,
 } from '../helpers';
@@ -137,6 +138,26 @@ describe('createOpenAiClient.stream', () => {
       role: 'user',
       content: 'hi',
     });
+  });
+});
+
+describe('createOpenAiClient stall watchdog', () => {
+  it('fails a stalled SSE stream with code=timeout instead of hanging', async () => {
+    const fetchImpl = recordingFetch(
+      () =>
+        new Response(neverClosingBody(), {
+          status: 200,
+          headers: { 'content-type': 'text/event-stream' },
+        }),
+    );
+    const client = createOpenAiClient(profile, { fetchImpl, idleMs: 50 });
+    await expect(client.stream(req, () => {})).rejects.toMatchObject({ code: 'timeout' });
+  });
+
+  it('still maps the status when an error body never closes', async () => {
+    const fetchImpl = recordingFetch(() => new Response(neverClosingBody(), { status: 404 }));
+    const client = createOpenAiClient(profile, { fetchImpl, idleMs: 50 });
+    await expect(client.stream(req, () => {})).rejects.toMatchObject({ code: 'not_found' });
   });
 });
 

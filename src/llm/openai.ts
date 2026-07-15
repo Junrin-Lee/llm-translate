@@ -1,5 +1,12 @@
 import { endpointFor, normalizeBaseUrl } from './base-url';
-import { type AdapterDeps, DEFAULT_TIMEOUT_MS, errorFromResponse, fetchWithTimeout } from './http';
+import {
+  type AdapterDeps,
+  DEFAULT_TIMEOUT_MS,
+  errorFromResponse,
+  fetchWithTimeout,
+  STREAM_IDLE_TIMEOUT_MS,
+  withIdleTimeout,
+} from './http';
 import { parseSse } from './sse';
 import {
   type ChatRequest,
@@ -30,6 +37,7 @@ export function createOpenAiClient(
   const fetchImpl = deps.fetchImpl ?? fetch;
   const base = normalizeBaseUrl(profile.baseUrl, 'openai');
   const timeoutMs = profile.params?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const idleMs = deps.idleMs ?? STREAM_IDLE_TIMEOUT_MS;
   const headers: Record<string, string> = {
     'content-type': 'application/json',
     authorization: `Bearer ${profile.apiKey}`,
@@ -75,11 +83,11 @@ export function createOpenAiClient(
     signal?: AbortSignal,
   ): Promise<ChatResult> {
     const res = await postChat(buildBody(req, true), signal);
-    if (!res.ok) throw await errorFromResponse(res);
+    if (!res.ok) throw await errorFromResponse(res, idleMs);
     if (!res.body) throw new LlmError('bad_response', 'Streaming response had no body');
 
     let text = '';
-    for await (const ev of parseSse(res.body)) {
+    for await (const ev of parseSse(withIdleTimeout(res.body, idleMs))) {
       if (ev.data === '[DONE]') break;
       let json: unknown;
       try {
@@ -116,7 +124,7 @@ export function createOpenAiClient(
 
   async function complete(req: ChatRequest, signal?: AbortSignal): Promise<ChatResult> {
     const res = await postChat(buildBody(req, false), signal);
-    if (!res.ok) throw await errorFromResponse(res);
+    if (!res.ok) throw await errorFromResponse(res, idleMs);
 
     const json = (await res.json()) as {
       choices?: Array<{ message?: { content?: unknown } }>;
@@ -142,7 +150,7 @@ export function createOpenAiClient(
       { method: 'GET', headers },
       timeoutMs,
     );
-    if (!res.ok) throw await errorFromResponse(res);
+    if (!res.ok) throw await errorFromResponse(res, idleMs);
     const json = (await res.json()) as { data?: Array<{ id?: unknown }> };
     if (!Array.isArray(json?.data)) return [];
     return json.data.map((m) => m?.id).filter((id): id is string => typeof id === 'string');
