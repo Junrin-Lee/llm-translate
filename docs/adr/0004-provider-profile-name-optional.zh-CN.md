@@ -9,3 +9,7 @@ Provider 配置在所有关键处都通过 `id`(生成的 UUID)引用——`defa
 - `name` 的导入导出对称:凡是应用能导出的,都能再导回来。
 - `id` 仍是唯一绑定键,导入时必须非空——无 id 的配置无法被默认项或功能级覆盖引用。
 - `baseUrl` 与 `model` 导入时仍必填:缺失它们的配置无法完成翻译。name 为空无害,endpoint 或 model 为空有害。对半成品配置做完全无损往返,是另一个独立决策。
+
+## Amendment (ADR-0007)
+
+ADR-0007 把扁平配置拆成两条,同一条规则现在按类型分别适用。`name` 在 `LlmProvider` 与 `ModelProfile` 上都仍是可选展示标签。`LlmProvider` 必填 `id` 与 `baseUrl`;`ModelProfile` 必填 `id`、`providerId` 与 `model`。`apiKey` 保持可选,这样抹掉 key 的导出文件仍能导回来。原决策不变:绑定键是 `id`,`name` 永远不参与身份。

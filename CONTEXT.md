@@ -37,25 +37,29 @@ A domain the user has marked as "always translate"; visiting its pages automatic
 _Avoid_: whitelist, auto site
 
 **Screenshot Translation (截屏翻译)**:
-Translation of the text inside a single image the user supplies — primarily by dragging a capture region on the current tab (on pages where the content script cannot run, e.g. the built-in PDF viewer, it automatically falls back to capturing the visible area and cropping inside an extension page), or by pasting / uploading an image. The result streams as a Translation Card. Requires the resolved Provider Profile's model to accept image input.
+Translation of the text inside a single image the user supplies — primarily by dragging a capture region on the current tab (on pages where the content script cannot run, e.g. the built-in PDF viewer, it automatically falls back to capturing the visible area and cropping inside an extension page), or by pasting / uploading an image. The result streams as a Translation Card. Requires the resolved Model Profile's model to accept image input.
 _Avoid_: image translation, OCR translation, picture translation
 
 ### Provider
 
-**Provider Profile (Provider 配置)**:
-A named configuration for connecting to a translation service, made up of a Protocol, Base URL, API Key, model name, and optional parameters. Users can save several. The name is an optional display label chosen by the user; each profile is referenced internally by a stable id, so a profile with no name still works.
-_Avoid_: translation engine, vendor, channel, account
+**LLM Provider (LLM Provider)**:
+One saved connection to an LLM endpoint: a Protocol, a Base URL and an API Key, plus an optional default timeout. It carries no model name, and several Model Profiles can share one. The name is an optional display label; each provider is referenced internally by a stable id, so a provider with no name still works.
+_Avoid_: provider profile, translation engine, vendor, channel, account
+
+**Model Profile (模型配置)**:
+A named choice of one model on one LLM Provider, plus optional parameters (temperature, max tokens, timeout). This is the unit routing points at, and the unit a user adds when they want the same endpoint with a different model. Its own timeout wins over the provider's default.
+_Avoid_: translate model, model entry, provider profile
 
 **Protocol (协议类型)**:
-The API shape a Provider Profile follows; there are only two: OpenAI-compatible, Anthropic-compatible.
+The API shape an LLM Provider follows; there are only two: OpenAI-compatible, Anthropic-compatible.
 _Avoid_: vendor type, interface type
 
-**Global Default Provider (全局默认 Provider)**:
-The Provider Profile that every translation feature actually uses when it is not overridden at the feature level.
-_Avoid_: current engine, active profile
+**Global Default Model (全局默认模型)**:
+The Model Profile that every translation feature actually uses when it is not overridden at the feature level.
+_Avoid_: current engine, active profile, global default provider
 
 **Feature Override (功能级覆盖)**:
-A Provider Profile specified separately for Selection Translation, Page Translation, or Screenshot Translation; once set, it takes precedence over the Global Default Provider, and when unset it follows the global one.
+A Model Profile specified separately for Selection Translation, Page Translation, or Screenshot Translation; once set, it takes precedence over the Global Default Model, and when unset it follows the global one.
 _Avoid_: standalone config, per-channel
 
 ### Permissions
@@ -67,8 +71,10 @@ _Avoid_: permission warning, authorization flow
 ## Example dialogue
 
 > **Dev**: After a user selects text, which model handles it?
-> **Expert**: First check whether Selection Translation has a Feature Override — if so, use the Provider Profile that override specifies; if not, use the Global Default Provider.
-> **Dev**: So does a "Provider Profile" store a vendor? Like DeepSeek?
-> **Expert**: Not a vendor — it's a connection configuration. DeepSeek's official endpoint and a DeepSeek proxied through the company gateway can be two different Provider Profiles, and both have the Protocol OpenAI-compatible.
+> **Expert**: First check whether Selection Translation has a Feature Override — if so, use the Model Profile that override specifies; if not, use the Global Default Model.
+> **Dev**: So does an "LLM Provider" store a vendor? Like DeepSeek?
+> **Expert**: Not a vendor — it's one connection. DeepSeek's official endpoint and a DeepSeek proxied through the company gateway are two different LLM Providers, and both have the Protocol OpenAI-compatible.
+> **Dev**: I want deepseek-chat and deepseek-reasoner on that same gateway. Two providers?
+> **Expert**: One LLM Provider, two Model Profiles pointing at it. The Base URL and API Key are stored once, so rotating that key covers both.
 > **Dev**: Screenshot Translation says "the model does not support image input" — now what?
-> **Expert**: The Provider Profile it resolved to (its Feature Override, or the Global Default Provider) uses a model without vision. Set a Feature Override for Screenshot Translation that points at a model that accepts images.
+> **Expert**: The Model Profile it resolved to (its Feature Override, or the Global Default Model) names a model without vision. Set a Feature Override for Screenshot Translation that points at a Model Profile whose model accepts images.

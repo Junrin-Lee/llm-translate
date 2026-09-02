@@ -9,3 +9,7 @@ Provider Profiles are referenced by their `id` (a generated UUID) everywhere it 
 - Import/export is symmetric for `name`: anything the app can export it can import back.
 - `id` remains the single binding key and must stay non-empty on import — a profile with no id cannot be referenced by defaults or feature overrides.
 - `baseUrl` and `model` are still required on import: a profile missing them cannot perform a translation. A blank name is harmless; a blank endpoint or model is not. Fully loss-less round-trips for half-configured profiles would be a separate decision.
+
+## Amendment (ADR-0007)
+
+ADR-0007 split the flat profile in two, so the same rule now applies per type. `name` stays an optional display label on both `LlmProvider` and `ModelProfile`. `id` and `baseUrl` are required on `LlmProvider`; `id`, `providerId` and `model` are required on `ModelProfile`. `apiKey` stays optional so a key-stripped export still imports. The original decision is unchanged: the binding key is `id`, and `name` is never part of identity.
