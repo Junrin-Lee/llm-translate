@@ -1,20 +1,44 @@
 /** The two API shapes this extension speaks. */
 export type Protocol = 'openai' | 'anthropic';
 
-/** A named, user-saved translation service connection. */
-export interface ProviderProfile {
+/** Tuning knobs shared by a Model Profile and a provider's connection default. */
+export interface ModelParams {
+  temperature?: number;
+  maxTokens?: number;
+  /** Per-request timeout; defaults to 60_000ms when unset. */
+  timeoutMs?: number;
+}
+
+/** One saved connection: protocol, endpoint and credential. Carries no model. */
+export interface LlmProvider {
+  id: string;
+  name: string;
+  protocol: Protocol;
+  baseUrl: string;
+  apiKey: string;
+  /** Connection-level default; a Model Profile's own timeoutMs wins. */
+  timeoutMs?: number;
+}
+
+/** One model on one provider. This is what routing points at. */
+export interface ModelProfile {
+  id: string;
+  name: string;
+  providerId: string;
+  model: string;
+  params?: ModelParams;
+}
+
+/** A provider joined with a model: the flat shape every adapter consumes. */
+export interface ResolvedProfile {
+  /** The ModelProfile it came from, or the LlmProvider id for a provider-only probe. */
   id: string;
   name: string;
   protocol: Protocol;
   baseUrl: string;
   apiKey: string;
   model: string;
-  params?: {
-    temperature?: number;
-    maxTokens?: number;
-    /** Per-request timeout; defaults to 60_000ms when unset. */
-    timeoutMs?: number;
-  };
+  params?: ModelParams;
 }
 
 /** One inline image sent with a chat request (already cropped & downscaled). */
