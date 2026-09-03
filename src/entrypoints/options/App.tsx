@@ -3,19 +3,29 @@ import { BRAND } from '@/brand';
 import { setUiLanguage } from '@/i18n';
 import type { MessageKey } from '@/i18n/messages';
 import { useT } from '@/i18n/useI18n';
-import type { ProviderProfile } from '@/llm/types';
-import type { GeneralSettings, ProfileDefaults, PromptOverrides } from '@/storage/schema';
+import type { LlmProvider, ModelProfile } from '@/llm/types';
+import {
+  countMergeableProviders,
+  type GeneralSettings,
+  mergeDuplicateProviders,
+  type ProfileDefaults,
+  type PromptOverrides,
+  pruneDefaults,
+} from '@/storage/schema';
 import { PermissionBanner } from '@/ui/PermissionBanner';
 import { BackupPanel } from './BackupPanel';
 import { CachePanel } from './CachePanel';
 import { DefaultsPanel } from './DefaultsPanel';
 import { GeneralPanel } from './GeneralPanel';
+import { MergeProvidersBanner } from './MergeProvidersBanner';
+import { ModelCard } from './ModelCard';
 import { PromptsPanel } from './PromptsPanel';
 import { ProviderCard } from './ProviderCard';
 import { useSettings } from './useSettings';
 
 const SECTIONS = [
   { id: 'providers', key: 'navProviders' },
+  { id: 'models', key: 'navModels' },
   { id: 'routing', key: 'navRouting' },
   { id: 'translation', key: 'navTranslation' },
   { id: 'prompts', key: 'navPrompts' },
@@ -30,15 +40,12 @@ function sectionFromHash(): SectionId {
   return SECTIONS.some((s) => s.id === hash) ? (hash as SectionId) : 'providers';
 }
 
-function newProvider(): ProviderProfile {
-  return {
-    id: crypto.randomUUID(),
-    name: '',
-    protocol: 'openai',
-    baseUrl: '',
-    apiKey: '',
-    model: '',
-  };
+function newProvider(): LlmProvider {
+  return { id: crypto.randomUUID(), name: '', protocol: 'openai', baseUrl: '', apiKey: '' };
+}
+
+function newModel(providerId: string): ModelProfile {
+  return { id: crypto.randomUUID(), name: '', providerId, model: '' };
 }
 
 export function App() {
@@ -69,17 +76,9 @@ export function App() {
     setActive(id);
   };
 
-  const addProvider = () =>
-    mutate((s) => {
-      const profile = newProvider();
-      return {
-        ...s,
-        providers: [...s.providers, profile],
-        defaults: s.providers.length === 0 ? { ...s.defaults, global: profile.id } : s.defaults,
-      };
-    });
+  const addProvider = () => mutate((s) => ({ ...s, providers: [...s.providers, newProvider()] }));
 
-  const patchProvider = (id: string, patch: Partial<ProviderProfile>) =>
+  const patchProvider = (id: string, patch: Partial<LlmProvider>) =>
     mutate((s) => ({
       ...s,
       providers: s.providers.map((p) => (p.id === id ? { ...p, ...patch } : p)),
@@ -87,15 +86,43 @@ export function App() {
 
   const deleteProvider = (id: string) => {
     if (!confirm(t('confirmDeleteProvider'))) return;
+    // The button is disabled while models still reference it, so this only ever
+    // removes an unused connection and cannot orphan anything.
+    mutate((s) => ({ ...s, providers: s.providers.filter((p) => p.id !== id) }));
+  };
+
+  const mergeProviders = () => mutate(mergeDuplicateProviders);
+
+  const addModel = () =>
     mutate((s) => {
-      const providers = s.providers.filter((p) => p.id !== id);
-      const defaults: ProfileDefaults = {
-        global: s.defaults.global === id ? (providers[0]?.id ?? null) : s.defaults.global,
+      const providerId = s.providers[0]?.id;
+      if (!providerId) return s;
+      const profile = newModel(providerId);
+      return {
+        ...s,
+        models: [...s.models, profile],
+        // The first model ever created becomes the global default, matching the
+        // old behaviour where the first provider did.
+        defaults: s.models.length === 0 ? { ...s.defaults, global: profile.id } : s.defaults,
       };
-      if (s.defaults.selection && s.defaults.selection !== id)
-        defaults.selection = s.defaults.selection;
-      if (s.defaults.page && s.defaults.page !== id) defaults.page = s.defaults.page;
-      return { ...s, providers, defaults };
+    });
+
+  const patchModel = (id: string, patch: Partial<ModelProfile>) =>
+    mutate((s) => ({
+      ...s,
+      models: s.models.map((m) => (m.id === id ? { ...m, ...patch } : m)),
+    }));
+
+  const deleteModel = (id: string) => {
+    if (!confirm(t('confirmDeleteModel'))) return;
+    mutate((s) => {
+      const models = s.models.filter((m) => m.id !== id);
+      const pruned = pruneDefaults(s.defaults, models);
+      return {
+        ...s,
+        models,
+        defaults: { ...pruned, global: pruned.global ?? models[0]?.id ?? null },
+      };
     });
   };
 
@@ -109,7 +136,7 @@ export function App() {
 
   const setPrompts = (prompts: PromptOverrides) => mutate((s) => ({ ...s, prompts }));
 
-  const { providers, defaults } = settings;
+  const { providers, models, defaults } = settings;
   const activeKey = SECTIONS.find((s) => s.id === active)?.key ?? 'navProviders';
 
   return (
@@ -143,6 +170,11 @@ export function App() {
                 {t('providersAdd')}
               </button>
             )}
+            {active === 'models' && providers.length > 0 && (
+              <button type="button" className="btn btn--primary" onClick={addModel}>
+                {t('modelsAdd')}
+              </button>
+            )}
           </div>
 
           {active === 'providers' &&
@@ -155,21 +187,63 @@ export function App() {
                 </button>
               </div>
             ) : (
+              <>
+                <MergeProvidersBanner
+                  count={countMergeableProviders(providers)}
+                  onMerge={mergeProviders}
+                />
+                <div className="cards">
+                  {providers.map((provider) => (
+                    <ProviderCard
+                      key={provider.id}
+                      provider={provider}
+                      inUseCount={models.filter((m) => m.providerId === provider.id).length}
+                      onPatch={(patch) => patchProvider(provider.id, patch)}
+                      onDelete={() => deleteProvider(provider.id)}
+                    />
+                  ))}
+                </div>
+              </>
+            ))}
+
+          {active === 'models' &&
+            (providers.length === 0 ? (
+              <div className="empty">
+                <p className="empty__title">{t('modelsNeedProviderTitle')}</p>
+                <p className="empty__body">{t('modelsNeedProviderBody')}</p>
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  onClick={() => navigate('providers')}
+                >
+                  {t('providersAddFirst')}
+                </button>
+              </div>
+            ) : models.length === 0 ? (
+              <div className="empty">
+                <p className="empty__title">{t('modelsEmptyTitle')}</p>
+                <p className="empty__body">{t('modelsEmptyBody')}</p>
+                <button type="button" className="btn btn--primary" onClick={addModel}>
+                  {t('modelsAddFirst')}
+                </button>
+              </div>
+            ) : (
               <div className="cards">
-                {providers.map((profile) => (
-                  <ProviderCard
+                {models.map((profile) => (
+                  <ModelCard
                     key={profile.id}
                     profile={profile}
+                    providers={providers}
                     isGlobalDefault={defaults.global === profile.id}
-                    onPatch={(patch) => patchProvider(profile.id, patch)}
-                    onDelete={() => deleteProvider(profile.id)}
+                    onPatch={(patch) => patchModel(profile.id, patch)}
+                    onDelete={() => deleteModel(profile.id)}
                   />
                 ))}
               </div>
             ))}
 
           {active === 'routing' && (
-            <DefaultsPanel providers={providers} defaults={defaults} onChange={setDefaults} />
+            <DefaultsPanel models={models} defaults={defaults} onChange={setDefaults} />
           )}
 
           {active === 'translation' && (

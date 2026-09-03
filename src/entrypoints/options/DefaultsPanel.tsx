@@ -1,16 +1,16 @@
 import { useT } from '@/i18n/useI18n';
-import type { ProviderProfile } from '@/llm/types';
+import type { ModelProfile } from '@/llm/types';
 import type { ProfileDefaults } from '@/storage/schema';
 
 interface Props {
-  providers: ProviderProfile[];
+  models: ModelProfile[];
   defaults: ProfileDefaults;
   onChange: (defaults: ProfileDefaults) => void;
 }
 
-export function DefaultsPanel({ providers, defaults, onChange }: Props) {
+export function DefaultsPanel({ models, defaults, onChange }: Props) {
   const t = useT();
-  const name = (p: ProviderProfile) => p.name || t('providerNamePlaceholder');
+  const name = (m: ModelProfile) => m.name || t('modelNamePlaceholder');
 
   return (
     <div className="defaults">
@@ -22,9 +22,9 @@ export function DefaultsPanel({ providers, defaults, onChange }: Props) {
           onChange={(e) => onChange({ ...defaults, global: e.target.value || null })}
         >
           <option value="">{t('routingNone')}</option>
-          {providers.map((p) => (
-            <option key={p.id} value={p.id}>
-              {name(p)}
+          {models.map((m) => (
+            <option key={m.id} value={m.id}>
+              {name(m)}
             </option>
           ))}
         </select>
@@ -40,9 +40,9 @@ export function DefaultsPanel({ providers, defaults, onChange }: Props) {
             onChange={(e) => onChange({ ...defaults, selection: e.target.value || undefined })}
           >
             <option value="">{t('routingUseGlobal')}</option>
-            {providers.map((p) => (
-              <option key={p.id} value={p.id}>
-                {name(p)}
+            {models.map((m) => (
+              <option key={m.id} value={m.id}>
+                {name(m)}
               </option>
             ))}
           </select>
@@ -56,9 +56,9 @@ export function DefaultsPanel({ providers, defaults, onChange }: Props) {
             onChange={(e) => onChange({ ...defaults, page: e.target.value || undefined })}
           >
             <option value="">{t('routingUseGlobal')}</option>
-            {providers.map((p) => (
-              <option key={p.id} value={p.id}>
-                {name(p)}
+            {models.map((m) => (
+              <option key={m.id} value={m.id}>
+                {name(m)}
               </option>
             ))}
           </select>
@@ -72,9 +72,9 @@ export function DefaultsPanel({ providers, defaults, onChange }: Props) {
             onChange={(e) => onChange({ ...defaults, image: e.target.value || undefined })}
           >
             <option value="">{t('routingUseGlobal')}</option>
-            {providers.map((p) => (
-              <option key={p.id} value={p.id}>
-                {name(p)}
+            {models.map((m) => (
+              <option key={m.id} value={m.id}>
+                {name(m)}
               </option>
             ))}
           </select>
