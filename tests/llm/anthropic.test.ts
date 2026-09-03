@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createAnthropicClient } from '@/llm/anthropic';
-import { LlmError, type ProviderProfile } from '@/llm/types';
+import { LlmError, type ResolvedProfile } from '@/llm/types';
 import {
   bodyOf,
   hangingFetch,
@@ -11,7 +11,7 @@ import {
   sseResponse,
 } from '../helpers';
 
-const profile: ProviderProfile = {
+const profile: ResolvedProfile = {
   id: 'a1',
   name: 'Anthropic',
   protocol: 'anthropic',

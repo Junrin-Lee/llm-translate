@@ -5,7 +5,7 @@ import {
   type ChatRequest,
   type ChatResult,
   LlmError,
-  type ProviderProfile,
+  type ResolvedProfile,
   type TranslationClient,
 } from './types';
 
@@ -30,9 +30,9 @@ function backoffMs(error: unknown, attempt: number, baseDelayMs: number): number
 /**
  * Build a TranslationClient for a profile: dispatches on protocol, retries
  * transient failures (429 honoring Retry-After, and 5xx with exponential
- * backoff) up to maxRetries, and makes listModels non-throwing.
+ * backoff) up to maxRetries.
  */
-export function createClient(profile: ProviderProfile, deps: ClientDeps = {}): TranslationClient {
+export function createClient(profile: ResolvedProfile, deps: ClientDeps = {}): TranslationClient {
   const adapter =
     profile.protocol === 'anthropic'
       ? createAnthropicClient(profile, deps)
@@ -77,13 +77,10 @@ export function createClient(profile: ProviderProfile, deps: ClientDeps = {}): T
         () => true,
       );
     },
-    async listModels(): Promise<string[]> {
-      try {
-        return await adapter.listModels();
-      } catch {
-        return [];
-      }
-    },
+    // An empty array means the endpoint really has no models. Auth failures and
+    // gateway errors throw, so the settings page can show what actually went wrong
+    // instead of "no models returned, type the name yourself" (ADR-0007).
+    listModels: () => adapter.listModels(),
     testConnection: () => adapter.testConnection(),
   };
 }

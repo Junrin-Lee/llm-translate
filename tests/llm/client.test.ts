@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { createClient } from '@/llm/client';
-import type { ProviderProfile } from '@/llm/types';
+import type { ResolvedProfile } from '@/llm/types';
 import { jsonResponse, recordingFetch, sseResponse } from '../helpers';
 
-const openai: ProviderProfile = {
+const openai: ResolvedProfile = {
   id: 'o',
   name: 'o',
   protocol: 'openai',
@@ -11,7 +11,7 @@ const openai: ProviderProfile = {
   apiKey: 'sk',
   model: 'gpt-4o-mini',
 };
-const anthropic: ProviderProfile = {
+const anthropic: ResolvedProfile = {
   id: 'a',
   name: 'a',
   protocol: 'anthropic',
@@ -113,15 +113,29 @@ describe('createClient retry', () => {
 });
 
 describe('createClient.listModels', () => {
-  it('swallows errors and returns an empty list', async () => {
-    const fetchImpl = recordingFetch(() => jsonResponse({}, 401));
-    const client = createClient(openai, { fetchImpl, sleep: noSleep });
-    expect(await client.listModels()).toEqual([]);
-  });
-
   it('returns model ids on success', async () => {
     const fetchImpl = recordingFetch(() => jsonResponse({ data: [{ id: 'gpt-4o' }] }));
     const client = createClient(openai, { fetchImpl, sleep: noSleep });
     expect(await client.listModels()).toEqual(['gpt-4o']);
+  });
+
+  it('returns an empty array when the endpoint genuinely has no models', async () => {
+    const fetchImpl = recordingFetch(() => jsonResponse({ data: [] }));
+    const client = createClient(openai, { fetchImpl, sleep: noSleep });
+    expect(await client.listModels()).toEqual([]);
+  });
+
+  // An empty list used to stand in for every failure, so a dead key surfaced in the
+  // options page as "no models returned, enter the model name manually" (ADR-0007).
+  it('throws on an auth failure instead of pretending there are no models', async () => {
+    const fetchImpl = recordingFetch(() => jsonResponse({}, 401));
+    const client = createClient(openai, { fetchImpl, maxRetries: 0, sleep: noSleep });
+    await expect(client.listModels()).rejects.toMatchObject({ code: 'auth' });
+  });
+
+  it('throws on a gateway error too', async () => {
+    const fetchImpl = recordingFetch(() => jsonResponse({}, 500));
+    const client = createClient(openai, { fetchImpl, maxRetries: 0, sleep: noSleep });
+    await expect(client.listModels()).rejects.toMatchObject({ code: 'server' });
   });
 });

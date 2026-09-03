@@ -13,7 +13,7 @@ import {
   type ChatRequest,
   type ChatResult,
   LlmError,
-  type ProviderProfile,
+  type ResolvedProfile,
   type TestResult,
   type TranslationClient,
 } from './types';
@@ -39,7 +39,7 @@ interface AnthropicBody {
 
 /** A TranslationClient speaking the Anthropic Messages protocol. */
 export function createAnthropicClient(
-  profile: ProviderProfile,
+  profile: ResolvedProfile,
   deps: AdapterDeps = {},
 ): TranslationClient {
   const fetchImpl = deps.fetchImpl ?? fetch;
