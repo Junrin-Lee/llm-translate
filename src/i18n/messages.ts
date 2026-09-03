@@ -2,6 +2,7 @@
 const EN = {
   // Options — navigation / section titles
   navProviders: 'Providers',
+  navModels: 'Models',
   navRouting: 'Routing',
   navTranslation: 'Translation',
   navPrompts: 'Prompts',
@@ -13,9 +14,25 @@ const EN = {
   providersAdd: 'Add provider',
   providersEmptyTitle: 'No providers yet',
   providersEmptyBody:
-    'Add a provider and paste an API key to start translating. Nothing leaves this device except requests to the endpoint you configure.',
+    'A provider is one endpoint and API key. Add one, then add the models you want to run on it. Nothing leaves this device except requests to the endpoint you configure.',
   providersAddFirst: 'Add your first provider',
   confirmDeleteProvider: 'Delete this provider? This cannot be undone.',
+  providerInUseHint: '{count} models use this provider. Delete or move them first.',
+  mergeBannerText: '{count} providers duplicate another one exactly. Merge them into one?',
+  mergeBannerAction: 'Merge duplicates',
+
+  // Models
+  modelsAdd: 'Add model',
+  modelsEmptyTitle: 'No models yet',
+  modelsEmptyBody:
+    'A model picks one model name on one of your providers. Add several to switch models without retyping the endpoint.',
+  modelsAddFirst: 'Add your first model',
+  modelsNeedProviderTitle: 'Add a provider first',
+  modelsNeedProviderBody: 'A model has to sit on a provider. Set up the endpoint and key first.',
+  confirmDeleteModel: 'Delete this model? This cannot be undone.',
+  modelNamePlaceholder: 'Untitled model',
+  modelNameAria: 'Model name',
+  fieldProvider: 'Provider',
 
   // Provider card
   providerNamePlaceholder: 'Untitled provider',
@@ -35,7 +52,8 @@ const EN = {
   fieldTemperature: 'Temperature',
   fieldMaxTokens: 'Max tokens',
   placeholderDefault: 'default',
-  actionTestConnection: 'Test connection',
+  actionTestProvider: 'Test connection',
+  actionTestModel: 'Test model',
   statusTesting: 'Testing…',
   statusConnected: 'Connected',
   actionDelete: 'Delete',
@@ -158,7 +176,8 @@ const EN = {
 export type MessageKey = keyof typeof EN;
 
 const ZH: Record<MessageKey, string> = {
-  navProviders: '服务商',
+  navProviders: 'Provider',
+  navModels: '模型',
   navRouting: '路由',
   navTranslation: '翻译',
   navPrompts: '提示词',
@@ -166,15 +185,30 @@ const ZH: Record<MessageKey, string> = {
   navCache: '缓存',
   optionsTagline: '自带 OpenAI 兼容或 Anthropic 兼容 API,密钥只保存在本机。',
 
-  providersAdd: '添加服务商',
-  providersEmptyTitle: '还没有服务商',
+  providersAdd: '添加 Provider',
+  providersEmptyTitle: '还没有 Provider',
   providersEmptyBody:
-    '添加一个服务商并填入 API Key 即可开始翻译。除了发往你配置的接口,数据不会离开本机。',
-  providersAddFirst: '添加第一个服务商',
-  confirmDeleteProvider: '删除这个服务商?此操作不可撤销。',
+    '一条 Provider 就是一个接口地址加一把 API Key。先加一条,再在它上面添加要用的模型。除了发往你配置的接口,数据不会离开本机。',
+  providersAddFirst: '添加第一个 Provider',
+  confirmDeleteProvider: '删除这条 Provider?此操作不可撤销。',
+  providerInUseHint: '还有 {count} 条模型配置在用这条 Provider,请先删除或改绑。',
+  mergeBannerText: '有 {count} 条 Provider 与其他条目完全重复,合并成一条?',
+  mergeBannerAction: '合并重复项',
 
-  providerNamePlaceholder: '未命名服务商',
-  providerNameAria: '服务商名称',
+  modelsAdd: '添加模型',
+  modelsEmptyTitle: '还没有模型',
+  modelsEmptyBody:
+    '一条模型配置就是在某条 Provider 上选一个模型名。多加几条,换模型时就不用重填接口地址了。',
+  modelsAddFirst: '添加第一个模型',
+  modelsNeedProviderTitle: '请先添加 Provider',
+  modelsNeedProviderBody: '模型必须挂在某条 Provider 上,先把接口地址和 Key 配好。',
+  confirmDeleteModel: '删除这条模型配置?此操作不可撤销。',
+  modelNamePlaceholder: '未命名模型',
+  modelNameAria: '模型名称',
+  fieldProvider: 'Provider',
+
+  providerNamePlaceholder: '未命名 Provider',
+  providerNameAria: 'Provider 名称',
   providerUsing: '使用中',
   fieldBaseUrl: 'Base URL',
   fieldApiKey: 'API Key',
@@ -190,7 +224,8 @@ const ZH: Record<MessageKey, string> = {
   fieldTemperature: 'Temperature',
   fieldMaxTokens: 'Max tokens',
   placeholderDefault: '默认',
-  actionTestConnection: '测试连接',
+  actionTestProvider: '测试连接',
+  actionTestModel: '测试模型',
   statusTesting: '测试中…',
   statusConnected: '已连接',
   actionDelete: '删除',
