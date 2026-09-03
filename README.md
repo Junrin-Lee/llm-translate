@@ -30,7 +30,7 @@ manual submission to the Chrome Web Store / Edge Add-ons / Firefox Add-ons (AMO)
 <details>
 <summary><b>More, for power users</b> — providers, routing, dual protocol, triggers, customization, cache (click to expand)</summary>
 
-- **Multiple providers + routing** — save several provider profiles (protocol / Base URL / key / model / optional params), set a global default, and optionally override the provider per feature (selection, page, screenshot)
+- **Providers, models and routing** — save connections (protocol / Base URL / key) separately from models (a model name on one connection, plus optional params), so swapping models on one gateway never means retyping the endpoint; set a global default and optionally override the model per feature (selection, page, screenshot)
 - **Dual protocol** — OpenAI-compatible (`/chat/completions`) and Anthropic-compatible (`/v1/messages`), hand-rolled lightweight client, no vendor SDK
 - **Flexible triggers** — selection icon / instant / shortcut-only; page translation via the popup, keyboard shortcut, right-click menu, or an auto-translate site list
 - **Customizable** — override the four prompt templates and reset to default; UI language (Automatic / English / 中文); per-site disable list; JSON settings import/export (keys stripped by default)
@@ -47,16 +47,18 @@ manual submission to the Chrome Web Store / Edge Add-ons / Firefox Add-ons (AMO)
 
 For screenshots, updating, and troubleshooting (e.g. "loaded it but there's no toolbar icon"), see the full [install guide](docs/INSTALL.md).
 
-### 2. Configure a provider
+### 2. Configure a provider and a model
+
+A provider is one endpoint plus one key. A model picks a model name on a provider, so several models can share one provider without you retyping anything.
 
 1. Click the extension icon → **Open settings**, go to **Providers**
 2. **Add provider** and fill in:
    - **Protocol**: OpenAI-compatible or Anthropic-compatible
    - **Base URL**: e.g. `https://api.openai.com/v1`, `https://api.anthropic.com`, or your compatible gateway
    - **API key**: your own key (stored only on this device)
-   - **Model**: type it, or click "Fetch models" to pick from the list
-3. Click **Test connection** to verify
-4. The first provider becomes the global default; with several, assign per-feature providers under **Routing**
+3. Click **Test connection** to verify the endpoint and key
+4. Go to **Models**, click **Add model**, pick the provider, then type the model name or click "Fetch models" to choose from the list. **Test model** sends one tiny request through it.
+5. The first model becomes the global default; with several, assign per-feature models under **Routing**. Adding another model on the same provider only takes step 4.
 
 ### 3. Translate
 
@@ -89,11 +91,11 @@ For screenshots, updating, and troubleshooting (e.g. "loaded it but there's no t
 
 ## ⚙️ Settings
 
-The settings page uses a sidebar: **Providers**, **Routing**, **Translation**, **Prompts**,
+The settings page uses a sidebar: **Providers**, **Models**, **Routing**, **Translation**, **Prompts**,
 **Backup**, **Cache**. The Translation section covers target language, interface language,
 selection trigger, and the per-site disable list.
 
-| ![Providers settings: protocol / Base URL / key / model](store-assets/screenshots/03-providers.png) | ![Routing: assign a provider per feature (selection, page, screenshot)](store-assets/screenshots/04-routing.png) |
+| ![Providers settings: protocol / Base URL / key](store-assets/screenshots/03-providers.png) | ![Routing: assign a model per feature (selection, page, screenshot)](store-assets/screenshots/04-routing.png) |
 | :--: | :--: |
 | ![Translation: target language, interface language, selection trigger, per-site disable list](store-assets/screenshots/05-translation.png) | ![Prompts: override the dictionary / selection / full-page / screenshot templates, reset to default](store-assets/screenshots/06-prompts.png) |
 | ![Backup: export settings as JSON (keys stripped by default) and import](store-assets/screenshots/07-backup.png) | ![Cache: view selection / page entry counts and clear](store-assets/screenshots/08-cache.png) |

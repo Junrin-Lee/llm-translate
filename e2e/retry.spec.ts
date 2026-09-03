@@ -8,12 +8,11 @@ test('a failed page translation can be retried per-block and in bulk', async () 
     await seedSettings(ext, {
       providers: [
         {
-          id: 'mock',
+          id: 'mock-provider',
           name: 'Mock',
           protocol: 'openai',
           baseUrl: 'http://127.0.0.1:1/v1',
           apiKey: 'test-key',
-          model: 'mock-model',
         },
       ],
       siteRules: { autoTranslate: ['localhost'], disableSelection: [] },

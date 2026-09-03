@@ -123,9 +123,10 @@ interface TranslationClient {
 
 ```ts
 {
-  version: 1,
-  providers: ProviderProfile[],            // {id, name, protocol, baseUrl, apiKey, model, params?}
-  defaults: { global: id, selection?: id, page?: id, image?: id },   // 功能级覆盖(image = 截屏翻译)
+  version: 2,
+  providers: LlmProvider[],                // {id, name, protocol, baseUrl, apiKey, timeoutMs?} —— 连接
+  models: ModelProfile[],                  // {id, name, providerId, model, params?} —— 某条连接上的某个模型
+  defaults: { global: id, selection?: id, page?: id, image?: id },   // 存 ModelProfile id;功能级覆盖(image = 截屏翻译)
   general: { targetLang, secondaryTargetLang?, selectionTrigger, pageMode, uiLang },  // secondaryTargetLang:预留,暂未接入任何 UI;uiLang: 界面语言 auto/en/zh
   siteRules: { autoTranslate: string[], disableSelection: string[] },
   prompts: { selectionDict?, selectionText?, pageBatch?, imageText? },  // 未设置 = 用内置默认
@@ -134,7 +135,9 @@ interface TranslationClient {
 
 > 翻译缓存**不在** `AppSettings` 内,而是独立的存储键(划词用 `storage.session`、全文用 `storage.local`),按内容 key、LRU 淘汰、可一键清空;详见 roadmap「缓存设计」。
 
-导入/导出:JSON 文件;导出默认**不含** API Key,勾选「包含 Key」才导出并给敏感提示。导入时 `id` / `baseUrl` / `model` 必填;`name` 可选(允许为空,因为配置按 id 绑定)。
+导入/导出:JSON 文件;导出默认**不含** API Key,勾选「包含 Key」才导出并给敏感提示。导入时 provider 必填 `id` / `baseUrl`,model 必填 `id` / `providerId` / `model`;`name` 两边都可选(允许为空,因为记录按 id 绑定),而 `providerId` 在同一份文件里找不到对应 provider 的 model 会被拒绝。
+
+v1(到 v0.3.0 为止)把连接、模型和参数装在一条扁平的 `ProviderProfile` 里,于是同一个网关下的两个模型必须把 Base URL 和 API Key 各填一遍。ADR-0007 拆开了它。迁移在读路径(`getSettings`)和导入路径上各跑一次,把每条 v1 配置展开成一个 provider 加一个 model,**完全不去重**,并让 model 沿用 v1 的 id,因此 `defaults` 无需重映射。把协议类型、Base URL、API Key 全等的 provider 收拢成一条,改由设置页里一个显式动作完成。
 
 ## 8. Prompt 层
 

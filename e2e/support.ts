@@ -39,6 +39,38 @@ export async function seedSettings(
   overrides: Record<string, unknown> = {},
 ): Promise<void> {
   const settings = {
+    version: 2,
+    providers: [
+      {
+        id: 'mock-provider',
+        name: 'Mock',
+        protocol: 'openai',
+        baseUrl: `${BASE_URL}/v1`,
+        apiKey: 'test-key',
+      },
+    ],
+    // Keeps the id 'mock', so every spec pointing defaults at it still works.
+    models: [{ id: 'mock', name: 'Mock', providerId: 'mock-provider', model: 'mock-model' }],
+    defaults: { global: 'mock' },
+    general: {
+      targetLang: 'zh-CN',
+      selectionTrigger: 'instant',
+      pageMode: 'bilingual',
+      uiLang: 'en',
+    },
+    siteRules: { autoTranslate: [], disableSelection: [] },
+    prompts: {},
+    ...overrides,
+  };
+  await writeSettings({ context, extensionId }, settings);
+}
+
+/**
+ * Seed the flat v1 shape a build up to v0.3.0 would have written, so the upgrade
+ * path is covered end to end and not only in unit tests (ADR-0007).
+ */
+export async function seedV1Settings(ext: LoadedExtension): Promise<void> {
+  await writeSettings(ext, {
     version: 1,
     providers: [
       {
@@ -59,8 +91,13 @@ export async function seedSettings(
     },
     siteRules: { autoTranslate: [], disableSelection: [] },
     prompts: {},
-    ...overrides,
-  };
+  });
+}
+
+async function writeSettings(
+  { context, extensionId }: LoadedExtension,
+  settings: unknown,
+): Promise<void> {
   const page = await context.newPage();
   await page.goto(`chrome-extension://${extensionId}/options.html`);
   await page.evaluate((value) => chrome.storage.local.set({ settings: value }), settings);

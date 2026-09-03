@@ -123,9 +123,10 @@ interface TranslationClient {
 
 ```ts
 {
-  version: 1,
-  providers: ProviderProfile[],            // {id, name, protocol, baseUrl, apiKey, model, params?}
-  defaults: { global: id, selection?: id, page?: id, image?: id },   // feature-level overrides (image = Screenshot Translation)
+  version: 2,
+  providers: LlmProvider[],                // {id, name, protocol, baseUrl, apiKey, timeoutMs?} — the connection
+  models: ModelProfile[],                  // {id, name, providerId, model, params?} — one model on one provider
+  defaults: { global: id, selection?: id, page?: id, image?: id },   // ModelProfile ids; feature-level overrides (image = Screenshot Translation)
   general: { targetLang, secondaryTargetLang?, selectionTrigger, pageMode, uiLang },  // secondaryTargetLang: reserved, not yet wired to any UI; uiLang: UI language auto/en/zh
   siteRules: { autoTranslate: string[], disableSelection: string[] },
   prompts: { selectionDict?, selectionText?, pageBatch?, imageText? },  // unset = use built-in default
@@ -134,7 +135,9 @@ interface TranslationClient {
 
 > The translation cache is **not** inside `AppSettings`; it lives under separate storage keys (`storage.session` for selection, `storage.local` for page), keyed by content, evicted by LRU, and clearable in one click; see "Cache design" in the roadmap for details.
 
-Import/export: JSON files; export **excludes** the API Key by default — only when "Include keys" is checked does it export them, with a sensitivity warning. On import, `id` / `baseUrl` / `model` are required; `name` is optional (empty allowed, since profiles are bound by id).
+Import/export: JSON files; export **excludes** the API Key by default — only when "Include keys" is checked does it export them, with a sensitivity warning. On import, `id` / `baseUrl` are required on a provider and `id` / `providerId` / `model` on a model; `name` is optional on both (empty allowed, since records are bound by id), and a model naming a provider absent from the file is rejected.
+
+v1 (through v0.3.0) stored one flat `ProviderProfile` holding the connection, the model and its parameters together, so two models behind one gateway meant duplicating the Base URL and API Key. ADR-0007 split it. Migration runs on the read path (`getSettings`) and on import, expands every v1 profile into one provider plus one model with **no dedupe**, and keeps the v1 id on the model so `defaults` needs no remapping. Collapsing providers that match exactly on protocol, Base URL and API key is offered in the settings page as an explicit action instead.
 
 ## 8. Prompt Layer
 
