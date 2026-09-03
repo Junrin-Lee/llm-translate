@@ -1,5 +1,6 @@
 import { storage } from '#imports';
-import type { ProviderProfile } from '@/llm/types';
+import type { ResolvedProfile } from '@/llm/types';
+import { migrateSettings } from './migrate';
 import {
   type AppSettings,
   DEFAULT_SETTINGS,
@@ -8,17 +9,24 @@ import {
 } from './schema';
 
 // All settings live in a single local-only item (ADR-0002). Keys are never synced.
-const settingsItem = storage.defineItem<AppSettings>('local:settings', {
+// The stored payload may predate the current schema, so it is typed `unknown` and
+// passed through migrateSettings on every read (ADR-0007).
+const settingsItem = storage.defineItem<unknown>('local:settings', {
   fallback: DEFAULT_SETTINGS,
 });
 
-export function getSettings(): Promise<AppSettings> {
-  return settingsItem.getValue();
+export async function getSettings(): Promise<AppSettings> {
+  const stored = await settingsItem.getValue();
+  const migrated = migrateSettings(stored);
+  // Identity, not deep equality: migrateSettings hands v2 payloads straight back,
+  // so this writes exactly once per upgrade instead of on every read.
+  if (migrated !== stored) await settingsItem.setValue(migrated);
+  return migrated;
 }
 
 /** Shallow-merge a patch over the current settings (top-level keys replace). */
 export async function updateSettings(patch: Partial<AppSettings>): Promise<void> {
-  const current = await settingsItem.getValue();
+  const current = await getSettings();
   await settingsItem.setValue({ ...current, ...patch });
 }
 
@@ -28,14 +36,14 @@ export async function replaceSettings(next: AppSettings): Promise<void> {
 }
 
 export function watchSettings(cb: (settings: AppSettings) => void): () => void {
-  return settingsItem.watch((next) => cb(next ?? DEFAULT_SETTINGS));
+  return settingsItem.watch((next) => cb(migrateSettings(next ?? DEFAULT_SETTINGS)));
 }
 
 /**
  * Resolve the profile a feature should use: its feature override if present and
- * still valid, otherwise the global default. Returns null when neither resolves.
+ * still resolvable, otherwise the global default. Returns null when neither resolves.
  */
-export async function resolveProfile(feature: TranslateFeature): Promise<ProviderProfile | null> {
+export async function resolveProfile(feature: TranslateFeature): Promise<ResolvedProfile | null> {
   return resolveProfileFrom(await getSettings(), feature);
 }
 
