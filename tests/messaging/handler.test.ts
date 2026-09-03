@@ -1,21 +1,44 @@
 import { describe, expect, it, vi } from 'vitest';
-import { LlmError, type ProviderProfile, type TranslationClient } from '@/llm/types';
+import {
+  LlmError,
+  type LlmProvider,
+  type ModelProfile,
+  type ResolvedProfile,
+  type TranslationClient,
+} from '@/llm/types';
 import { handleRequest } from '@/messaging/handler';
 import type { BgEvent, BgRequest } from '@/messaging/protocol';
 import { type AppSettings, DEFAULT_SETTINGS } from '@/storage/schema';
 import type { TranslationCache } from '@/translator/cache';
 
-const profile: ProviderProfile = {
+const provider: LlmProvider = {
   id: 'p1',
   name: 'p1',
   protocol: 'openai',
   baseUrl: 'https://api.openai.com/v1',
   apiKey: 'sk',
+};
+
+const modelProfile: ModelProfile = {
+  id: 'm1',
+  name: 'm1',
+  providerId: 'p1',
   model: 'gpt-4o-mini',
 };
 
-function settingsWith(providers: ProviderProfile[]): AppSettings {
-  return { ...DEFAULT_SETTINGS, providers, defaults: { global: providers[0]?.id ?? null } };
+/** What resolveProfile hands back once provider and model are joined. */
+const profile: ResolvedProfile = { ...provider, ...modelProfile, id: modelProfile.id };
+
+/** A model whose provider was deleted; resolution must refuse to half-build it. */
+const orphan: ModelProfile = { id: 'orphan', name: 'orphan', providerId: 'gone', model: 'x' };
+
+function settingsWith(models: ModelProfile[] = [modelProfile]): AppSettings {
+  return {
+    ...DEFAULT_SETTINGS,
+    providers: [provider],
+    models,
+    defaults: { global: models[0]?.id ?? null },
+  };
 }
 
 /** Build a fake TranslationClient with overridable behavior. */
@@ -51,7 +74,7 @@ describe('handleRequest translate-stream', () => {
       vars: { text: 'hello', targetLang: 'zh-CN' },
     };
     await handleRequest(req, emit, {
-      getSettings: async () => settingsWith([profile]),
+      getSettings: async () => settingsWith(),
       resolveProfile: async () => profile,
       createClient: () => client,
     });
@@ -98,7 +121,7 @@ describe('handleRequest translate-stream', () => {
       },
       emit,
       {
-        getSettings: async () => settingsWith([profile]),
+        getSettings: async () => settingsWith(),
         resolveProfile: async () => profile,
         createClient: () => client,
       },
@@ -110,7 +133,7 @@ describe('handleRequest translate-stream', () => {
     const streamSpy = vi.fn(async () => ({ text: 'x' }));
     const client = fakeClient({ stream: streamSpy as unknown as TranslationClient['stream'] });
     const settings: AppSettings = {
-      ...settingsWith([profile]),
+      ...settingsWith(),
       prompts: { selectionText: 'CUSTOM {{targetLang}}' },
     };
     await handleRequest(
@@ -135,39 +158,112 @@ describe('handleRequest translate-stream', () => {
   });
 });
 
-describe('handleRequest list-models & test-connection', () => {
-  it('returns models for a known profile', async () => {
-    const client = fakeClient({ listModels: async () => ['a', 'b'] });
+describe('handleRequest list-models', () => {
+  const run = async (req: BgRequest, client: TranslationClient) => {
     const { emit, events } = collector();
-    await handleRequest({ kind: 'list-models', profileId: 'p1' }, emit, {
-      getSettings: async () => settingsWith([profile]),
+    await handleRequest(req, emit, {
+      getSettings: async () => settingsWith(),
       resolveProfile: async () => null,
       createClient: () => client,
     });
+    return events;
+  };
+
+  it('lists models for a provider without needing a model profile', async () => {
+    const events = await run(
+      { kind: 'list-models', providerId: 'p1' },
+      fakeClient({ listModels: async () => ['a', 'b'] }),
+    );
     expect(events).toEqual([{ type: 'models', models: ['a', 'b'] }]);
   });
 
-  it('emits not_found for an unknown profile id', async () => {
-    const { emit, events } = collector();
-    await handleRequest({ kind: 'test-connection', profileId: 'ghost' }, emit, {
-      getSettings: async () => settingsWith([profile]),
-      resolveProfile: async () => null,
-      createClient: () => fakeClient({}),
-    });
+  it('emits not_found for an unknown provider id', async () => {
+    const events = await run({ kind: 'list-models', providerId: 'ghost' }, fakeClient({}));
     expect(events[0]).toMatchObject({ type: 'error', code: 'not_found' });
   });
 
-  it('reports a connection test result', async () => {
-    const client = fakeClient({ testConnection: async () => ({ ok: true, latencyMs: 42 }) });
+  // A failure here is an operation failure: the user asked for a list and did not
+  // get one, so it must not arrive as an empty list (ADR-0007).
+  it('reports a listModels failure as an error event, not an empty list', async () => {
+    const events = await run(
+      { kind: 'list-models', providerId: 'p1' },
+      fakeClient({
+        listModels: async () => {
+          throw new LlmError('auth', 'Invalid API key');
+        },
+      }),
+    );
+    expect(events[0]).toMatchObject({ type: 'error', code: 'auth' });
+    expect(events).not.toContainEqual(expect.objectContaining({ type: 'models' }));
+  });
+});
+
+describe('handleRequest test-provider & test-model', () => {
+  function spyClient(overrides: Partial<TranslationClient> = {}) {
+    const seen: ResolvedProfile[] = [];
+    const listModels = vi.fn(async () => ['a']);
+    const testConnection = vi.fn(async () => ({ ok: true, latencyMs: 42 }));
+    const client = fakeClient({ listModels, testConnection, ...overrides });
+    return {
+      seen,
+      listModels,
+      testConnection,
+      deps: {
+        getSettings: async () => settingsWith([modelProfile, orphan]),
+        resolveProfile: async () => null,
+        createClient: (p: ResolvedProfile) => {
+          seen.push(p);
+          return client;
+        },
+      },
+    };
+  }
+
+  it('probes a provider through listModels, never through a completion', async () => {
+    const spy = spyClient();
     const { emit, events } = collector();
-    await handleRequest({ kind: 'test-connection', profileId: 'p1' }, emit, {
-      getSettings: async () => settingsWith([profile]),
-      resolveProfile: async () => null,
-      createClient: () => client,
+    await handleRequest({ kind: 'test-provider', providerId: 'p1' }, emit, spy.deps);
+    expect(spy.listModels).toHaveBeenCalled();
+    expect(spy.testConnection).not.toHaveBeenCalled();
+    expect(events[0]).toMatchObject({ type: 'test-result', ok: true });
+    expect(spy.seen[0]).toMatchObject({ apiKey: 'sk', model: '' });
+  });
+
+  // The same LlmError is a verdict here, not an operation failure (ADR-0007).
+  it('turns a provider probe failure into a test-result, not an error event', async () => {
+    const spy = spyClient({
+      listModels: async () => {
+        throw new LlmError('auth', 'Invalid API key');
+      },
     });
+    const { emit, events } = collector();
+    await handleRequest({ kind: 'test-provider', providerId: 'p1' }, emit, spy.deps);
+    expect(events[0]).toMatchObject({ type: 'test-result', ok: false, errorCode: 'auth' });
+  });
+
+  it('probes a model through testConnection with the joined profile', async () => {
+    const spy = spyClient();
+    const { emit, events } = collector();
+    await handleRequest({ kind: 'test-model', modelId: 'm1' }, emit, spy.deps);
+    expect(spy.testConnection).toHaveBeenCalled();
+    expect(spy.seen[0]).toMatchObject({ model: 'gpt-4o-mini', apiKey: 'sk' });
     expect(events).toEqual([
       { type: 'test-result', ok: true, latencyMs: 42, errorCode: undefined, message: undefined },
     ]);
+  });
+
+  it('emits not_found for an unknown model id', async () => {
+    const spy = spyClient();
+    const { emit, events } = collector();
+    await handleRequest({ kind: 'test-model', modelId: 'ghost' }, emit, spy.deps);
+    expect(events[0]).toMatchObject({ type: 'error', code: 'not_found' });
+  });
+
+  it('emits not_found when a model points at a provider that is gone', async () => {
+    const spy = spyClient();
+    const { emit, events } = collector();
+    await handleRequest({ kind: 'test-model', modelId: 'orphan' }, emit, spy.deps);
+    expect(events[0]).toMatchObject({ type: 'error', code: 'not_found' });
   });
 });
 
@@ -187,7 +283,7 @@ describe('handleRequest translate-batch', () => {
       },
       emit,
       {
-        getSettings: async () => settingsWith([profile]),
+        getSettings: async () => settingsWith(),
         resolveProfile: async () => profile,
         createClient: () => client,
       },
@@ -226,7 +322,7 @@ describe('handleRequest caching', () => {
     });
     const client = fakeClient({ stream: streamSpy as unknown as TranslationClient['stream'] });
     const deps = {
-      getSettings: async () => settingsWith([profile]),
+      getSettings: async () => settingsWith(),
       resolveProfile: async () => profile,
       createClient: () => client,
       selectionCache: fakeCache(),
@@ -248,7 +344,7 @@ describe('handleRequest caching', () => {
     });
     const client = fakeClient({ stream: streamSpy as unknown as TranslationClient['stream'] });
     const deps = {
-      getSettings: async () => settingsWith([profile]),
+      getSettings: async () => settingsWith(),
       resolveProfile: async () => profile,
       createClient: () => client,
       selectionCache: fakeCache(),
@@ -281,7 +377,7 @@ describe('handleRequest translate-image', () => {
     const features: string[] = [];
     const { emit, events } = collector();
     await handleRequest(imageReq, emit, {
-      getSettings: async () => settingsWith([profile]),
+      getSettings: async () => settingsWith(),
       resolveProfile: async (feature) => {
         features.push(feature);
         return profile;
@@ -302,7 +398,7 @@ describe('handleRequest translate-image', () => {
     const cache = { get: vi.fn(), set: vi.fn() } as unknown as TranslationCache;
     const { emit } = collector();
     await handleRequest(imageReq, emit, {
-      getSettings: async () => settingsWith([profile]),
+      getSettings: async () => settingsWith(),
       resolveProfile: async () => profile,
       createClient: () => fakeClient({ stream: async () => ({ text: 'x' }) }),
       selectionCache: cache,

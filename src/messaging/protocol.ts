@@ -6,7 +6,8 @@ export const TRANSLATE_PORT = 'llm-translate';
 
 /**
  * Requests the background accepts (first message on a connected port):
- * selection streaming, page batches, screenshot translation, model listing, connection tests.
+ * selection streaming, page batches, screenshot translation, model listing,
+ * and the two separate health probes (provider connection, model end-to-end).
  */
 export type BgRequest =
   | {
@@ -31,8 +32,11 @@ export type BgRequest =
       image: ImageAttachment;
       vars: Omit<PromptVars, 'text'>;
     }
-  | { kind: 'list-models'; profileId: string }
-  | { kind: 'test-connection'; profileId: string };
+  | { kind: 'list-models'; providerId: string }
+  /** Connection health only: auth + reachability, no model involved. */
+  | { kind: 'test-provider'; providerId: string }
+  /** End-to-end check for one Model Profile: a single tiny completion. */
+  | { kind: 'test-model'; modelId: string };
 
 /** One-off messages the background / popup send to a tab's content script. */
 export type ContentMessage =

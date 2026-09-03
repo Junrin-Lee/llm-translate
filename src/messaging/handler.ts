@@ -1,13 +1,23 @@
-import { LlmError, type ProviderProfile, type TranslationClient } from '@/llm/types';
+import {
+  LlmError,
+  type ResolvedProfile,
+  type TestResult,
+  type TranslationClient,
+} from '@/llm/types';
 import { renderPrompt } from '@/prompts';
-import type { AppSettings, TranslateFeature } from '@/storage/schema';
+import {
+  type AppSettings,
+  joinProfile,
+  resolveForProvider,
+  type TranslateFeature,
+} from '@/storage/schema';
 import { cacheKey, type TranslationCache } from '@/translator/cache';
 import type { BgEvent, BgRequest } from './protocol';
 
 export interface HandlerDeps {
   getSettings: () => Promise<AppSettings>;
-  resolveProfile: (feature: TranslateFeature) => Promise<ProviderProfile | null>;
-  createClient: (profile: ProviderProfile) => TranslationClient;
+  resolveProfile: (feature: TranslateFeature) => Promise<ResolvedProfile | null>;
+  createClient: (profile: ResolvedProfile) => TranslationClient;
   /** Optional caches; omitted in tests to exercise the live path. */
   selectionCache?: TranslationCache;
   pageCache?: TranslationCache;
@@ -33,6 +43,15 @@ export async function handleRequest(
   deps: HandlerDeps,
   signal?: AbortSignal,
 ): Promise<void> {
+  const emitTestResult = (result: TestResult) =>
+    emit({
+      type: 'test-result',
+      ok: result.ok,
+      latencyMs: result.latencyMs,
+      errorCode: result.error?.code,
+      message: result.error?.message,
+    });
+
   try {
     switch (req.kind) {
       case 'translate-stream': {
@@ -132,29 +151,47 @@ export async function handleRequest(
       }
       case 'list-models': {
         const settings = await deps.getSettings();
-        const profile = settings.providers.find((p) => p.id === req.profileId);
-        if (!profile) {
-          emit({ type: 'error', code: 'not_found', message: 'Profile not found' });
+        const provider = settings.providers.find((p) => p.id === req.providerId);
+        if (!provider) {
+          emit({ type: 'error', code: 'not_found', message: 'Provider not found' });
           return;
         }
-        emit({ type: 'models', models: await deps.createClient(profile).listModels() });
+        // No local catch: a failure here is an operation failure, so the outer
+        // handler turns it into { type: 'error' } with the real code and message.
+        const models = await deps.createClient(resolveForProvider(provider)).listModels();
+        emit({ type: 'models', models });
         return;
       }
-      case 'test-connection': {
+      case 'test-provider': {
         const settings = await deps.getSettings();
-        const profile = settings.providers.find((p) => p.id === req.profileId);
-        if (!profile) {
-          emit({ type: 'error', code: 'not_found', message: 'Profile not found' });
+        const provider = settings.providers.find((p) => p.id === req.providerId);
+        if (!provider) {
+          emit({ type: 'error', code: 'not_found', message: 'Provider not found' });
           return;
         }
-        const result = await deps.createClient(profile).testConnection();
-        emit({
-          type: 'test-result',
-          ok: result.ok,
-          latencyMs: result.latencyMs,
-          errorCode: result.error?.code,
-          message: result.error?.message,
-        });
+        // Connection probe: the same failure is a verdict here, not an operation
+        // error, so it is caught locally and reported as a test-result.
+        const start = Date.now();
+        try {
+          await deps.createClient(resolveForProvider(provider)).listModels();
+          emitTestResult({ ok: true, latencyMs: Date.now() - start });
+        } catch (error) {
+          emitTestResult({
+            ok: false,
+            error: error instanceof LlmError ? error : new LlmError('network', String(error)),
+          });
+        }
+        return;
+      }
+      case 'test-model': {
+        const settings = await deps.getSettings();
+        const model = settings.models.find((m) => m.id === req.modelId);
+        const provider = model && settings.providers.find((p) => p.id === model.providerId);
+        if (!model || !provider) {
+          emit({ type: 'error', code: 'not_found', message: 'Model or its provider not found' });
+          return;
+        }
+        emitTestResult(await deps.createClient(joinProfile(provider, model)).testConnection());
         return;
       }
       default: {
