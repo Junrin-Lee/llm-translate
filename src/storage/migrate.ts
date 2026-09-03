@@ -1,5 +1,5 @@
 import type { LlmProvider, ModelParams, ModelProfile, Protocol } from '@/llm/types';
-import { type AppSettings, DEFAULT_SETTINGS } from './schema';
+import { type AppSettings, DEFAULT_SETTINGS, TRANSLATE_FEATURES } from './schema';
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -7,6 +7,18 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
 
 const str = (value: unknown, fallback = ''): string =>
   typeof value === 'string' ? value : fallback;
+
+/** Carry v1 routing across verbatim: the ids it holds are still the model ids. */
+function toDefaults(value: unknown): AppSettings['defaults'] {
+  if (!isRecord(value)) return DEFAULT_SETTINGS.defaults;
+  const defaults: AppSettings['defaults'] = {
+    global: typeof value.global === 'string' ? value.global : null,
+  };
+  for (const feature of TRANSLATE_FEATURES) {
+    if (typeof value[feature] === 'string') defaults[feature] = value[feature];
+  }
+  return defaults;
+}
 
 function toParams(value: unknown): ModelParams | undefined {
   if (!isRecord(value)) return undefined;
@@ -54,9 +66,7 @@ function migrateV1(raw: Record<string, unknown>): AppSettings {
     version: 2,
     providers,
     models,
-    defaults: isRecord(raw.defaults)
-      ? (raw.defaults as AppSettings['defaults'])
-      : DEFAULT_SETTINGS.defaults,
+    defaults: toDefaults(raw.defaults),
     general: isRecord(raw.general)
       ? { ...DEFAULT_SETTINGS.general, ...(raw.general as Partial<AppSettings['general']>) }
       : DEFAULT_SETTINGS.general,
