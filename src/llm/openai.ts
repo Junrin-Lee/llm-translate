@@ -4,6 +4,7 @@ import {
   DEFAULT_TIMEOUT_MS,
   errorFromResponse,
   fetchWithTimeout,
+  opencodeSessionHeader,
   STREAM_IDLE_TIMEOUT_MS,
   withIdleTimeout,
 } from './http';
@@ -41,6 +42,7 @@ export function createOpenAiClient(
   const headers: Record<string, string> = {
     'content-type': 'application/json',
     authorization: `Bearer ${profile.apiKey}`,
+    ...opencodeSessionHeader(base, profile.id),
   };
 
   function buildBody(req: ChatRequest, stream: boolean): OpenAiBody {

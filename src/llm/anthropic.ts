@@ -4,6 +4,7 @@ import {
   DEFAULT_TIMEOUT_MS,
   errorFromResponse,
   fetchWithTimeout,
+  opencodeSessionHeader,
   STREAM_IDLE_TIMEOUT_MS,
   withIdleTimeout,
 } from './http';
@@ -52,6 +53,7 @@ export function createAnthropicClient(
     // Required to call the official API from an extension (browser) context;
     // harmless for compatible gateways. See ADR-0003 / docs/plan.md.
     'anthropic-dangerous-direct-browser-access': 'true',
+    ...opencodeSessionHeader(base, profile.id),
   };
 
   function buildBody(req: ChatRequest, stream: boolean): AnthropicBody {

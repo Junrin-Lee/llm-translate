@@ -10,6 +10,25 @@ export interface AdapterDeps {
 }
 
 export const DEFAULT_TIMEOUT_MS = 60_000;
+
+/**
+ * OpenCode Go (opencode.ai) rejects requests with 400 unless they carry a
+ * stable `x-opencode-session` id; the profile id is stable per connection, so
+ * every translation shares one session and benefits from prompt caching.
+ * Scoped by host so other OpenAI/Anthropic-compatible gateways never see it.
+ */
+export function opencodeSessionHeader(base: string, sessionId: string): Record<string, string> {
+  let host = '';
+  try {
+    host = new URL(base).hostname;
+  } catch {
+    return {};
+  }
+  if (host === 'opencode.ai' || host.endsWith('.opencode.ai')) {
+    return { 'x-opencode-session': sessionId };
+  }
+  return {};
+}
 /** Max quiet gap tolerated while reading a response body (SSE or error text). */
 export const STREAM_IDLE_TIMEOUT_MS = 30_000;
 

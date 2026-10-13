@@ -161,6 +161,22 @@ describe('createOpenAiClient stall watchdog', () => {
   });
 });
 
+describe('createOpenAiClient opencode session header', () => {
+  it('sends x-opencode-session (profile id) only to opencode.ai hosts', async () => {
+    const ok = () => jsonResponse({ choices: [{ message: { content: 'ok' } }] });
+    const go = recordingFetch(ok);
+    await createOpenAiClient(
+      { ...profile, baseUrl: 'https://opencode.ai/zen/v1' },
+      { fetchImpl: go },
+    ).complete(req);
+    expect(headerOf(go.calls[0], 'x-opencode-session')).toBe('p1');
+
+    const other = recordingFetch(ok);
+    await createOpenAiClient(profile, { fetchImpl: other }).complete(req);
+    expect(headerOf(other.calls[0], 'x-opencode-session')).toBeUndefined();
+  });
+});
+
 describe('createOpenAiClient.complete', () => {
   it('returns the message content and token usage', async () => {
     const fetchImpl = recordingFetch(() =>
