@@ -245,4 +245,24 @@ describe('createAnthropicClient.testConnection', () => {
     expect(result.ok).toBe(false);
     expect(result.error?.code).toBe('auth');
   });
+
+  it('passes on a 200 whose content is missing (gateway or thinking model)', async () => {
+    const fetchImpl = recordingFetch(() =>
+      jsonResponse({ type: 'message', stop_reason: 'max_tokens', content: null }),
+    );
+    const client = createAnthropicClient(profile, { fetchImpl });
+    const result = await client.testConnection();
+    expect(result.ok).toBe(true);
+    expect(typeof result.latencyMs).toBe('number');
+  });
+
+  it('fails on a 200 that carries an error payload', async () => {
+    const fetchImpl = recordingFetch(() =>
+      jsonResponse({ type: 'error', error: { type: 'not_found_error', message: 'model: x' } }),
+    );
+    const client = createAnthropicClient(profile, { fetchImpl });
+    const result = await client.testConnection();
+    expect(result.ok).toBe(false);
+    expect(result.error?.message).toContain('model: x');
+  });
 });

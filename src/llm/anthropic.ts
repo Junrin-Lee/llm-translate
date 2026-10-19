@@ -1,6 +1,7 @@
 import { endpointFor, normalizeBaseUrl } from './base-url';
 import {
   type AdapterDeps,
+  assertProbeBody,
   DEFAULT_TIMEOUT_MS,
   errorFromResponse,
   fetchWithTimeout,
@@ -179,7 +180,12 @@ export function createAnthropicClient(
   async function testConnection(): Promise<TestResult> {
     const start = Date.now();
     try {
-      await complete({ system: '', user: 'ping', model: profile.model, maxTokens: 1 });
+      // Checks reachability, auth and the model id — not the reply: see assertProbeBody.
+      const res = await postMessages(
+        buildBody({ system: '', user: 'ping', model: profile.model, maxTokens: 1 }, false),
+      );
+      if (!res.ok) throw await errorFromResponse(res, idleMs);
+      await assertProbeBody(res, idleMs);
       return { ok: true, latencyMs: Date.now() - start };
     } catch (error) {
       return {

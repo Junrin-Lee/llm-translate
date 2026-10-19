@@ -59,6 +59,34 @@ function responseText(system, user) {
   return `${SENTINEL} ${user.trim()}`;
 }
 
+/**
+ * Model ids that make a non-streaming call misbehave the way real providers do,
+ * so the settings page's "Test model" verdict is covered end to end.
+ * - mock-reasoning: a thinking model that spends a 1-token budget on reasoning
+ *   and replies 200 with no text content.
+ * - mock-error-200: a gateway that reports a failure inside a 200 body.
+ */
+function probeQuirk(model, protocol) {
+  if (model === 'mock-error-200') {
+    return protocol === 'anthropic'
+      ? { type: 'error', error: { type: 'not_found_error', message: 'mock: no such model' } }
+      : { error: { message: 'mock: no such model' } };
+  }
+  if (model === 'mock-reasoning') {
+    return protocol === 'anthropic'
+      ? { type: 'message', stop_reason: 'max_tokens', content: null }
+      : {
+          choices: [
+            {
+              message: { role: 'assistant', content: null, reasoning_content: 'Hmm' },
+              finish_reason: 'length',
+            },
+          ],
+        };
+  }
+  return null;
+}
+
 function sendJson(res, status, body) {
   res.writeHead(status, { 'content-type': 'application/json', ...CORS });
   res.end(JSON.stringify(body));
@@ -129,6 +157,11 @@ const server = createServer(async (req, res) => {
         .filter((m) => m.role === role)
         .map((m) => m.content)
         .join('\n');
+    const quirk = body.stream ? null : probeQuirk(body.model, 'openai');
+    if (quirk) {
+      sendJson(res, 200, quirk);
+      return;
+    }
     const text = responseText(pick('system'), pick('user'));
     if (body.stream) streamOpenAi(res, text);
     else
@@ -146,6 +179,11 @@ const server = createServer(async (req, res) => {
       .filter((m) => m.role === 'user')
       .map((m) => (typeof m.content === 'string' ? m.content : ''))
       .join('\n');
+    const quirk = body.stream ? null : probeQuirk(body.model, 'anthropic');
+    if (quirk) {
+      sendJson(res, 200, quirk);
+      return;
+    }
     const text = responseText(system, user);
     if (body.stream) streamAnthropic(res, text);
     else

@@ -280,4 +280,35 @@ describe('createOpenAiClient.testConnection', () => {
     expect(result.ok).toBe(false);
     expect(result.error?.code).toBe('auth');
   });
+
+  it('passes when a reasoning model spends the 1-token budget and returns null content', async () => {
+    const fetchImpl = recordingFetch(() =>
+      jsonResponse({
+        choices: [
+          { message: { content: null, reasoning_content: 'The' }, finish_reason: 'length' },
+        ],
+      }),
+    );
+    const client = createOpenAiClient(profile, { fetchImpl });
+    const result = await client.testConnection();
+    expect(result.ok).toBe(true);
+  });
+
+  it('fails on a 200 that carries an error payload', async () => {
+    const fetchImpl = recordingFetch(() =>
+      jsonResponse({ error: { message: 'model does not exist' } }),
+    );
+    const client = createOpenAiClient(profile, { fetchImpl });
+    const result = await client.testConnection();
+    expect(result.ok).toBe(false);
+    expect(result.error?.message).toContain('model does not exist');
+  });
+
+  it('fails on a 200 that is not JSON (wrong base URL hitting a web page)', async () => {
+    const fetchImpl = recordingFetch(() => new Response('<html>hello</html>', { status: 200 }));
+    const client = createOpenAiClient(profile, { fetchImpl });
+    const result = await client.testConnection();
+    expect(result.ok).toBe(false);
+    expect(result.error?.code).toBe('bad_response');
+  });
 });

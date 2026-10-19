@@ -108,6 +108,32 @@ export async function errorFromResponse(
 }
 
 /**
+ * Verdict for a connection probe's 2xx response. The probe asks for a single
+ * token, so the reply's content is not a signal: reasoning models spend that
+ * token on thinking and return null content. What does count as failure is a
+ * body that isn't JSON (base URL pointing at a web page) or one that carries
+ * an error payload despite the 2xx (some gateways do this).
+ */
+export async function assertProbeBody(
+  res: Response,
+  bodyTimeoutMs = STREAM_IDLE_TIMEOUT_MS,
+): Promise<void> {
+  const text = await textWithTimeout(res, bodyTimeoutMs);
+  let json: { type?: unknown; error?: unknown };
+  try {
+    json = JSON.parse(text);
+  } catch {
+    throw new LlmError('bad_response', `Response was not JSON: ${truncate(text.trim(), 120)}`);
+  }
+  if (json === null || typeof json !== 'object') {
+    throw new LlmError('bad_response', 'Response was not a JSON object');
+  }
+  if (json.error !== undefined && json.error !== null) {
+    throw new LlmError('server', extractMessage(text) || 'Provider reported an error');
+  }
+}
+
+/**
  * fetch with a timeout and cooperative external cancellation. Distinguishes a
  * timeout (`timeout`) from a caller-initiated abort (`aborted`) and wraps any
  * other failure as `network`.
