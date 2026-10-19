@@ -26,6 +26,9 @@ manual submission to the Chrome Web Store / Edge Add-ons / Firefox Add-ons (AMO)
   - from the popup or the right-click menu, drag-select a region over a frozen capture of the page; the translation streams in place (drag the card aside if it covers the original)
   - on restricted pages (the built-in PDF viewer, browser-internal pages) it falls back automatically to an extension page, which also accepts pasted / dropped / chosen images
   - requires the routed model to accept image input (errors link to Routing settings); a one-time privacy notice appears on first use
+- **Text translation** — type or paste text in the popup and translate it with a streaming result:
+  - the target language starts on your default and can be switched per use (a finished result re-translates on switch); `Ctrl/⌘ + Enter` to translate; copy, retry
+  - shares the selection pipeline: same routed model, same "Selection translation" prompt, same cache
 
 <details>
 <summary><b>More, for power users</b> — providers, routing, dual protocol, triggers, customization, cache (click to expand)</summary>
