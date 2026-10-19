@@ -6,7 +6,7 @@
 
 **Summary** (≤132 chars):
 
-> Selection, full-page & screenshot translation with your own OpenAI/Anthropic-compatible key. No account, no backend, no telemetry.
+> Selection, page, screenshot & text translation with your own OpenAI/Anthropic-compatible key. No account, no backend, no telemetry.
 
 ## Detailed description
 
@@ -33,6 +33,11 @@ inside it — the result streams in a card you can drag aside. On restricted pag
 page that also accepts pasted, dropped, or chosen images. Requires a routed model
 that accepts image input.
 
+**Text translation**
+Open the popup, type or paste any text, pick a target language, and get a
+streaming translation with copy and retry. Uses the same model and prompt as
+selection translation.
+
 **Your keys, your endpoint, your privacy**
 - Bring your own OpenAI-compatible or Anthropic-compatible API key.
 - Everything is stored locally on your device — no account, no sign-in.
@@ -57,7 +62,7 @@ that accepts image input.
 
 ## AMO (Firefox Add-ons)
 
-> Selection, full-page & screenshot translation with your own OpenAI/Anthropic-compatible key. No account, no backend, no telemetry.
+> Selection, page, screenshot & text translation with your own OpenAI/Anthropic-compatible key. No account, no backend, no telemetry.
 
 The same extension, now on Firefox (Manifest V3, Firefox 128+).
 

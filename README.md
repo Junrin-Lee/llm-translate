@@ -2,11 +2,11 @@
 
 **English** · [简体中文](./README.zh-CN.md)
 
-> Selection, full-page & screenshot translation for the browser, powered entirely by **your own**
+> Selection, full-page, screenshot & text translation for the browser, powered entirely by **your own**
 > OpenAI-compatible or Anthropic-compatible API key (BYOK). No account, no backend, no
 > telemetry — all settings stay on your machine.
 
-**Status:** Selection, full-page, and screenshot translation are fully working and covered by
+**Status:** Selection, full-page, screenshot, and text translation are fully working and covered by
 E2E tests, with icon assets and the privacy policy in place. It currently runs by loading the unpacked
 build in the browser's developer mode; the only remaining release chore is the first
 manual submission to the Chrome Web Store / Edge Add-ons / Firefox Add-ons (AMO) — see the
@@ -67,6 +67,7 @@ A provider is one endpoint plus one key. A model picks a model name on a provide
 
 - **Selection**: select text on any page → click the icon (or press `Ctrl/⌘ + Shift + S`)
 - **Page**: click the extension icon → "Translate this page", or press `Ctrl/⌘ + Shift + P`, or use the right-click menu
+- **Text**: click the extension icon → "Text translation", type or paste, pick the target language, press `Ctrl/⌘ + Enter`
 - **Auto-translate a site**: open the popup and tick **Always translate** for the current site — its pages then translate automatically on load
 - Shortcuts can be rebound at `chrome://extensions/shortcuts`
 

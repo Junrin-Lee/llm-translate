@@ -26,7 +26,7 @@ export default defineConfig({
   manifest: ({ browser }) => ({
     name: BRAND.name,
     description:
-      'Selection, full-page & screenshot translation powered by your own OpenAI-compatible or Anthropic-compatible LLM API.',
+      'Selection, full-page, screenshot & text translation powered by your own OpenAI-compatible or Anthropic-compatible LLM API.',
     // Minimal permission set — justifications live in docs/adr/0001 and store-assets (T5.4).
     // storage:      local persistence of settings & translation cache (ADR-0002)
     // contextMenus: right-click "Translate page / selection / Screenshot Translation" (T3.10, ADR-0006)
