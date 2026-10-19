@@ -6,6 +6,7 @@ import { useT } from '@/i18n/useI18n';
 import type { ContentMessage, PageStatusReply } from '@/messaging/protocol';
 import { getSettings, updateSettings } from '@/storage';
 import { PermissionBanner } from '@/ui/PermissionBanner';
+import { TextTranslatePanel } from './TextTranslatePanel';
 
 async function getActiveTab() {
   const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
@@ -36,6 +37,8 @@ export function App() {
   const [translated, setTranslated] = useState(false);
   const [host, setHost] = useState('');
   const [autoSite, setAutoSite] = useState(false);
+  const [targetLang, setTargetLang] = useState<string | null>(null);
+  const [view, setView] = useState<'menu' | 'text'>('menu');
 
   useEffect(() => {
     document.title = BRAND.name;
@@ -46,6 +49,7 @@ export function App() {
 
       const settings = await getSettings();
       setUiLanguage(settings.general.uiLang);
+      setTargetLang(settings.general.targetLang);
       setAutoSite(currentHost !== '' && settings.siteRules.autoTranslate.includes(currentHost));
 
       if (tab?.id != null) {
@@ -68,6 +72,15 @@ export function App() {
     const next = list.includes(host) ? list.filter((h) => h !== host) : [...list, host];
     await updateSettings({ siteRules: { ...settings.siteRules, autoTranslate: next } });
     setAutoSite(next.includes(host));
+  }
+
+  if (view === 'text' && targetLang !== null) {
+    return (
+      <main className="popup popup--text">
+        <PermissionBanner />
+        <TextTranslatePanel defaultTargetLang={targetLang} onBack={() => setView('menu')} />
+      </main>
+    );
   }
 
   return (
@@ -100,6 +113,15 @@ export function App() {
           }}
         >
           {t('imageTranslate')}
+        </button>
+        <button
+          type="button"
+          className="popup__btn"
+          // Settings load async; until then the button would open with no default language.
+          disabled={targetLang === null}
+          onClick={() => setView('text')}
+        >
+          {t('textTranslate')}
         </button>
         <button
           type="button"
