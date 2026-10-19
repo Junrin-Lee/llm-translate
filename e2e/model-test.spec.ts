@@ -5,6 +5,8 @@ import { BASE_URL, launchWithExtension, seedSettings } from './support';
  * "Test model" probes reachability, auth and the model id; the 1-token reply's
  * content is not a signal. A reasoning model answering 200 with no text must read
  * as connected, while a 200 carrying an error payload must still fail (issue 0004).
+ * A model that rejects `max_tokens` (OpenAI o-series, gpt-5) is asked again with
+ * `max_completion_tokens` (issue 0005).
  */
 test('model test judges the connection, not the 1-token reply', async () => {
   const ext = await launchWithExtension();
@@ -41,6 +43,12 @@ test('model test judges the connection, not the 1-token reply', async () => {
           model: 'mock-reasoning',
         },
         {
+          id: 'oa-o-series',
+          name: 'OpenAI o-series',
+          providerId: 'openai-mock',
+          model: 'mock-o-series',
+        },
+        {
           id: 'oa-error',
           name: 'OpenAI error in 200',
           providerId: 'openai-mock',
@@ -53,7 +61,7 @@ test('model test judges the connection, not the 1-token reply', async () => {
     const options = await ext.context.newPage();
     await options.goto(`chrome-extension://${ext.extensionId}/options.html#models`);
     const cards = options.locator('.card');
-    await expect(cards).toHaveCount(4);
+    await expect(cards).toHaveCount(5);
 
     const runTest = async (index: number) => {
       const card = cards.nth(index);
@@ -61,12 +69,12 @@ test('model test judges the connection, not the 1-token reply', async () => {
       return card.locator('.card__foot .status:not(.status--muted)');
     };
 
-    for (const index of [0, 1, 2]) {
+    for (const index of [0, 1, 2, 3]) {
       const status = await runTest(index);
       await expect(status).toHaveClass(/status--ok/);
     }
 
-    const failed = await runTest(3);
+    const failed = await runTest(4);
     await expect(failed).toHaveClass(/status--error/);
     await expect(failed).toContainText('mock: no such model');
   } finally {

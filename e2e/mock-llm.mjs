@@ -65,8 +65,15 @@ function responseText(system, user) {
  * - mock-reasoning: a thinking model that spends a 1-token budget on reasoning
  *   and replies 200 with no text content.
  * - mock-error-200: a gateway that reports a failure inside a 200 body.
+ * - mock-o-series: like OpenAI's o-series / gpt-5, rejects `max_tokens` with a
+ *   400 naming `max_completion_tokens`, then reasons through a tiny budget.
  */
 function probeQuirk(model, protocol) {
+  if (model === 'mock-o-series' && protocol === 'openai') {
+    return {
+      choices: [{ message: { role: 'assistant', content: '' }, finish_reason: 'length' }],
+    };
+  }
   if (model === 'mock-error-200') {
     return protocol === 'anthropic'
       ? { type: 'error', error: { type: 'not_found_error', message: 'mock: no such model' } }
@@ -157,6 +164,18 @@ const server = createServer(async (req, res) => {
         .filter((m) => m.role === role)
         .map((m) => m.content)
         .join('\n');
+    if (body.model === 'mock-o-series' && 'max_tokens' in body) {
+      sendJson(res, 400, {
+        error: {
+          message:
+            "Unsupported parameter: 'max_tokens' is not supported with this model. Use 'max_completion_tokens' instead.",
+          type: 'invalid_request_error',
+          param: 'max_tokens',
+          code: 'unsupported_parameter',
+        },
+      });
+      return;
+    }
     const quirk = body.stream ? null : probeQuirk(body.model, 'openai');
     if (quirk) {
       sendJson(res, 200, quirk);

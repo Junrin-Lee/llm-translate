@@ -7,6 +7,7 @@ import {
   fetchWithTimeout,
   opencodeSessionHeader,
   STREAM_IDLE_TIMEOUT_MS,
+  textWithTimeout,
   withIdleTimeout,
 } from './http';
 import { parseSse } from './sse';
@@ -29,7 +30,16 @@ interface OpenAiBody {
   stream: boolean;
   temperature?: number;
   max_tokens?: number;
+  max_completion_tokens?: number;
 }
+
+/**
+ * Endpoint + model pairs that answered 400 to `max_tokens` with a pointer to
+ * `max_completion_tokens` (OpenAI's o-series and gpt-5). Clients are built per
+ * request, so the switch is remembered here for the life of the background
+ * worker; pairs that never complain (older models, most gateways) keep the old name.
+ */
+const completionTokenModels = new Set<string>();
 
 /** A TranslationClient speaking the OpenAI Chat Completions protocol. */
 export function createOpenAiClient(
@@ -45,6 +55,7 @@ export function createOpenAiClient(
     authorization: `Bearer ${profile.apiKey}`,
     ...opencodeSessionHeader(base, profile.id),
   };
+  const capKey = (model: string) => `${base}|${model}`;
 
   function buildBody(req: ChatRequest, stream: boolean): OpenAiBody {
     const messages: OpenAiBody['messages'] = [];
@@ -66,11 +77,14 @@ export function createOpenAiClient(
     const temperature = req.temperature ?? profile.params?.temperature;
     if (temperature !== undefined) body.temperature = temperature;
     const maxTokens = req.maxTokens ?? profile.params?.maxTokens;
-    if (maxTokens !== undefined) body.max_tokens = maxTokens;
+    if (maxTokens !== undefined) {
+      if (completionTokenModels.has(capKey(req.model))) body.max_completion_tokens = maxTokens;
+      else body.max_tokens = maxTokens;
+    }
     return body;
   }
 
-  function postChat(body: OpenAiBody, signal?: AbortSignal): Promise<Response> {
+  function send(body: OpenAiBody, signal?: AbortSignal): Promise<Response> {
     return fetchWithTimeout(
       fetchImpl,
       endpointFor(base, 'openai', 'chat'),
@@ -78,6 +92,19 @@ export function createOpenAiClient(
       timeoutMs,
       signal,
     );
+  }
+
+  async function postChat(body: OpenAiBody, signal?: AbortSignal): Promise<Response> {
+    const res = await send(body, signal);
+    if (res.status !== 400 || body.max_tokens === undefined) return res;
+    const text = await textWithTimeout(res, idleMs);
+    if (!text.includes('max_completion_tokens')) {
+      // Not the rename complaint: hand the body back for errorFromResponse.
+      return new Response(text, { status: res.status, headers: res.headers });
+    }
+    completionTokenModels.add(capKey(body.model));
+    const { max_tokens, ...rest } = body;
+    return send({ ...rest, max_completion_tokens: max_tokens }, signal);
   }
 
   async function stream(

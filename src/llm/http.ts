@@ -60,7 +60,7 @@ function parseRetryAfter(value: string | null): number | undefined {
  * Read a response body as text, but give up (and cancel the body) if it stays
  * open past `ms` — error responses from misbehaving gateways can hang forever.
  */
-async function textWithTimeout(res: Response, ms: number): Promise<string> {
+export async function textWithTimeout(res: Response, ms: number): Promise<string> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const gaveUp = new Promise<string>((resolve) => {
     timer = setTimeout(() => {

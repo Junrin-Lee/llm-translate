@@ -312,3 +312,86 @@ describe('createOpenAiClient.testConnection', () => {
     expect(result.error?.code).toBe('bad_response');
   });
 });
+
+describe('createOpenAiClient max_completion_tokens fallback', () => {
+  // What OpenAI answers for o-series and gpt-5 when the request carries max_tokens.
+  const unsupportedMaxTokens = () =>
+    jsonResponse(
+      {
+        error: {
+          message:
+            "Unsupported parameter: 'max_tokens' is not supported with this model. Use 'max_completion_tokens' instead.",
+          type: 'invalid_request_error',
+          param: 'max_tokens',
+          code: 'unsupported_parameter',
+        },
+      },
+      400,
+    );
+  const ok = () => jsonResponse({ choices: [{ message: { content: 'ok' } }] });
+  // The switch is remembered per endpoint + model for the worker's lifetime, so
+  // each case uses its own model id to stay independent of the others.
+  const withModel = (model: string, extra: Partial<ResolvedProfile> = {}) => ({
+    ...profile,
+    model,
+    ...extra,
+  });
+
+  /** Answer like OpenAI's reasoning models: reject max_tokens, accept the new name. */
+  const reasoningFetch = () =>
+    recordingFetch((_url, init) => {
+      const body = JSON.parse(init.body as string);
+      return 'max_tokens' in body ? unsupportedMaxTokens() : ok();
+    });
+
+  it('retries the model test with max_completion_tokens', async () => {
+    const fetchImpl = reasoningFetch();
+    const client = createOpenAiClient(withModel('o3'), { fetchImpl });
+    const result = await client.testConnection();
+
+    expect(result.ok).toBe(true);
+    expect(fetchImpl.calls).toHaveLength(2);
+    expect(bodyOf(fetchImpl.calls[1])).toMatchObject({ max_completion_tokens: 1 });
+    expect(bodyOf(fetchImpl.calls[1])).not.toHaveProperty('max_tokens');
+  });
+
+  it('keeps a user-set cap when translating with such a model', async () => {
+    const fetchImpl = reasoningFetch();
+    const client = createOpenAiClient(withModel('gpt-5', { params: { maxTokens: 512 } }), {
+      fetchImpl,
+    });
+    const result = await client.complete({ ...req, model: 'gpt-5' });
+
+    expect(result.text).toBe('ok');
+    expect(bodyOf(fetchImpl.calls[1])).toMatchObject({ max_completion_tokens: 512 });
+  });
+
+  it('remembers the switch for later clients of the same endpoint and model', async () => {
+    const fetchImpl = reasoningFetch();
+    // The background builds a fresh client for every request.
+    await createOpenAiClient(withModel('o4-mini'), { fetchImpl }).testConnection();
+    await createOpenAiClient(withModel('o4-mini'), { fetchImpl }).testConnection();
+
+    expect(fetchImpl.calls).toHaveLength(3);
+    expect(bodyOf(fetchImpl.calls[2])).toMatchObject({ max_completion_tokens: 1 });
+  });
+
+  it('does not retry an unrelated 400 and keeps its message', async () => {
+    const fetchImpl = recordingFetch(() =>
+      jsonResponse({ error: { message: 'The model `nope` does not exist' } }, 400),
+    );
+    const client = createOpenAiClient(withModel('nope'), { fetchImpl });
+    const result = await client.testConnection();
+
+    expect(result.ok).toBe(false);
+    expect(result.error?.message).toContain('The model `nope` does not exist');
+    expect(fetchImpl.calls).toHaveLength(1);
+  });
+
+  it('does not touch requests that carry no cap', async () => {
+    const fetchImpl = recordingFetch(() => unsupportedMaxTokens());
+    const client = createOpenAiClient(withModel('o1'), { fetchImpl });
+    await expect(client.complete({ ...req, model: 'o1' })).rejects.toThrow(/max_completion_tokens/);
+    expect(fetchImpl.calls).toHaveLength(1);
+  });
+});
