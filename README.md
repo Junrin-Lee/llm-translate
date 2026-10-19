@@ -71,8 +71,9 @@ A provider is one endpoint plus one key. A model picks a model name on a provide
 - **Auto-translate a site**: open the popup and tick **Always translate** for the current site — its pages then translate automatically on load
 - Shortcuts can be rebound at `chrome://extensions/shortcuts`
 
-| ![Selection translation: streaming popup with a dictionary / translation card](store-assets/screenshots/01-selection.png) | ![Full-page translation: bilingual mode inserts the translation under each original block](store-assets/screenshots/02-page-bilingual.png) | ![Screenshot translation: drag-select a region over a frozen page capture; the translation streams in a card](store-assets/screenshots/09-screenshot.png) |
-| :--: | :--: | :--: |
+| ![Selection translation: streaming popup with a dictionary / translation card](store-assets/screenshots/01-selection.png) | ![Full-page translation: bilingual mode inserts the translation under each original block](store-assets/screenshots/02-page-bilingual.png) |
+| :--: | :--: |
+| ![Screenshot translation: drag-select a region over a frozen page capture; the translation streams in a card](store-assets/screenshots/09-screenshot.png) | ![Text translation: type or paste text in the popup, pick a target language, and the translation streams below](store-assets/screenshots/10-text.png) |
 
 <details>
 <summary>🎬 <b>Watch the demos</b> (click to expand) — selection · full-page · screenshot</summary>

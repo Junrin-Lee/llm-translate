@@ -24,6 +24,10 @@ const ZH = {
   'Today it is grown in many countries and enjoyed in countless varieties.':
     '如今它在许多国家种植,并衍生出数不清的品种。',
 };
+// What gets pasted into the popup's Text translation view.
+const TEXT_EN =
+  'Tea is one of the most widely consumed beverages in the world. According to legend, it was discovered by accident thousands of years ago.';
+ZH[TEXT_EN] = '茶是世界上消费最广泛的饮料之一。相传,它在数千年前被偶然发现。';
 const tr = (s) => ZH[s.trim()] ?? s.trim();
 // What the "vision model" reads out of the cropped article screenshot.
 const IMAGE_ZH =
@@ -264,7 +268,35 @@ async function run() {
     await cap.screenshot({ path: `${OUT_DIR}/09-screenshot.png` });
     await cap.close();
 
-    console.log(`Saved 9 screenshots to ${OUT_DIR}`);
+    // Text translation — the popup's Text translation view, composited over
+    // the article page the way the toolbar popup sits on top of a tab.
+    const backdrop = await context.newPage();
+    await backdrop.goto(`${BASE}/demo/article.html`);
+    const backdropPng = (await backdrop.screenshot()).toString('base64');
+    await backdrop.close();
+
+    const popup = await context.newPage();
+    await popup.goto(`chrome-extension://${extensionId}/popup.html`);
+    await popup.getByRole('button', { name: 'Text translation' }).click();
+    await popup.getByRole('textbox', { name: 'Text translation' }).fill(TEXT_EN);
+    await popup.getByRole('button', { name: 'Translate' }).click();
+    const output = popup.locator('.popup__output');
+    await expect_(async () => {
+      if (!(await output.textContent())?.includes('茶')) throw new Error('not translated yet');
+    });
+    const popupPng = (await popup.locator('.popup--text').screenshot()).toString('base64');
+    await popup.close();
+
+    const composite = await context.newPage();
+    await composite.setContent(`<!doctype html><html><body style="margin:0;width:1280px;height:800px;
+background:url(data:image/png;base64,${backdropPng}) no-repeat;position:relative;overflow:hidden">
+<img src="data:image/png;base64,${popupPng}" style="position:absolute;top:12px;right:24px;
+border-radius:8px;box-shadow:0 8px 28px rgba(0,0,0,.22),0 0 0 1px rgba(0,0,0,.08)">
+</body></html>`);
+    await composite.screenshot({ path: `${OUT_DIR}/10-text.png` });
+    await composite.close();
+
+    console.log(`Saved 10 screenshots to ${OUT_DIR}`);
   } finally {
     await context.close();
     server.close();

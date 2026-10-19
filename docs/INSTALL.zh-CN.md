@@ -92,12 +92,15 @@ Firefox 的加载方式和 Chromium 不同(临时载入,或安装签名后的 `.
 - **整页** —— 点工具栏图标 → **翻译此页**(或按 `Ctrl/⌘ + Shift + P`,或右键 → 翻译此页)。
 - **截屏** —— 点工具栏图标 → **截屏翻译**(或右键 → 截屏翻译),然后拖拽框选一块区域,
   翻译其中的文字。需要所路由的模型支持图片输入。
+- **文本** —— 点工具栏图标 → **文本翻译**,输入或粘贴文本,选好目标语言,按 `Ctrl/⌘ + Enter`。
 
 ![划词翻译浮层](../store-assets/screenshots/01-selection.png)
 
 ![全文双语翻译](../store-assets/screenshots/02-page-bilingual.png)
 
 ![截屏翻译卡片](../store-assets/screenshots/09-screenshot.png)
+
+![弹窗里的文本翻译](../store-assets/screenshots/10-text.png)
 
 完整功能(词典卡片、双语 / 仅译文、自动翻译站点、自定义提示词等)见 [README](../README.zh-CN.md)。
 

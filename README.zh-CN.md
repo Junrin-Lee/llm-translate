@@ -68,8 +68,9 @@ Store / Edge Add-ons / Firefox Add-ons(AMO)首次人工提交,见
 - **自动翻译某站点**:打开扩展弹窗,勾选当前站点的「始终翻译」——该域名下的页面此后打开即自动翻译
 - 快捷键可在 `chrome://extensions/shortcuts` 重新绑定
 
-| ![划词翻译:流式浮窗,词典卡 / 翻译卡](store-assets/screenshots/01-selection.png) | ![全文翻译:双语模式,将译文插入到每段原文下方](store-assets/screenshots/02-page-bilingual.png) | ![截屏翻译:在冻结的页面截图上拖拽框选,译文以卡片形式流式呈现](store-assets/screenshots/09-screenshot.png) |
-| :--: | :--: | :--: |
+| ![划词翻译:流式浮窗,词典卡 / 翻译卡](store-assets/screenshots/01-selection.png) | ![全文翻译:双语模式,将译文插入到每段原文下方](store-assets/screenshots/02-page-bilingual.png) |
+| :--: | :--: |
+| ![截屏翻译:在冻结的页面截图上拖拽框选,译文以卡片形式流式呈现](store-assets/screenshots/09-screenshot.png) | ![文本翻译:在扩展弹窗里输入或粘贴文本,选好目标语言,译文流式输出在下方](store-assets/screenshots/10-text.png) |
 
 <details>
 <summary>🎬 <b>观看演示</b>(点击展开)—— 划词 · 全文 · 截屏</summary>
