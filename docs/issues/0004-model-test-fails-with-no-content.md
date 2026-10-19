@@ -67,5 +67,5 @@ exist. The reply's content is not part of that.
 
 - The test still sends `max_tokens: 1`. OpenAI's own o-series and gpt-5 models reject
   `max_tokens` (they require `max_completion_tokens`), so testing them returns 400 while
-  translation, which omits the parameter, works. That is a separate false negative and is not
-  handled here.
+  translation, which omits the parameter, works. That is a separate false negative, fixed in
+  [0005](./0005-o-series-rejects-max-tokens.md).

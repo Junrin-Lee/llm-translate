@@ -60,4 +60,4 @@ Anthropic 协议要求 `content` 是数组。
 
 - 测试仍然发送 `max_tokens: 1`。OpenAI 官方的 o 系列和 gpt-5 不接受 `max_tokens`
   (要求 `max_completion_tokens`),对这些模型测试会得到 400,而翻译不传该参数所以能用。
-  这是另一种误报,本次没有处理。
+  这是另一种误报,已在 [0005](./0005-o-series-rejects-max-tokens.zh-CN.md) 修复。
