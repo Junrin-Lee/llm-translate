@@ -268,13 +268,8 @@ async function run() {
     await cap.screenshot({ path: `${OUT_DIR}/09-screenshot.png` });
     await cap.close();
 
-    // Text translation — the popup's Text translation view, composited over
-    // the article page the way the toolbar popup sits on top of a tab.
-    const backdrop = await context.newPage();
-    await backdrop.goto(`${BASE}/demo/article.html`);
-    const backdropPng = (await backdrop.screenshot()).toString('base64');
-    await backdrop.close();
-
+    // Text translation — just the popup's Text translation view, framed as a
+    // floating card on a transparent background.
     const popup = await context.newPage();
     await popup.goto(`chrome-extension://${extensionId}/popup.html`);
     await popup.getByRole('button', { name: 'Text translation' }).click();
@@ -287,14 +282,15 @@ async function run() {
     const popupPng = (await popup.locator('.popup--text').screenshot()).toString('base64');
     await popup.close();
 
-    const composite = await context.newPage();
-    await composite.setContent(`<!doctype html><html><body style="margin:0;width:1280px;height:800px;
-background:url(data:image/png;base64,${backdropPng}) no-repeat;position:relative;overflow:hidden">
-<img src="data:image/png;base64,${popupPng}" style="position:absolute;top:12px;right:24px;
-border-radius:8px;box-shadow:0 8px 28px rgba(0,0,0,.22),0 0 0 1px rgba(0,0,0,.08)">
-</body></html>`);
-    await composite.screenshot({ path: `${OUT_DIR}/10-text.png` });
-    await composite.close();
+    const framed = await context.newPage();
+    await framed.setContent(`<!doctype html><html><body style="margin:0;background:transparent">
+<div id="card" style="display:inline-block;padding:24px">
+<img src="data:image/png;base64,${popupPng}" style="display:block;border-radius:8px;
+box-shadow:0 8px 24px rgba(0,0,0,.18),0 0 0 1px rgba(0,0,0,.08)"></div></body></html>`);
+    await framed
+      .locator('#card')
+      .screenshot({ path: `${OUT_DIR}/10-text.png`, omitBackground: true });
+    await framed.close();
 
     console.log(`Saved 10 screenshots to ${OUT_DIR}`);
   } finally {
