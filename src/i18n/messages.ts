@@ -114,11 +114,19 @@ const EN = {
   cacheClear: 'Clear cache',
 
   // Popup
-  popupHintDefault: 'Translate the whole page, or select text on any page for a quick translation.',
+  popupHintDefault:
+    'Translate the whole page, type text to translate, or select text on any page for a quick translation.',
   popupHintTranslated:
     'This page is translated. Restore the original below, or select text for a quick translation.',
   popupAutoSite: 'Always translate',
   openSettings: 'Open settings',
+
+  // Text translation (popup)
+  textTranslate: 'Text translation',
+  textBack: 'Back',
+  textInputPlaceholder: 'Type or paste text to translate…',
+  textTranslateAction: 'Translate',
+  textShortcutHint: 'Ctrl/⌘ + Enter',
 
   // Selection panel
   panelDictionary: 'Dictionary',
@@ -279,10 +287,16 @@ const ZH: Record<MessageKey, string> = {
   cacheStats: '划词:{selection} 条 · 全文:{page} 条',
   cacheClear: '清空缓存',
 
-  popupHintDefault: '翻译整页,或在任意页面选中文字快速翻译。',
+  popupHintDefault: '翻译整页、输入文本翻译,或在任意页面选中文字快速翻译。',
   popupHintTranslated: '本页已翻译。可在下方还原原文,或选中文字快速翻译。',
   popupAutoSite: '始终翻译',
   openSettings: '打开设置',
+
+  textTranslate: '文本翻译',
+  textBack: '返回',
+  textInputPlaceholder: '输入或粘贴要翻译的文本…',
+  textTranslateAction: '翻译',
+  textShortcutHint: 'Ctrl/⌘ + Enter',
 
   panelDictionary: '词典',
   panelTranslation: '翻译',
