@@ -11,12 +11,19 @@ interface Props {
 
 type Status = 'idle' | 'streaming' | 'done' | 'error';
 
+/** How long after a paste the panel waits before translating on its own. */
+export const AUTO_TRANSLATE_DELAY_MS = 2000;
+
 /**
  * Text translation inside the popup: type or paste text, pick a target
  * language, translate. Rides the selection pipeline (same model routing,
  * same "Selection translation" prompt, same cache) — it is selection
  * translation without a page. The language choice is per use and is not
  * written back to settings.
+ *
+ * A paste arms an auto-translate: if the user has not translated within
+ * AUTO_TRANSLATE_DELAY_MS, it fires on its own. Edits after the paste restart
+ * the wait; any manual translate disarms it.
  */
 export function TextTranslatePanel({ defaultTargetLang, onBack }: Props) {
   const t = useT();
@@ -25,6 +32,7 @@ export function TextTranslatePanel({ defaultTargetLang, onBack }: Props) {
   const [output, setOutput] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState('');
+  const [autoPending, setAutoPending] = useState(false);
   const streamRef = useRef<{ cancel: () => void } | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -33,7 +41,15 @@ export function TextTranslatePanel({ defaultTargetLang, onBack }: Props) {
     return () => streamRef.current?.cancel();
   }, []);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-arm on every text/lang change; translate is recreated each render
+  useEffect(() => {
+    if (!autoPending) return;
+    const id = setTimeout(() => translate(text, lang), AUTO_TRANSLATE_DELAY_MS);
+    return () => clearTimeout(id);
+  }, [autoPending, text, lang]);
+
   function translate(source: string, targetLang: string, bypassCache = false) {
+    setAutoPending(false);
     const trimmed = source.trim();
     if (!trimmed) return;
     streamRef.current?.cancel();
@@ -85,6 +101,7 @@ export function TextTranslatePanel({ defaultTargetLang, onBack }: Props) {
         placeholder={t('textInputPlaceholder')}
         aria-label={t('textTranslate')}
         onChange={(e) => setText(e.target.value)}
+        onPaste={() => setAutoPending(true)}
         onKeyDown={onKeyDown}
       />
 
