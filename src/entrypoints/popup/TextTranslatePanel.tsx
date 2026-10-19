@@ -11,7 +11,7 @@ interface Props {
 
 type Status = 'idle' | 'streaming' | 'done' | 'error';
 
-/** How long after a paste the panel waits before translating on its own. */
+/** How long after the last typed edit the panel waits before translating on its own. */
 export const AUTO_TRANSLATE_DELAY_MS = 2000;
 
 /**
@@ -21,9 +21,11 @@ export const AUTO_TRANSLATE_DELAY_MS = 2000;
  * translation without a page. The language choice is per use and is not
  * written back to settings.
  *
- * A paste arms an auto-translate: if the user has not translated within
- * AUTO_TRANSLATE_DELAY_MS, it fires on its own. Edits after the paste restart
- * the wait; any manual translate disarms it.
+ * A paste translates right away. Typing arms an auto-translate instead: once
+ * the text has sat unchanged for AUTO_TRANSLATE_DELAY_MS without a manual
+ * translate, it fires on its own. Each further keystroke restarts the wait, an
+ * open IME composition holds it (so half-typed pinyin is never sent), and any
+ * manual translate disarms it.
  */
 export function TextTranslatePanel({ defaultTargetLang, onBack }: Props) {
   const t = useT();
@@ -33,8 +35,11 @@ export function TextTranslatePanel({ defaultTargetLang, onBack }: Props) {
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState('');
   const [autoPending, setAutoPending] = useState(false);
+  const [composing, setComposing] = useState(false);
   const streamRef = useRef<{ cancel: () => void } | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  // Set by the paste event so the change it causes translates at once.
+  const pastedRef = useRef(false);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -43,10 +48,10 @@ export function TextTranslatePanel({ defaultTargetLang, onBack }: Props) {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-arm on every text/lang change; translate is recreated each render
   useEffect(() => {
-    if (!autoPending) return;
+    if (!autoPending || composing) return;
     const id = setTimeout(() => translate(text, lang), AUTO_TRANSLATE_DELAY_MS);
     return () => clearTimeout(id);
-  }, [autoPending, text, lang]);
+  }, [autoPending, composing, text, lang]);
 
   function translate(source: string, targetLang: string, bypassCache = false) {
     setAutoPending(false);
@@ -100,8 +105,26 @@ export function TextTranslatePanel({ defaultTargetLang, onBack }: Props) {
         value={text}
         placeholder={t('textInputPlaceholder')}
         aria-label={t('textTranslate')}
-        onChange={(e) => setText(e.target.value)}
-        onPaste={() => setAutoPending(true)}
+        onChange={(e) => {
+          const next = e.target.value;
+          setText(next);
+          if (pastedRef.current) {
+            pastedRef.current = false;
+            translate(next, lang);
+          } else {
+            setAutoPending(true);
+          }
+        }}
+        onPaste={() => {
+          pastedRef.current = true;
+          // A paste that leaves the value unchanged fires no change event;
+          // don't let the flag leak into the next keystroke.
+          setTimeout(() => {
+            pastedRef.current = false;
+          }, 0);
+        }}
+        onCompositionStart={() => setComposing(true)}
+        onCompositionEnd={() => setComposing(false)}
         onKeyDown={onKeyDown}
       />
 

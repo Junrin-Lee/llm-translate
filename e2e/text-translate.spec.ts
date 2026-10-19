@@ -35,47 +35,68 @@ test('text translation in the popup streams a translation of the typed text', as
   }
 });
 
-test('pasted text translates on its own after 2 seconds', async () => {
+async function openTextPanel() {
   const ext = await launchWithExtension();
+  await seedSettings(ext);
+  const popup = await ext.context.newPage();
+  await popup.goto(`chrome-extension://${ext.extensionId}/popup.html`);
+  await popup.getByRole('button', { name: 'Text translation' }).click();
+  const input = popup.getByRole('textbox', { name: 'Text translation' });
+  return { ext, popup, input, output: popup.locator('.popup__output') };
+}
+
+test('pasted text translates right away', async () => {
+  const { ext, popup, input, output } = await openTextPanel();
   try {
-    await seedSettings(ext);
-    const popup = await ext.context.newPage();
-    await popup.goto(`chrome-extension://${ext.extensionId}/popup.html`);
+    await popup.evaluate(() =>
+      navigator.clipboard.writeText('Tea is one of the most widely consumed beverages.'),
+    );
+    await input.focus();
+    await popup.keyboard.press('ControlOrMeta+V');
 
-    await popup.getByRole('button', { name: 'Text translation' }).click();
-    const input = popup.getByRole('textbox', { name: 'Text translation' });
-
-    // A paste event arms the auto-translate; fill() then lands the text.
-    await input.dispatchEvent('paste');
-    await input.fill('Tea is one of the most widely consumed beverages.');
-
-    // Nothing happens straight away: the panel waits for a manual translate first.
-    const output = popup.locator('.popup__output');
-    await popup.waitForTimeout(1000);
-    await expect(output).toHaveCount(0);
-
+    // Well inside the 2s typing delay, so this can only be the paste path.
     await expect(output).toContainText('[[MT]] Tea is one of the most widely consumed', {
-      timeout: 5000,
+      timeout: 1000,
     });
+
+    // The keystroke after a paste is ordinary typing: it waits out the delay.
+    await input.press('End');
+    await input.pressSequentially(' Yes.');
+    await popup.waitForTimeout(1000);
+    await expect(output).toContainText('[[MT]] Tea is one of the most widely consumed beverages.');
+    await expect(output).not.toContainText('Yes.');
+    await expect(output).toContainText('Yes.', { timeout: 5000 });
   } finally {
     await ext.context.close();
   }
 });
 
-test('typing without pasting never auto-translates', async () => {
-  const ext = await launchWithExtension();
+test('typed text translates 2 seconds after the last keystroke', async () => {
+  const { ext, popup, input, output } = await openTextPanel();
   try {
-    await seedSettings(ext);
-    const popup = await ext.context.newPage();
-    await popup.goto(`chrome-extension://${ext.extensionId}/popup.html`);
+    await input.pressSequentially('Tea is');
+    await popup.waitForTimeout(1500);
+    // A further keystroke restarts the wait, so 1.5s after it nothing has fired yet.
+    await input.pressSequentially(' green.');
+    await popup.waitForTimeout(1500);
+    await expect(output).toHaveCount(0);
 
-    await popup.getByRole('button', { name: 'Text translation' }).click();
-    await popup
-      .getByRole('textbox', { name: 'Text translation' })
-      .fill('Tea is one of the most widely consumed beverages.');
+    await expect(output).toContainText('[[MT]] Tea is green.', { timeout: 5000 });
+  } finally {
+    await ext.context.close();
+  }
+});
 
+test('an open IME composition holds the auto-translate until it ends', async () => {
+  const { ext, popup, input, output } = await openTextPanel();
+  try {
+    await input.dispatchEvent('compositionstart');
+    await input.fill('cha');
     await popup.waitForTimeout(3000);
-    await expect(popup.locator('.popup__output')).toHaveCount(0);
+    await expect(output).toHaveCount(0);
+
+    await input.dispatchEvent('compositionend');
+    await expect(output).toContainText('[[MT]] cha', { timeout: 5000 });
   } finally {
     await ext.context.close();
   }

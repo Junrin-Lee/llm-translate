@@ -27,7 +27,7 @@ manual submission to the Chrome Web Store / Edge Add-ons / Firefox Add-ons (AMO)
   - on restricted pages (the built-in PDF viewer, browser-internal pages) it falls back automatically to an extension page, which also accepts pasted / dropped / chosen images
   - requires the routed model to accept image input (errors link to Routing settings); a one-time privacy notice appears on first use
 - **Text translation** — type or paste text in the popup and translate it with a streaming result:
-  - the target language starts on your default and can be switched per use (a finished result re-translates on switch); `Ctrl/⌘ + Enter` to translate, and pasted text translates on its own after 2 seconds; copy, retry
+  - the target language starts on your default and can be switched per use (a finished result re-translates on switch); `Ctrl/⌘ + Enter` to translate; pasted text translates right away, and typed text translates on its own 2 seconds after you stop typing; copy, retry
   - shares the selection pipeline: same routed model, same "Selection translation" prompt, same cache
 
 <details>
