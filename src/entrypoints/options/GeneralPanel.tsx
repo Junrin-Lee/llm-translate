@@ -88,6 +88,18 @@ export function GeneralPanel({ general, disabledSites, onGeneral, onDisabledSite
         ))}
       </fieldset>
 
+      <label className="radio">
+        <input
+          type="checkbox"
+          checked={general.selectionSearch === true}
+          onChange={(e) => onGeneral({ selectionSearch: e.target.checked })}
+        />
+        <span className="radio__body">
+          <span className="radio__label">{t('genSelectionSearch')}</span>
+          <span className="radio__hint">{t('genSelectionSearchHint')}</span>
+        </span>
+      </label>
+
       <div className="field">
         <span className="field__label">{t('genDisableSites')}</span>
         <div className="field__row">

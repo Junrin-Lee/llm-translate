@@ -73,6 +73,34 @@ describe('resolveProfileFrom', () => {
   it('returns null when nothing resolves', () => {
     expect(resolveProfileFrom(DEFAULT_SETTINGS, 'selection')).toBeNull();
   });
+
+  it('prefers the search feature override', () => {
+    const s = settings({
+      models: [model('g', 'p1'), model('sel', 'p1'), model('srch', 'p1')],
+      defaults: { global: 'g', selection: 'sel', search: 'srch' },
+    });
+    expect(resolveProfileFrom(s, 'search')?.id).toBe('srch');
+  });
+
+  it('falls back from search to the selection override before the global default', () => {
+    const s = settings({
+      models: [model('g', 'p1'), model('sel', 'p1')],
+      defaults: { global: 'g', selection: 'sel' },
+    });
+    expect(resolveProfileFrom(s, 'search')?.id).toBe('sel');
+  });
+
+  it('falls back from search to the global default when selection has no override', () => {
+    expect(resolveProfileFrom(settings(), 'search')?.id).toBe('g');
+  });
+
+  it('never routes other features through the selection override', () => {
+    const s = settings({
+      models: [model('g', 'p1'), model('sel', 'p1')],
+      defaults: { global: 'g', selection: 'sel' },
+    });
+    expect(resolveProfileFrom(s, 'image')?.id).toBe('g');
+  });
 });
 
 describe('joinProfile', () => {

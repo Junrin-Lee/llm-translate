@@ -133,6 +133,9 @@ export function normalizeSettings(parsed: unknown): AppSettings {
   if (typeof generalRaw.secondaryTargetLang === 'string') {
     general.secondaryTargetLang = generalRaw.secondaryTargetLang;
   }
+  if (typeof generalRaw.selectionSearch === 'boolean') {
+    general.selectionSearch = generalRaw.selectionSearch;
+  }
 
   const siteRaw = isRecord(source.siteRules) ? source.siteRules : {};
   const siteRules: AppSettings['siteRules'] = {
@@ -142,7 +145,13 @@ export function normalizeSettings(parsed: unknown): AppSettings {
 
   const promptsRaw = isRecord(source.prompts) ? source.prompts : {};
   const prompts: AppSettings['prompts'] = {};
-  for (const key of ['selectionDict', 'selectionText', 'pageBatch', 'imageText'] as const) {
+  for (const key of [
+    'selectionDict',
+    'selectionText',
+    'selectionSearch',
+    'pageBatch',
+    'imageText',
+  ] as const) {
     if (typeof promptsRaw[key] === 'string') prompts[key] = promptsRaw[key] as string;
   }
 

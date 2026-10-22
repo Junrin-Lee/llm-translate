@@ -191,6 +191,27 @@ describe('import/export', () => {
     });
   });
 
+  it('keeps the selection search toggle, its model override and its prompt through a round-trip', async () => {
+    const base = settings(['m1', 'm2'], { global: 'm1', search: 'm2' });
+    const s: AppSettings = {
+      ...base,
+      general: { ...base.general, selectionSearch: true },
+      prompts: { selectionSearch: 'custom search' },
+    };
+    await importSettings(exportSettings(s, true));
+    const restored = await getSettings();
+    expect(restored.general.selectionSearch).toBe(true);
+    expect(restored.defaults.search).toBe('m2');
+    expect(restored.prompts).toEqual({ selectionSearch: 'custom search' });
+  });
+
+  it('drops a selection search toggle that is not a boolean', async () => {
+    const base = settings(['m1'], { global: 'm1' });
+    const bad = { ...base, general: { ...base.general, selectionSearch: 'yes' } };
+    await importSettings(JSON.stringify(bad));
+    expect((await getSettings()).general.selectionSearch).toBeUndefined();
+  });
+
   it('imports records whose name is empty (name is an optional label)', async () => {
     const s: AppSettings = {
       ...DEFAULT_SETTINGS,

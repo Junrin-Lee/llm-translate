@@ -6,7 +6,7 @@ export const TRANSLATE_PORT = 'llm-translate';
 
 /**
  * Requests the background accepts (first message on a connected port):
- * selection streaming, page batches, screenshot translation, model listing,
+ * selection streaming, selection search, page batches, screenshot translation, model listing,
  * and the two separate health probes (provider connection, model end-to-end).
  */
 export type BgRequest =
@@ -17,6 +17,12 @@ export type BgRequest =
       vars: PromptVars;
       /** Retry sets this to skip a cached result and refetch. */
       bypassCache?: boolean;
+    }
+  | {
+      /** Selection Search: never cached, results are time-sensitive. */
+      kind: 'search-stream';
+      feature: 'search';
+      vars: PromptVars;
     }
   | {
       // payload is an already-encoded batch (orchestrator owns encode/decode).

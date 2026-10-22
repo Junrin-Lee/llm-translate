@@ -6,14 +6,20 @@ export type PageMode = 'bilingual' | 'replace';
 export type UiLang = 'auto' | 'en' | 'zh';
 
 /** Features that route to a Model Profile. */
-export type TranslateFeature = 'selection' | 'page' | 'image';
+export type TranslateFeature = 'selection' | 'page' | 'image' | 'search';
 
 /** Every routable feature, in one place so nothing gets forgotten again. */
 export const TRANSLATE_FEATURES = [
   'selection',
   'page',
   'image',
+  'search',
 ] as const satisfies readonly TranslateFeature[];
+
+/** A feature that falls back to another feature's override before the global default. */
+const FEATURE_FALLBACK: Partial<Record<TranslateFeature, TranslateFeature>> = {
+  search: 'selection',
+};
 
 export interface GeneralSettings {
   /** BCP-47 target language, e.g. 'zh-CN'. */
@@ -24,6 +30,8 @@ export interface GeneralSettings {
   pageMode: PageMode;
   /** Language of the extension's own UI. */
   uiLang: UiLang;
+  /** Show a search icon next to the selection icon; unset means off. */
+  selectionSearch?: boolean;
 }
 
 export interface SiteRules {
@@ -36,6 +44,7 @@ export interface SiteRules {
 export interface PromptOverrides {
   selectionDict?: string;
   selectionText?: string;
+  selectionSearch?: string;
   pageBatch?: string;
   imageText?: string;
 }
@@ -46,6 +55,8 @@ export interface ProfileDefaults {
   selection?: string;
   page?: string;
   image?: string;
+  /** Unset falls back to the selection override, then global. */
+  search?: string;
 }
 
 export interface AppSettings {
@@ -107,15 +118,22 @@ export function resolveForProvider(provider: LlmProvider): ResolvedProfile {
 }
 
 /**
- * Pure resolution: the feature override if present and still resolvable, otherwise
- * the global default. A model whose provider has gone missing is skipped rather than
+ * Pure resolution: the feature override if present and still resolvable, then the
+ * override of the feature it falls back to (search → selection), otherwise the
+ * global default. A model whose provider has gone missing is skipped rather than
  * returned half-built. storage/index.ts wraps this with live settings.
  */
 export function resolveProfileFrom(
   settings: AppSettings,
   feature: TranslateFeature,
 ): ResolvedProfile | null {
-  for (const id of [settings.defaults[feature], settings.defaults.global]) {
+  const fallback = FEATURE_FALLBACK[feature];
+  const chain = [
+    settings.defaults[feature],
+    fallback && settings.defaults[fallback],
+    settings.defaults.global,
+  ];
+  for (const id of chain) {
     if (!id) continue;
     const model = settings.models.find((m) => m.id === id);
     if (!model) continue;

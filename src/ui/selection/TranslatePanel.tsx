@@ -12,53 +12,90 @@ import { openTranslateStream } from '@/messaging/port-client';
 import { parseDictResult } from '@/selection/dict-result';
 import { useDrag } from '@/ui/useDrag';
 import { DictCard } from './DictCard';
+import { MarkdownView } from './MarkdownView';
 import { bodyMaxHeightAt, computePanelPlacement } from './panel-position';
+
+type Mode = 'dict' | 'text' | 'search';
 
 interface Props {
   text: string;
   rect: DOMRect;
   targetLang: string;
-  initialMode: 'dict' | 'text';
+  initialMode: Mode;
+  /** Adds the Search tab; only set when the panel was opened from the search icon. */
+  showSearch?: boolean;
   onClose: () => void;
   onTargetLangChange: (code: string) => void;
 }
 
 type Status = 'streaming' | 'done' | 'error';
 
+/** A finished search, kept so switching tabs and back does not search again. */
+interface SearchMemo {
+  key: string;
+  output: string;
+  status: Status;
+  error: string;
+}
+
 export function TranslatePanel({
   text,
   rect,
   targetLang,
   initialMode,
+  showSearch = false,
   onClose,
   onTargetLangChange,
 }: Props) {
   const t = useT();
-  const [mode, setMode] = useState<'dict' | 'text'>(initialMode);
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [lang, setLang] = useState(targetLang);
   const [attempt, setAttempt] = useState(0);
   const [output, setOutput] = useState('');
   const [status, setStatus] = useState<Status>('streaming');
   const [error, setError] = useState('');
   const panelRef = useRef<HTMLDivElement>(null);
+  const searchMemo = useRef<SearchMemo | null>(null);
   const { pos, startDrag } = useDrag(panelRef);
 
   useEffect(() => {
+    // Search results are never cached in the background, so remember the last
+    // one here; Retry and a language change both alter the key and search again.
+    const searchKey = `${lang}|${attempt}`;
+    const memo = searchMemo.current;
+    if (mode === 'search' && memo?.key === searchKey) {
+      setOutput(memo.output);
+      setStatus(memo.status);
+      setError(memo.error);
+      return;
+    }
+
     setOutput('');
     setStatus('streaming');
     setError('');
+    let received = '';
     const handle = openTranslateStream(
+      mode === 'search'
+        ? { kind: 'search-stream', feature: 'search', vars: { text, targetLang: lang } }
+        : {
+            kind: 'translate-stream',
+            feature: 'selection',
+            promptKind: mode === 'dict' ? 'selectionDict' : 'selectionText',
+            vars: { text, targetLang: lang },
+            // A manual retry refetches instead of serving the cached result.
+            bypassCache: attempt > 0,
+          },
       {
-        kind: 'translate-stream',
-        feature: 'selection',
-        promptKind: mode === 'dict' ? 'selectionDict' : 'selectionText',
-        vars: { text, targetLang: lang },
-        // A manual retry refetches instead of serving the cached result.
-        bypassCache: attempt > 0,
-      },
-      {
-        onDelta: (chunk) => setOutput((prev) => prev + chunk),
-        onDone: () => setStatus('done'),
+        onDelta: (chunk) => {
+          received += chunk;
+          setOutput(received);
+        },
+        onDone: () => {
+          setStatus('done');
+          if (mode === 'search') {
+            searchMemo.current = { key: searchKey, output: received, status: 'done', error: '' };
+          }
+        },
         onError: (message) => {
           setStatus('error');
           setError(message);
@@ -135,6 +172,15 @@ export function TranslatePanel({
           >
             {t('panelTranslation')}
           </button>
+          {showSearch && (
+            <button
+              type="button"
+              className={`llmt-seg__opt${mode === 'search' ? ' is-active' : ''}`}
+              onClick={() => setMode('search')}
+            >
+              {t('panelSearch')}
+            </button>
+          )}
         </div>
         <button type="button" className="llmt-x" onClick={onClose} aria-label={t('panelClose')}>
           ×
@@ -148,6 +194,14 @@ export function TranslatePanel({
           <p className="llmt-muted">{t('panelLookingUp')}</p>
         ) : dict ? (
           <DictCard result={dict} />
+        ) : mode === 'search' ? (
+          output ? (
+            <MarkdownView source={output} />
+          ) : (
+            <p className="llmt-muted">
+              {t(status === 'streaming' ? 'panelSearching' : 'panelEmptyResult')}
+            </p>
+          )
         ) : (
           <p className="llmt-text">
             {output || (

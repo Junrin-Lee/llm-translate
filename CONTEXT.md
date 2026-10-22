@@ -20,6 +20,10 @@ _Avoid_: lookup result, word card
 The plain-translation result that Selection Translation outputs when the selection is a sentence or paragraph; Screenshot Translation streams its result in the same form.
 _Avoid_: translation result box
 
+**Selection Search (划词搜索)**:
+An opt-in companion to Selection Translation: when enabled and the trigger is the icon, a search icon sits to the right of the translate icon. Clicking it opens the same popover on a Search tab, where the resolved model answers about the selected text in the target language (searching the web itself if the model can) as rendered Markdown. Results are never cached.
+_Avoid_: AI lookup, explain, web search
+
 **Page Translation (全文翻译)**:
 Whole-page translation of the readable body text of the current web page; it has two display modes, Bilingual Mode and Translation-only Mode.
 _Avoid_: webpage translation, immersive translation, full-page translation
@@ -59,7 +63,7 @@ The Model Profile that every translation feature actually uses when it is not ov
 _Avoid_: current engine, active profile, global default provider
 
 **Feature Override (功能级覆盖)**:
-A Model Profile specified separately for Selection Translation, Page Translation, or Screenshot Translation; once set, it takes precedence over the Global Default Model, and when unset it follows the global one.
+A Model Profile specified separately for Selection Translation, Page Translation, Screenshot Translation, or Selection Search; once set, it takes precedence over the Global Default Model, and when unset it follows the global one. Selection Search is the exception: unset, it follows Selection Translation's override first.
 _Avoid_: standalone config, per-channel
 
 ### Permissions

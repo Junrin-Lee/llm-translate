@@ -11,6 +11,7 @@ interface Props {
 const ENTRIES: Array<{ key: PromptKind; labelKey: MessageKey; hintKey: MessageKey }> = [
   { key: 'selectionDict', labelKey: 'promptDictLabel', hintKey: 'promptDictHint' },
   { key: 'selectionText', labelKey: 'promptTextLabel', hintKey: 'promptTextHint' },
+  { key: 'selectionSearch', labelKey: 'promptSearchLabel', hintKey: 'promptSearchHint' },
   { key: 'pageBatch', labelKey: 'promptBatchLabel', hintKey: 'promptBatchHint' },
   { key: 'imageText', labelKey: 'promptImageLabel', hintKey: 'promptImageHint' },
 ];

@@ -41,7 +41,8 @@ export function watchSettings(cb: (settings: AppSettings) => void): () => void {
 
 /**
  * Resolve the profile a feature should use: its feature override if present and
- * still resolvable, otherwise the global default. Returns null when neither resolves.
+ * still resolvable (search then tries the selection override), otherwise the global
+ * default. Returns null when nothing resolves.
  */
 export async function resolveProfile(feature: TranslateFeature): Promise<ResolvedProfile | null> {
   return resolveProfileFrom(await getSettings(), feature);

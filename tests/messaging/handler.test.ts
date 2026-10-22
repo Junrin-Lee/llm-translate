@@ -420,3 +420,91 @@ describe('handleRequest translate-image', () => {
     ]);
   });
 });
+
+describe('handleRequest search-stream', () => {
+  const searchReq: BgRequest = {
+    kind: 'search-stream',
+    feature: 'search',
+    vars: { text: 'WXT framework', targetLang: 'zh-CN' },
+  };
+
+  it('resolves the search feature and streams the search prompt on the selection', async () => {
+    const seen: Array<Parameters<TranslationClient['stream']>[0]> = [];
+    const client = fakeClient({
+      stream: async (req, onDelta) => {
+        seen.push(req);
+        onDelta('WXT 是');
+        return { text: 'WXT 是' };
+      },
+    });
+    const features: string[] = [];
+    const { emit, events } = collector();
+    await handleRequest(searchReq, emit, {
+      getSettings: async () => settingsWith(),
+      resolveProfile: async (feature) => {
+        features.push(feature);
+        return profile;
+      },
+      createClient: () => client,
+    });
+
+    expect(features).toEqual(['search']);
+    expect(seen[0].user).toBe('WXT framework');
+    expect(seen[0].system).toMatch(/search/i);
+    expect(seen[0].system).toContain('zh-CN');
+    expect(events).toEqual([
+      { type: 'delta', text: 'WXT 是' },
+      { type: 'done', usage: undefined },
+    ]);
+  });
+
+  it('never reads or writes the selection cache, so a repeat search hits the model again', async () => {
+    const cache = { get: vi.fn(), set: vi.fn() } as unknown as TranslationCache;
+    const streamSpy = vi.fn(async () => ({ text: 'x' }));
+    const deps = {
+      getSettings: async () => settingsWith(),
+      resolveProfile: async () => profile,
+      createClient: () =>
+        fakeClient({ stream: streamSpy as unknown as TranslationClient['stream'] }),
+      selectionCache: cache,
+      pageCache: cache,
+    };
+    await handleRequest(searchReq, collector().emit, deps);
+    await handleRequest(searchReq, collector().emit, deps);
+
+    expect(streamSpy).toHaveBeenCalledTimes(2);
+    expect(cache.get).not.toHaveBeenCalled();
+    expect(cache.set).not.toHaveBeenCalled();
+  });
+
+  it('uses the selectionSearch prompt override from settings', async () => {
+    const seen: string[] = [];
+    await handleRequest(searchReq, collector().emit, {
+      getSettings: async () => ({
+        ...settingsWith(),
+        prompts: { selectionSearch: 'Look up {{text}} and answer in {{targetLang}}.' },
+      }),
+      resolveProfile: async () => profile,
+      createClient: () =>
+        fakeClient({
+          stream: async (req) => {
+            seen.push(req.system);
+            return { text: '' };
+          },
+        }),
+    });
+    expect(seen).toEqual(['Look up WXT framework and answer in zh-CN.']);
+  });
+
+  it('emits not_found when no provider resolves', async () => {
+    const { emit, events } = collector();
+    await handleRequest(searchReq, emit, {
+      getSettings: async () => DEFAULT_SETTINGS,
+      resolveProfile: async () => null,
+      createClient: () => fakeClient({}),
+    });
+    expect(events).toEqual([
+      { type: 'error', code: 'not_found', message: 'No provider configured' },
+    ]);
+  });
+});

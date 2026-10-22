@@ -44,10 +44,18 @@ function translateBatch(text) {
   return parts.join('\n\n');
 }
 
+/** Search requests seen per selected text, so specs can assert none were repeated. */
+const searchCounts = new Map();
+
 /** Deterministic "translation" for a given system + user prompt. */
 function responseText(system, user) {
   const batch = translateBatch(user);
   if (batch) return batch;
+  if (/search assistant/i.test(system)) {
+    searchCounts.set(user.trim(), (searchCounts.get(user.trim()) ?? 0) + 1);
+    // Markdown with a source link, as a web-enabled model would answer.
+    return `**${SENTINEL} ${user.trim()}**\n\n- [Mock source](https://example.com/source)`;
+  }
   if (/dictionary|JSON object/i.test(system)) {
     return JSON.stringify({
       word: user.trim().slice(0, 40),
@@ -146,6 +154,11 @@ const server = createServer(async (req, res) => {
   if (pathname === '/health') {
     res.writeHead(200, CORS);
     res.end('ok');
+    return;
+  }
+  if (method === 'GET' && pathname === '/stats/search') {
+    const text = new URL(req.url ?? '/', `http://localhost:${PORT}`).searchParams.get('text');
+    sendJson(res, 200, { count: searchCounts.get(text ?? '') ?? 0 });
     return;
   }
   if (method === 'GET' && pathname.startsWith('/fixtures/')) {

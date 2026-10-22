@@ -90,6 +90,24 @@ export async function handleRequest(
         emit({ type: 'done', usage: result.usage });
         return;
       }
+      case 'search-stream': {
+        const settings = await deps.getSettings();
+        const profile = await deps.resolveProfile('search');
+        if (!profile) {
+          emit({ type: 'error', code: 'not_found', message: 'No provider configured' });
+          return;
+        }
+        // No cache on purpose: a search should reflect what the model finds now.
+        const rendered = renderPrompt('selectionSearch', req.vars, settings.prompts);
+        const client = deps.createClient(profile);
+        const result = await client.stream(
+          { system: rendered.system, user: rendered.user, model: profile.model },
+          (text) => emit({ type: 'delta', text }),
+          signal,
+        );
+        emit({ type: 'done', usage: result.usage });
+        return;
+      }
       case 'translate-batch': {
         const settings = await deps.getSettings();
         const profile = await deps.resolveProfile('page');

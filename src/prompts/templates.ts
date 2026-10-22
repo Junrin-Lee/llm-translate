@@ -1,4 +1,9 @@
-export type PromptKind = 'selectionDict' | 'selectionText' | 'pageBatch' | 'imageText';
+export type PromptKind =
+  | 'selectionDict'
+  | 'selectionText'
+  | 'selectionSearch'
+  | 'pageBatch'
+  | 'imageText';
 
 export interface PromptTemplate {
   system: string;
@@ -21,6 +26,15 @@ export const DEFAULT_TEMPLATES: Record<PromptKind, PromptTemplate> = {
       'object of the form {"word": string, "phonetic"?: string, "senses": [{"pos"?: string, ' +
       '"meaning": string}], "examples"?: string[]}. Meanings and examples must be written in ' +
       '{{targetLang}}. Do not wrap the JSON in code fences or add commentary.',
+    user: '{{text}}',
+  },
+  selectionSearch: {
+    system:
+      'You are a search assistant. The user message is text they selected on a web page. ' +
+      'Search the web for it if you can, then explain what it is and the key facts about it ' +
+      'in {{targetLang}}, in one to three short paragraphs. You may use Markdown paragraphs, ' +
+      'lists, bold, inline code and links. If you used web sources, end with a list of their ' +
+      'links; never invent a source.',
     user: '{{text}}',
   },
   pageBatch: {

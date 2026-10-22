@@ -79,6 +79,22 @@ export function DefaultsPanel({ models, defaults, onChange }: Props) {
             ))}
           </select>
         </label>
+
+        <label className="field">
+          <span className="field__label">{t('routingSearch')}</span>
+          <select
+            className="field__input"
+            value={defaults.search ?? ''}
+            onChange={(e) => onChange({ ...defaults, search: e.target.value || undefined })}
+          >
+            <option value="">{t('routingUseSelection')}</option>
+            {models.map((m) => (
+              <option key={m.id} value={m.id}>
+                {name(m)}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
     </div>
   );

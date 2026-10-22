@@ -65,7 +65,9 @@ const EN = {
   routingSelection: 'Selection translation',
   routingPage: 'Page translation',
   routingImage: 'Screenshot translation',
+  routingSearch: 'Selection search',
   routingUseGlobal: 'Use global default',
+  routingUseSelection: 'Same as selection translation',
 
   // Translation (general settings)
   targetLanguage: 'Target language',
@@ -78,6 +80,9 @@ const EN = {
   triggerInstantHint: 'Translate as soon as you select text — uses more tokens.',
   triggerShortcutLabel: 'Shortcut only',
   triggerShortcutHint: 'No icon; press the translate-selection shortcut instead.',
+  genSelectionSearch: 'Show a search icon next to the selection icon',
+  genSelectionSearchHint:
+    'Your model searches the selected text and answers in the panel. Works with the "Show an icon" trigger only.',
   genDisableSites: 'Disable the selection icon on these sites',
   actionAdd: 'Add',
   actionRemove: 'Remove',
@@ -87,6 +92,8 @@ const EN = {
   promptDictHint: 'Selection popup, for single words or short phrases (JSON dictionary output).',
   promptTextLabel: 'Selection translation',
   promptTextHint: 'Selection popup, for sentences and longer text.',
+  promptSearchLabel: 'Selection search',
+  promptSearchHint: 'Search icon next to the selection icon; the answer renders as Markdown.',
   promptBatchLabel: 'Full-page translation',
   promptBatchHint: 'Batched page segments — the prompt must keep every @@n@@ marker.',
   promptImageLabel: 'Screenshot translation',
@@ -131,13 +138,16 @@ const EN = {
   // Selection panel
   panelDictionary: 'Dictionary',
   panelTranslation: 'Translation',
+  panelSearch: 'Search',
   panelClose: 'Close',
   panelLookingUp: 'Looking up…',
   panelTranslating: 'Translating…',
+  panelSearching: 'Searching…',
   panelEmptyResult: 'No content returned — try Retry.',
   panelRetry: 'Retry',
   panelCopy: 'Copy',
   iconTranslateSelection: 'Translate selection',
+  iconSearchSelection: 'Search selection',
 
   // Page toolbar
   toolbarTranslating: 'Translating',
@@ -244,7 +254,9 @@ const ZH: Record<MessageKey, string> = {
   routingSelection: '划词翻译',
   routingPage: '全文翻译',
   routingImage: '截屏翻译',
+  routingSearch: '划词搜索',
   routingUseGlobal: '使用全局默认',
+  routingUseSelection: '与划词翻译相同',
 
   targetLanguage: '目标语言',
   genUiLang: '界面语言',
@@ -256,6 +268,9 @@ const ZH: Record<MessageKey, string> = {
   triggerInstantHint: '选中文字立即翻译——更费 token。',
   triggerShortcutLabel: '仅快捷键',
   triggerShortcutHint: '不显示图标,改用划词快捷键触发。',
+  genSelectionSearch: '在划词图标旁显示搜索图标',
+  genSelectionSearchHint:
+    '由模型搜索选中的文字,结果显示在面板里。仅在触发方式为「显示图标」时生效。',
   genDisableSites: '在这些站点禁用划词图标',
   actionAdd: '添加',
   actionRemove: '移除',
@@ -264,6 +279,8 @@ const ZH: Record<MessageKey, string> = {
   promptDictHint: '划词浮层,用于单词或短语(词典式 JSON 输出)。',
   promptTextLabel: '划词翻译',
   promptTextHint: '划词浮层,用于句子和长文本。',
+  promptSearchLabel: '划词搜索',
+  promptSearchHint: '划词图标旁的搜索图标;回答按 Markdown 显示。',
   promptBatchLabel: '全文翻译',
   promptBatchHint: '整页分批翻译——提示词必须保留每个 @@n@@ 标记。',
   promptImageLabel: '截屏翻译',
@@ -300,13 +317,16 @@ const ZH: Record<MessageKey, string> = {
 
   panelDictionary: '词典',
   panelTranslation: '翻译',
+  panelSearch: '搜索',
   panelClose: '关闭',
   panelLookingUp: '查询中…',
   panelTranslating: '翻译中…',
+  panelSearching: '搜索中…',
   panelEmptyResult: '未返回内容——请点击重试。',
   panelRetry: '重试',
   panelCopy: '复制',
   iconTranslateSelection: '翻译所选',
+  iconSearchSelection: '搜索所选',
 
   toolbarTranslating: '翻译中',
   toolbarTranslated: '已翻译',
