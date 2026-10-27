@@ -3,7 +3,9 @@ import { fileURLToPath } from 'node:url';
 import { type BrowserContext, chromium } from '@playwright/test';
 
 const DIR = dirname(fileURLToPath(import.meta.url));
-const EXTENSION_PATH = resolve(DIR, '../.output/chrome-mv3');
+// `pnpm e2e` builds with --mode e2e: the in-page UI keeps an open shadow root
+// there so locators can reach it (production uses a closed one).
+const EXTENSION_PATH = resolve(DIR, '../.output/chrome-mv3-e2e');
 
 export const MOCK_PORT = Number(process.env.MOCK_PORT ?? 8787);
 export const BASE_URL = `http://localhost:${MOCK_PORT}`;

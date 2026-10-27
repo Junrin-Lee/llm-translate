@@ -73,8 +73,9 @@ describe('firefox smoke', () => {
         sel.addRange(range);
         document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
       `);
-      // content.tsx mounts the panel via WXT's createShadowRootUi (default
-      // mode: 'open') onto a <llm-translate-ui> host, so a flat
+      // content.tsx mounts the panel via WXT's createShadowRootUi onto a
+      // <llm-translate-ui> host, open in the --mode e2e build this suite zips
+      // (production uses a closed root), so a flat
       // document.querySelector can never see inside it — unlike Playwright's
       // locator engine (e2e/selection.spec.ts), which pierces open shadow
       // roots transparently. Verified: piercing via .shadowRoot finds it on

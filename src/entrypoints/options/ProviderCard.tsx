@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useT } from '@/i18n/useI18n';
+import { isCleartextRemote } from '@/llm/base-url';
 import type { LlmProvider, Protocol } from '@/llm/types';
 import { runRpc } from '@/messaging/port-client';
 
@@ -83,6 +84,9 @@ export function ProviderCard({ provider, inUseCount, onPatch, onDelete }: Props)
           autoComplete="off"
           onChange={(e) => onPatch({ baseUrl: e.target.value })}
         />
+        {isCleartextRemote(provider.baseUrl) && (
+          <span className="field__hint field__hint--warn">{t('baseUrlCleartextWarning')}</span>
+        )}
       </label>
 
       <label className="field">

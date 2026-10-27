@@ -109,11 +109,18 @@ export function TranslatePanel({
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
-    // Close on a click anywhere outside the panel. composedPath sees through the
-    // Shadow DOM; capture phase runs regardless of stopPropagation on the page.
-    const onPointerDown = (e: Event) => {
-      const panel = panelRef.current;
-      if (panel && !e.composedPath().includes(panel)) onClose();
+    // Close on a click anywhere outside the panel; capture phase runs regardless
+    // of stopPropagation on the page. Hit-test by position: seen from document,
+    // composedPath() stops at the host of a closed shadow root.
+    const onPointerDown = (e: MouseEvent) => {
+      const rect = panelRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const inside =
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right &&
+        e.clientY >= rect.top &&
+        e.clientY <= rect.bottom;
+      if (!inside) onClose();
     };
     document.addEventListener('keydown', onKey);
     document.addEventListener('mousedown', onPointerDown, true);

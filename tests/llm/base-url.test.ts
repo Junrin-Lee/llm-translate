@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { endpointFor, normalizeBaseUrl } from '@/llm/base-url';
+import { endpointFor, isCleartextRemote, normalizeBaseUrl } from '@/llm/base-url';
 
 describe('normalizeBaseUrl (openai)', () => {
   it('appends /v1 when the URL has no path', () => {
@@ -97,5 +97,28 @@ describe('normalize + endpointFor together', () => {
     expect(endpointFor(base, 'openai', 'chat')).toBe(
       'https://api.deepseek.com/v1/chat/completions',
     );
+  });
+});
+
+describe('isCleartextRemote', () => {
+  it('flags plain http to a remote host', () => {
+    expect(isCleartextRemote('http://api.example.com/v1')).toBe(true);
+    expect(isCleartextRemote('http://192.168.1.20:11434/v1')).toBe(true);
+  });
+
+  it('allows https anywhere', () => {
+    expect(isCleartextRemote('https://api.example.com/v1')).toBe(false);
+  });
+
+  it('allows plain http to this machine', () => {
+    expect(isCleartextRemote('http://localhost:11434/v1')).toBe(false);
+    expect(isCleartextRemote('http://127.0.0.1:8080')).toBe(false);
+    expect(isCleartextRemote('http://[::1]:8080')).toBe(false);
+    expect(isCleartextRemote('http://ollama.localhost')).toBe(false);
+  });
+
+  it('does not flag input that is not a URL yet', () => {
+    expect(isCleartextRemote('')).toBe(false);
+    expect(isCleartextRemote('api.example.com')).toBe(false);
   });
 });

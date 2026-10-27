@@ -283,6 +283,10 @@ body {
   color: var(--text-muted);
 }
 
+.field__hint--warn {
+  color: var(--danger);
+}
+
 .field__label .badge {
   margin-left: 6px;
 }

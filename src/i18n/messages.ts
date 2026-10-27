@@ -39,6 +39,8 @@ const EN = {
   providerNameAria: 'Provider name',
   providerUsing: 'Using',
   fieldBaseUrl: 'Base URL',
+  baseUrlCleartextWarning:
+    'Plain http to a remote host: your API key and the text you translate travel unencrypted. Use https unless this is a trusted local network.',
   fieldApiKey: 'API key',
   apiKeyHint: 'Stored only on this device.',
   fieldModel: 'Model',
@@ -229,6 +231,8 @@ const ZH: Record<MessageKey, string> = {
   providerNameAria: 'Provider 名称',
   providerUsing: '使用中',
   fieldBaseUrl: 'Base URL',
+  baseUrlCleartextWarning:
+    '这是指向远程主机的明文 http 地址,API Key 和要翻译的文字都会未加密传输。除非是可信的局域网,否则请改用 https。',
   fieldApiKey: 'API Key',
   apiKeyHint: '只保存在本机。',
   fieldModel: '模型',

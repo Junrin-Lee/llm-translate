@@ -20,7 +20,7 @@ import { getSettings, resolveProfile, watchSettings } from '@/storage';
 import { createCache, type StorageAreaLike } from '@/translator/cache';
 
 // Selection cache is in-memory (cleared on browser close, never hits disk);
-// page cache persists across sessions. Both keyed by content, LRU-evicted.
+// page cache persists across sessions for 7 days. Both keyed by content, LRU-evicted.
 const selectionCache = createCache(browser.storage.session as unknown as StorageAreaLike, {
   storageKey: 'cache:selection',
   maxEntries: 500,
@@ -28,6 +28,7 @@ const selectionCache = createCache(browser.storage.session as unknown as Storage
 const pageCache = createCache(browser.storage.local as unknown as StorageAreaLike, {
   storageKey: 'cache:page',
   maxEntries: 1000,
+  ttlMs: 7 * 24 * 60 * 60 * 1000,
 });
 
 async function sendToActiveTab(message: ContentMessage): Promise<void> {

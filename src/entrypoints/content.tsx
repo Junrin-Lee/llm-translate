@@ -19,6 +19,10 @@ export default defineContentScript({
 
     const ui = await createShadowRootUi(ctx, {
       name: 'llm-translate-ui',
+      // Closed, so page scripts can't read the panel or the screenshot it shows
+      // through element.shadowRoot (docs/issues/0006). Test builds (--mode e2e)
+      // stay open because Playwright and Selenium can only reach open roots.
+      mode: import.meta.env.MODE === 'e2e' ? 'open' : 'closed',
       position: 'inline',
       anchor: 'body',
       onMount: (container) => {

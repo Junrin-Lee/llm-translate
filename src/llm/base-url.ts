@@ -41,3 +41,25 @@ export function endpointFor(base: string, protocol: Protocol, kind: 'chat' | 'mo
   const withV1 = /\/v1$/.test(b) ? b : `${b}/v1`;
   return kind === 'chat' ? `${withV1}/messages` : `${withV1}/models`;
 }
+
+/**
+ * True when the Base URL is plain http to anything but this machine, i.e. the
+ * API key and the text would cross the network unencrypted (docs/issues/0006).
+ * Unparseable input is not flagged; the field is probably still being typed.
+ */
+export function isCleartextRemote(raw: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(raw.trim());
+  } catch {
+    return false;
+  }
+  if (url.protocol !== 'http:') return false;
+  const host = url.hostname;
+  const loopback =
+    host === 'localhost' ||
+    host.endsWith('.localhost') ||
+    host === '[::1]' ||
+    /^127(\.\d{1,3}){3}$/.test(host);
+  return !loopback;
+}

@@ -10,7 +10,8 @@ import { chromium } from '@playwright/test';
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(DIR, '..');
-const EXTENSION_PATH = resolve(ROOT, '.output/chrome-mv3');
+// Built with --mode e2e so the in-page UI's shadow root is open to locators.
+const EXTENSION_PATH = resolve(ROOT, '.output/chrome-mv3-e2e');
 const OUT_DIR = resolve(ROOT, 'store-assets/screenshots');
 const PORT = 8899;
 const BASE = `http://localhost:${PORT}`;

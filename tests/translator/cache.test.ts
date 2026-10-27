@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeBrowser } from 'wxt/testing/fake-browser';
 import { cacheKey, createCache } from '@/translator/cache';
 
@@ -51,6 +51,41 @@ describe('createCache', () => {
     expect(await cache.get('a')).toBeUndefined(); // evicted
     expect(await cache.get('b')).toBe('2');
     expect(await cache.get('c')).toBe('3');
+  });
+
+  describe('with ttlMs', () => {
+    const DAY = 24 * 60 * 60 * 1000;
+    afterEach(() => vi.useRealTimers());
+
+    it('serves an entry younger than the ttl', async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-10-01T00:00:00Z'));
+      const cache = createCache(area(), { storageKey: 'cache:test', ttlMs: 7 * DAY });
+      await cache.set('k', 'v');
+      vi.setSystemTime(new Date('2026-10-07T23:00:00Z'));
+      expect(await cache.get('k')).toBe('v');
+    });
+
+    it('misses an entry older than the ttl', async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-10-01T00:00:00Z'));
+      const cache = createCache(area(), { storageKey: 'cache:test', ttlMs: 7 * DAY });
+      await cache.set('k', 'v');
+      vi.setSystemTime(new Date('2026-10-08T00:00:01Z'));
+      expect(await cache.get('k')).toBeUndefined();
+    });
+
+    it('drops expired entries from storage on the next write', async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-10-01T00:00:00Z'));
+      const cache = createCache(area(), { storageKey: 'cache:test', ttlMs: 7 * DAY });
+      await cache.set('old', 'private page text');
+      vi.setSystemTime(new Date('2026-10-09T00:00:00Z'));
+      await cache.set('new', 'v');
+
+      const stored = await area().get('cache:test');
+      expect(Object.keys(stored['cache:test'] as object)).toEqual(['new']);
+    });
   });
 
   it('keeps entries isolated by storageKey', async () => {
