@@ -19,3 +19,6 @@ web-ext-artifacts
 .env
 .env.*
 !.env.example
+# Local tooling: CodeGraph index and JetBrains project files
+.codegraph
+.idea
