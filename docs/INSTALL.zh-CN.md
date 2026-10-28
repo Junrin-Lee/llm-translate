@@ -76,7 +76,7 @@ Firefox 的加载方式和 Chromium 不同(临时载入,或安装签名后的 `.
 ## 3. 配置 API Key
 
 1. 点 LLM Translate 图标 → **打开设置**(或右键图标 → 选项)。
-2. 进入 **服务商 (Providers)** → **添加服务商**。
+2. 进入 **接入点 (Providers)** → **添加接入点**。
 3. 填写:
    - **协议** —— OpenAI 兼容 或 Anthropic 兼容。
    - **Base URL** —— 如 `https://api.openai.com/v1` 或 `https://api.anthropic.com`

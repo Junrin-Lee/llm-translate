@@ -44,23 +44,23 @@ _Avoid_: 白名单、自动站点
 对用户提供的单张图片中文字的翻译 —— 主入口是在当前标签页上拖拽框选截取区域(content script 无法注入的页面,如内置 PDF 阅读器,自动降级为"截取可见区域后在扩展页内裁剪"),也支持粘贴/上传图片。结果以译文卡片流式输出。要求实际解析到的模型配置所选的模型支持图片输入。
 _Avoid_: 图片翻译、截图翻译、OCR 翻译
 
-### Provider
+### 接入点
 
-**LLM Provider (LLM Provider)**:
+**接入点 (LLM Provider)**:
 一条已保存的 LLM 接口连接,由协议类型、Base URL、API Key 以及可选的默认超时组成,不包含模型名,多条模型配置可以共用同一条。其中 name 是可选的展示标签;每条连接在内部通过稳定的 id 引用,因此 name 为空也能正常工作。
-_Avoid_: Provider 配置、翻译引擎、服务商、渠道、账号
+_Avoid_: Provider(中文界面与文档中一律用「接入点」)、供应商、服务商、翻译引擎、渠道、账号
 
 **模型配置 (Model Profile)**:
-在某一条 LLM Provider 上选定一个模型,外加可选参数(temperature、max tokens、超时)。路由指向的就是它;用户想在同一个接口上换模型时,新增的也是它。它自己的超时优先于 Provider 上的默认值。
-_Avoid_: translate model、模型条目、Provider 配置
+在某一个接入点上选定一个模型,外加可选参数(temperature、max tokens、超时)。路由指向的就是它;用户想在同一个接口上换模型时,新增的也是它。它自己的超时优先于接入点上的默认值。
+_Avoid_: translate model、模型条目、接入点配置
 
 **协议类型 (Protocol)**:
-LLM Provider 遵循的 API 形态,只有两种:OpenAI 兼容、Anthropic 兼容。
+接入点遵循的 API 形态,只有两种:OpenAI 兼容、Anthropic 兼容。
 _Avoid_: 厂商类型、接口类型
 
 **全局默认模型 (Global Default Model)**:
 未被功能级覆盖时,所有翻译功能实际使用的那条模型配置。
-_Avoid_: 当前引擎、激活配置、全局默认 Provider
+_Avoid_: 当前引擎、激活配置、全局默认接入点
 
 **功能级覆盖 (Feature Override)**:
 划词翻译、全文翻译、截屏翻译或划词搜索各自单独指定的模型配置;设置后优先于全局默认模型,不设置则跟随全局。划词搜索例外:不设置时先跟随划词翻译的覆盖。
@@ -76,9 +76,9 @@ _Avoid_: 权限警告、授权流程
 
 > **Dev**: 用户划词之后走哪个模型?
 > **Expert**: 先看划词翻译有没有功能级覆盖,有就用覆盖指定的那条模型配置;没有就用全局默认模型。
-> **Dev**: 那"LLM Provider"里存的是厂商吗?比如 DeepSeek?
-> **Expert**: 不是厂商,是一条连接。DeepSeek 官方、公司网关代理的 DeepSeek 是两条不同的 LLM Provider,它们的协议类型都是 OpenAI 兼容。
-> **Dev**: 我想在同一个网关上同时用 deepseek-chat 和 deepseek-reasoner,要建两条 Provider 吗?
-> **Expert**: 一条 LLM Provider,两条模型配置指向它。Base URL 和 API Key 只存一份,换 key 时两条一起生效。
+> **Dev**: 那"接入点"里存的是厂商吗?比如 DeepSeek?
+> **Expert**: 不是厂商,是一条连接。DeepSeek 官方、公司网关代理的 DeepSeek 是两个不同的接入点,它们的协议类型都是 OpenAI 兼容。
+> **Dev**: 我想在同一个网关上同时用 deepseek-chat 和 deepseek-reasoner,要建两个接入点吗?
+> **Expert**: 一个接入点,两条模型配置指向它。Base URL 和 API Key 只存一份,换 key 时两条一起生效。
 > **Dev**: 截屏翻译提示"模型不支持图片输入"怎么办?
 > **Expert**: 说明它解析到的模型配置(功能级覆盖,或全局默认模型)选的模型不带视觉能力。给截屏翻译设一条功能级覆盖,指到一条模型支持图片输入的模型配置即可。

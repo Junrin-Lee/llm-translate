@@ -46,7 +46,7 @@ _Avoid_: image translation, OCR translation, picture translation
 
 ### Provider
 
-**LLM Provider (LLM Provider)**:
+**LLM Provider (接入点)**:
 One saved connection to an LLM endpoint: a Protocol, a Base URL and an API Key, plus an optional default timeout. It carries no model name, and several Model Profiles can share one. The name is an optional display label; each provider is referenced internally by a stable id, so a provider with no name still works.
 _Avoid_: provider profile, translation engine, vendor, channel, account
 

@@ -28,9 +28,9 @@ Store / Edge Add-ons / Firefox Add-ons(AMO)首次人工提交,见
   - 复用划词翻译链路:同一路由模型、同一「划词翻译」Prompt、同一缓存
 
 <details>
-<summary><b>更多进阶能力</b> —— 多 Provider、双协议、触发方式、自定义、本地缓存(点击展开)</summary>
+<summary><b>更多进阶能力</b> —— 多接入点、双协议、触发方式、自定义、本地缓存(点击展开)</summary>
 
-- **Provider、模型与路由** —— 连接(协议 / Base URL / Key)与模型(某条连接上的模型名及可选参数)分开保存,同一个网关下换模型不用重填接口地址;可设「全局默认」,并为划词、全文、截屏分别指定功能级覆盖
+- **接入点、模型与路由** —— 连接(协议 / Base URL / Key)与模型(某条连接上的模型名及可选参数)分开保存,同一个网关下换模型不用重填接口地址;可设「全局默认」,并为划词、全文、截屏分别指定功能级覆盖
 - **双协议** —— OpenAI 兼容(`/chat/completions`)与 Anthropic 兼容(`/v1/messages`),自研轻量客户端,无需官方 SDK
 - **多触发方式** —— 划词图标 / 选中即翻 / 仅快捷键;全文支持扩展弹窗、快捷键、右键菜单、自动翻译站点清单
 - **可定制** —— 四套 Prompt 模板可覆盖并一键恢复默认;界面语言(自动 / English / 中文);站点禁用清单;设置 JSON 导入导出(默认**不含** API Key)
@@ -47,18 +47,18 @@ Store / Edge Add-ons / Firefox Add-ons(AMO)首次人工提交,见
 
 需要图文详解、更新方法与常见问题(比如「装好却没有工具栏图标」),见完整[安装指南](docs/INSTALL.zh-CN.md)。
 
-### 2. 配置 Provider 和模型
+### 2. 配置接入点和模型
 
-一条 Provider 就是一个接口地址加一把 Key;一条模型配置则是在某条 Provider 上选一个模型名。多个模型可以共用一条 Provider,不用重复填写。
+一个接入点就是一个接口地址加一把 Key;一条模型配置则是在某个接入点上选一个模型名。多个模型可以共用一个接入点,不用重复填写。
 
-1. 点扩展图标 → **打开设置**,进入 **Provider (Providers)**
-2. **添加 Provider**,填写:
+1. 点扩展图标 → **打开设置**,进入 **接入点 (Providers)**
+2. **添加接入点**,填写:
    - **协议**:OpenAI 兼容 或 Anthropic 兼容
    - **Base URL**:如 `https://api.openai.com/v1`、`https://api.anthropic.com`,或你的兼容网关地址
    - **API Key**:你自己的密钥(仅保存在本机)
 3. 点 **测试连接** 确认接口和密钥可用
-4. 进入 **模型 (Models)**,点 **添加模型**,选好 Provider,再手动填模型名或点「获取模型」从列表选择。**测试模型** 会通过它发一次极小的请求
-5. 首条模型会自动成为全局默认;多条时可在 **路由 (Routing)** 里为划词/全文/截屏分别指定。之后在同一条 Provider 上再加模型,只需要第 4 步
+4. 进入 **模型 (Models)**,点 **添加模型**,选好接入点,再手动填模型名或点「获取模型」从列表选择。**测试模型** 会通过它发一次极小的请求
+5. 首条模型会自动成为全局默认;多条时可在 **路由 (Routing)** 里为划词/全文/截屏分别指定。之后在同一个接入点上再加模型,只需要第 4 步
 
 ### 3. 开始翻译
 
@@ -93,11 +93,11 @@ Store / Edge Add-ons / Firefox Add-ons(AMO)首次人工提交,见
 
 ## ⚙️ 设置项
 
-设置页采用侧边导航,分为:**Provider (Providers)**、**模型 (Models)**、**路由 (Routing)**、**翻译 (Translation)**、
+设置页采用侧边导航,分为:**接入点 (Providers)**、**模型 (Models)**、**路由 (Routing)**、**翻译 (Translation)**、
 **提示词 (Prompts)**、**备份 (Backup)**、**缓存 (Cache)**。翻译区可切换目标语言、界面语言、
 划词触发方式与站点禁用清单。
 
-| ![Provider 设置:协议 / Base URL / Key](store-assets/screenshots/03-providers.png) | ![路由:为划词、全文、截屏分别指定模型](store-assets/screenshots/04-routing.png) |
+| ![接入点设置:协议 / Base URL / Key](store-assets/screenshots/03-providers.png) | ![路由:为划词、全文、截屏分别指定模型](store-assets/screenshots/04-routing.png) |
 | :--: | :--: |
 | ![翻译:目标语言、界面语言、划词触发方式、站点禁用清单](store-assets/screenshots/05-translation.png) | ![提示词:覆盖词典 / 划词 / 全文 / 截屏四个模板,可重置为默认](store-assets/screenshots/06-prompts.png) |
 | ![备份:导出为 JSON(默认剥离 Key)与导入](store-assets/screenshots/07-backup.png) | ![缓存:查看划词 / 全文缓存条目数并清空](store-assets/screenshots/08-cache.png) |
@@ -192,7 +192,7 @@ pnpm screenshots  # 重新生成 store-assets/ 里的商店截图
 | 里程碑 | 内容 | 状态 |
 |---|---|---|
 | M0 | 脚手架(WXT + React + TS、Biome、CI、四入口) | ✅ |
-| M1 | 双协议客户端 + Provider 管理 UI | ✅ |
+| M1 | 双协议客户端 + 接入点管理 UI | ✅ |
 | M2 | 划词翻译(图标 / 浮层 / 词典 + 译文卡 / 快捷键) | ✅ |
 | M3 | 全文翻译(分块 / 批量 / 懒加载 / 双语与仅译文 / SPA / 缓存) | ✅ |
 | M4 | 设置完善(Prompt 编辑器、导入导出、缓存清理、界面 i18n) | ✅ |

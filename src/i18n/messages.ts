@@ -196,7 +196,7 @@ const EN = {
 export type MessageKey = keyof typeof EN;
 
 const ZH: Record<MessageKey, string> = {
-  navProviders: 'Provider',
+  navProviders: '接入点',
   navModels: '模型',
   navRouting: '路由',
   navTranslation: '翻译',
@@ -205,30 +205,30 @@ const ZH: Record<MessageKey, string> = {
   navCache: '缓存',
   optionsTagline: '自带 OpenAI 兼容或 Anthropic 兼容 API,密钥只保存在本机。',
 
-  providersAdd: '添加 Provider',
-  providersEmptyTitle: '还没有 Provider',
+  providersAdd: '添加接入点',
+  providersEmptyTitle: '还没有接入点',
   providersEmptyBody:
-    '一条 Provider 就是一个接口地址加一把 API Key。先加一条,再在它上面添加要用的模型。除了发往你配置的接口,数据不会离开本机。',
-  providersAddFirst: '添加第一个 Provider',
-  confirmDeleteProvider: '删除这条 Provider?此操作不可撤销。',
-  providerInUseHint: '还有 {count} 条模型配置在用这条 Provider,请先删除或改绑。',
-  mergeBannerText: '有 {count} 条 Provider 与其他条目完全重复,合并成一条?',
+    '一个接入点就是一个接口地址加一把 API Key。先加一个,再在它上面添加要用的模型。除了发往你配置的接口,数据不会离开本机。',
+  providersAddFirst: '添加第一个接入点',
+  confirmDeleteProvider: '删除这个接入点?此操作不可撤销。',
+  providerInUseHint: '还有 {count} 条模型配置在用这个接入点,请先删除或改绑。',
+  mergeBannerText: '有 {count} 个接入点与其他条目完全重复,合并成一个?',
   mergeBannerAction: '合并重复项',
 
   modelsAdd: '添加模型',
   modelsEmptyTitle: '还没有模型',
   modelsEmptyBody:
-    '一条模型配置就是在某条 Provider 上选一个模型名。多加几条,换模型时就不用重填接口地址了。',
+    '一条模型配置就是在某个接入点上选一个模型名。多加几条,换模型时就不用重填接口地址了。',
   modelsAddFirst: '添加第一个模型',
-  modelsNeedProviderTitle: '请先添加 Provider',
-  modelsNeedProviderBody: '模型必须挂在某条 Provider 上,先把接口地址和 Key 配好。',
+  modelsNeedProviderTitle: '请先添加接入点',
+  modelsNeedProviderBody: '模型必须挂在某个接入点上,先把接口地址和 Key 配好。',
   confirmDeleteModel: '删除这条模型配置?此操作不可撤销。',
   modelNamePlaceholder: '未命名模型',
   modelNameAria: '模型名称',
-  fieldProvider: 'Provider',
+  fieldProvider: '接入点',
 
-  providerNamePlaceholder: '未命名 Provider',
-  providerNameAria: 'Provider 名称',
+  providerNamePlaceholder: '未命名接入点',
+  providerNameAria: '接入点名称',
   providerUsing: '使用中',
   fieldBaseUrl: 'Base URL',
   baseUrlCleartextWarning:
@@ -366,7 +366,7 @@ const ZH: Record<MessageKey, string> = {
     'LLM Translate 需要读取你正在浏览的页面文本来完成翻译,并且只与你自己配置的 LLM 接口通信。Firefox 要求你显式授予这项站点访问权限。',
   onboardingGrant: '授予站点访问权限',
   onboardingGranted: '搞定!可以关闭此页了。',
-  onboardingNext: '下一步:在设置中添加你的 LLM Provider。',
+  onboardingNext: '下一步:在设置中添加你的 LLM 接入点。',
   onboardingOpenSettings: '打开设置',
   onboardingManual:
     'Firefox 未完成授权。你也可以在 about:addons → LLM Translate → 权限 中手动开启。',
